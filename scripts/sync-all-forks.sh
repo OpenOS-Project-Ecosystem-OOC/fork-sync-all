@@ -86,6 +86,7 @@ gh_api() {
 }
 
 get_all_forks() {
+  # Returns "full_name default_branch" per line to avoid a separate get_repo_info call
   local page=1
   while true; do
     local result
@@ -98,7 +99,7 @@ get_all_forks() {
       break
     fi
 
-    echo "$result" | jq -r '.[] | .full_name' 2>/dev/null
+    echo "$result" | jq -r '.[] | "\(.full_name) \(.default_branch) \(.parent.full_name // "")"' 2>/dev/null
     (( page++ ))
   done
 }
@@ -216,23 +217,24 @@ sync_non_default_branch() {
 # ── main ─────────────────────────────────────────────────────────────────────
 
 echo "Fetching all forks for ${GITHUB_OWNER}..."
-mapfile -t forks < <(get_all_forks)
-echo "Found ${#forks[@]} forks."
+mapfile -t fork_lines < <(get_all_forks)
+echo "Found ${#fork_lines[@]} forks."
 echo ""
 
-for fork in "${forks[@]}"; do
+total=${#fork_lines[@]}
+current=0
+
+for line in "${fork_lines[@]}"; do
+  [[ -z "$line" ]] && continue
+  (( current++ ))
+
+  fork=$(echo "$line" | awk '{print $1}')
+  default_branch=$(echo "$line" | awk '{print $2}')
+  upstream=$(echo "$line" | awk '{print $3}')
+
   [[ -z "$fork" ]] && continue
 
-  echo "Syncing ${fork}..."
-
-  repo_info=$(get_repo_info "$fork") || {
-    echo "  Could not fetch repo info, skipping."
-    (( skipped++ ))
-    continue
-  }
-
-  upstream=$(echo "$repo_info" | jq -r '.parent.full_name // empty' 2>/dev/null)
-  default_branch=$(echo "$repo_info" | jq -r '.default_branch // empty' 2>/dev/null)
+  echo "[${current}/${total}] Syncing ${fork}..."
 
   if [[ -z "$upstream" || "$upstream" == "null" ]]; then
     echo "  No upstream found, skipping."
@@ -240,37 +242,21 @@ for fork in "${forks[@]}"; do
     continue
   fi
 
-  mapfile -t branches < <(get_branches "$fork")
-
-  if [[ ${#branches[@]} -eq 0 ]]; then
-    echo "  No branches found, skipping."
+  if [[ -z "$default_branch" || "$default_branch" == "null" ]]; then
+    echo "  No default branch found, skipping."
     (( skipped++ ))
     continue
   fi
 
-  repo_ok=true
-  for branch in "${branches[@]}"; do
-    [[ -z "$branch" ]] && continue
+  # Sync default branch via merge-upstream (single API call)
+  rc=0
+  sync_default_branch "$fork" "$default_branch" || rc=$?
 
-    rc=0
-    if [[ "$branch" == "$default_branch" ]]; then
-      sync_default_branch "$fork" "$branch" || rc=$?
-    else
-      sync_non_default_branch "$fork" "$branch" "$upstream" || rc=$?
-    fi
-
-    if [[ "$rc" -eq 0 ]]; then
-      (( synced++ ))
-    elif [[ "$rc" -eq 2 ]]; then
-      :
-    else
-      (( failed++ ))
-      repo_ok=false
-    fi
-  done
-
-  if $repo_ok; then
+  if [[ "$rc" -eq 0 ]]; then
+    (( synced++ ))
     echo "  done."
+  else
+    (( failed++ ))
   fi
 done
 
