@@ -48,14 +48,15 @@ search_wait() {
   sleep 7
 }
 
-# Validate token
+# Validate token via /rate_limit (immune to secondary rate limits)
 echo "Validating token..."
-LOGIN=$(api_get "$API/user" | python3 -c "import sys,json; print(json.load(sys.stdin).get('login',''))" 2>/dev/null || true)
-if [ -z "$LOGIN" ]; then
-  echo "ERROR: GH_TOKEN invalid."
+REMAINING=$(api_get "$API/rate_limit" | \
+  python3 -c "import sys,json; print(json.load(sys.stdin)['resources']['core']['remaining'])" 2>/dev/null || true)
+if [ -z "$REMAINING" ]; then
+  echo "ERROR: GH_TOKEN invalid or unreachable."
   exit 1
 fi
-echo "Authenticated as: $LOGIN"
+echo "Token valid. Core API requests remaining: $REMAINING"
 
 # ---------------------------------------------------------------------------
 # Python patcher (written once, reused for every file)
