@@ -138,18 +138,22 @@ patch_file() {
 
   new_b64=$(echo "$patched" | base64 -w 0)
 
-  local payload
-  payload=$(python3 -c "
+  # Write payload to temp file to avoid "Argument list too long" on large files
+  local payload_file
+  payload_file=$(mktemp /tmp/payload.XXXXXX.json)
+  python3 - "$new_b64" "$sha" "$src" "$dst" > "$payload_file" << 'PYEOF'
 import json, sys
 print(json.dumps({
-  'message': 'ci: reconcile org refs ($src -> $dst)',
-  'content': sys.argv[1],
-  'sha':     sys.argv[2]
-}))" "$new_b64" "$sha")
+  "message": "ci: reconcile org refs (%s -> %s)" % (sys.argv[3], sys.argv[4]),
+  "content": sys.argv[1],
+  "sha":     sys.argv[2]
+}))
+PYEOF
 
-  api_put "$API/repos/$owner/$repo/contents/$fpath" -d "$payload" > /dev/null \
+  api_put "$API/repos/$owner/$repo/contents/$fpath" -d "@$payload_file" > /dev/null \
     && echo "    patched: $fpath" \
     || echo "    WARN: failed to patch $fpath"
+  rm -f "$payload_file"
 }
 
 # ---------------------------------------------------------------------------
