@@ -29,6 +29,7 @@ SCAN_SUFFIXES=(
 )
 
 SKIP_DIRS=("vendor/" "node_modules/" ".git/")
+SKIP_FILES=("pnpm-lock.yaml" "package-lock.json" "yarn.lock" "Cargo.lock" "poetry.lock" "uv.lock" "go.sum")
 EXCLUDED_REPOS=("fork-sync-all" "org-mirror")
 
 # Write the patcher to a temp file — avoids heredoc/stdin conflicts
@@ -96,7 +97,10 @@ is_excluded() {
 
 in_skip_dir() {
   local p="$1"
+  local base
+  base=$(basename "$p")
   for d in "${SKIP_DIRS[@]}"; do [[ "$p" == "$d"* ]] && return 0; done
+  for f in "${SKIP_FILES[@]}"; do [[ "$base" == "$f" ]] && return 0; done
   return 1
 }
 
