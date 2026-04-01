@@ -1,219 +1,242 @@
 #!/usr/bin/env bash
+# reconcile-org-refs.sh
 #
-# Rewrite org references across all mirror repos using GitHub code search
-# to find only files that actually need patching — avoiding full tree scans.
+# For every repo that exists in BOTH OSP and Interested-Deving-1896:
+#   - In the Interested-Deving-1896 copy: replace pieroproietti → Interested-Deving-1896
+#   - In the OSP copy:                    replace Interested-Deving-1896 → OSP, pieroproietti → OSP
+#   - In the OOC copy (if it exists):     replace Interested-Deving-1896 → OOC, OSP → OOC, pieroproietti → OOC
 #
-# Substitution rules:
-#   Interested-Deving-1896 repos: pieroproietti -> Interested-Deving-1896
-#   OSP repos:  Interested-Deving-1896 -> OSP,  pieroproietti -> OSP
-#   OOC repos:  Interested-Deving-1896 -> OOC,  OpenOS-Project-OSP -> OOC,
-#               pieroproietti -> OOC
+# Skips:
+#   - Lines containing `if: github.repository ==`  (workflow guards — must stay as-is)
+#   - polkit/D-Bus action IDs (com.github.pieroproietti.*)
+#   - Binary files, lockfiles, and files >1 MB
 #
-# Lines never rewritten:
-#   - `if: github.repository ==`  (workflow job guards — mirrors stay passive)
-#   - lines containing polkit/D-Bus action IDs (com.github.pieroproietti.*)
-#   - lines containing penguins-bootloaders (upstream asset source URLs)
-#
-# Files never touched:
-#   - sync-pieroproietti-forks.* and rebase-lts.* (intentionally reference upstream)
-#
-# Requires: GH_TOKEN, UPSTREAM_OWNER, OSP_ORG, OOC_ORG
-#
-set -uo pipefail
+# Uses GitHub code search to find only files that actually contain the target
+# strings, then patches only those files via the Contents API.
+set -euo pipefail
 
-: "${GH_TOKEN:?required}"
-: "${UPSTREAM_OWNER:?required}"
-: "${OSP_ORG:?required}"
-: "${OOC_ORG:?required}"
+: "${GH_TOKEN:?GH_TOKEN is required}"
+: "${UPSTREAM_OWNER:?UPSTREAM_OWNER is required}"
+: "${OSP_ORG:?OSP_ORG is required}"
+: "${OOC_ORG:?OOC_ORG is required}"
 
 API="https://api.github.com"
-AUTH=(-H "Authorization: token ${GH_TOKEN}" -H "Accept: application/vnd.github+json")
+AUTH="Authorization: token ${GH_TOKEN}"
 
-api_get() { curl --disable --silent "${AUTH[@]}" "$@"; }
+# ---------------------------------------------------------------------------
+# helpers
+# ---------------------------------------------------------------------------
 
-# Write patcher to temp file once
-PATCHER=$(mktemp /tmp/patch_refs_XXXXXX.py)
-cat > "$PATCHER" << 'PYEOF'
-#!/usr/bin/env python3
-# Usage: python3 patcher.py <file> <src1> <dst1> [<src2> <dst2> ...]
-import sys, re, os
+api_get() { curl -sf -H "$AUTH" -H "Accept: application/vnd.github+json" "$@"; }
+api_put() { curl -sf -X PUT -H "$AUTH" -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" "$@"; }
 
-args = sys.argv[1:]
-path = args[0]
-pairs = [(args[i], args[i+1]) for i in range(1, len(args)-1, 2)]
-
-guard_re = re.compile(r'if:\s+github\.repository\s*==')
-preserve_re = re.compile(
-    r'com\.github\.pieroproietti\.|'   # polkit/D-Bus action IDs
-    r'penguins-bootloaders'             # upstream asset source URLs
-)
-PRESERVE_FILES = {
-    "sync-pieroproietti-forks.sh", "sync-pieroproietti-forks.yml",
-    "sync-pieroproietti-forks.yaml", "rebase-lts.sh",
-    "rebase-lts.yml", "rebase-lts.yaml",
-}
-
-if os.path.basename(path) in PRESERVE_FILES:
-    print("UNCHANGED")
-    sys.exit(0)
-
-try:
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
-        lines = f.readlines()
-except OSError:
-    print("UNCHANGED")
-    sys.exit(0)
-
-out = []
-modified = False
-for line in lines:
-    if guard_re.search(line) or preserve_re.search(line):
-        out.append(line)
-    else:
-        new = line
-        for src, dst in pairs:
-            new = new.replace(src, dst)
-        if new != line:
-            modified = True
-        out.append(new)
-
-if modified:
-    with open(path, "w", encoding="utf-8") as f:
-        f.writelines(out)
-    print("MODIFIED")
-else:
-    print("UNCHANGED")
-PYEOF
-trap 'rm -f "$PATCHER"' EXIT
-
-# ── helpers ──────────────────────────────────────────────────────────────────
-
-# Use code search to find files containing a term in an org
-# Returns: "repo/path" lines
-search_files() {
-  local org="$1" term="$2"
-  local page=1 results=""
-  while true; do
-    local resp
-    resp=$(api_get "${API}/search/code?q=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$term")+org:${org}&per_page=100&page=${page}")
-    local items count
-    items=$(echo "$resp" | jq -r '.items[]? | "\(.repository.name)/\(.path)"' 2>/dev/null)
-    count=$(echo "$resp" | jq '.items | length' 2>/dev/null || echo 0)
-    results="${results}${items}"$'\n'
-    [[ "$count" -lt 100 ]] && break
-    (( page++ ))
-    sleep 2  # search rate limit: 10 req/min authenticated
-  done
-  echo "$results" | grep -v '^$' | sort -u
-}
-
-# Patch a single file in a repo via the API
-patch_file() {
-  local org="$1" repo="$2" filepath="$3"
-  shift 3
-  local pairs=("$@")  # src1 dst1 src2 dst2 ...
-
-  local tmpdir
-  tmpdir=$(mktemp -d)
-  trap "rm -rf '$tmpdir'" RETURN
-
-  local file_data sha content_b64
-  file_data=$(api_get "${API}/repos/${org}/${repo}/contents/${filepath}")
-  sha=$(echo "$file_data" | jq -r '.sha // empty')
-  content_b64=$(echo "$file_data" | jq -r '.content // empty')
-  [[ -z "$sha" || -z "$content_b64" ]] && return
-
-  local tmpfile="${tmpdir}/workfile"
-  echo "$content_b64" | base64 -d > "$tmpfile" 2>/dev/null || return
-
-  local status
-  status=$(python3 "$PATCHER" "$tmpfile" "${pairs[@]}")
-  [[ "$status" != "MODIFIED" ]] && return
-
-  local new_b64 payload http_code
-  new_b64=$(base64 -w 0 "$tmpfile")
-  payload=$(jq -n \
-    --arg msg "ci: rebase org refs [auto]" \
-    --arg content "$new_b64" \
-    --arg sha "$sha" \
-    '{message:$msg, content:$content, sha:$sha}')
-
-  http_code=$(curl --disable --silent -o /dev/null -w "%{http_code}" \
-    -X PUT "${AUTH[@]}" -H "Content-Type: application/json" \
-    "${API}/repos/${org}/${repo}/contents/${filepath}" -d "$payload")
-
-  if [[ "$http_code" == "200" ]]; then
-    echo "    patched: ${repo}/${filepath}"
-  else
-    echo "    FAILED:  ${repo}/${filepath} (HTTP $http_code)"
+rate_wait() {
+  local remaining reset now wait_sec
+  remaining=$(curl -sf -H "$AUTH" "$API/rate_limit" | python3 -c "import sys,json; print(json.load(sys.stdin)['resources']['core']['remaining'])")
+  if [ "$remaining" -lt 50 ]; then
+    reset=$(curl -sf -H "$AUTH" "$API/rate_limit" | python3 -c "import sys,json; print(json.load(sys.stdin)['resources']['core']['reset'])")
+    now=$(date +%s)
+    wait_sec=$(( reset - now + 5 ))
+    echo "  [rate-limit] only $remaining requests left — sleeping ${wait_sec}s"
+    sleep "$wait_sec"
   fi
 }
 
-# Process all files found by code search for a given org + search term
-process_search_results() {
-  local org="$1" term="$2"
-  shift 2
-  local pairs=("$@")
-
-  echo "  Searching ${org} for: ${term}"
-  local files
-  files=$(search_files "$org" "$term")
-  local count
-  count=$(echo "$files" | grep -c . || true)
-  echo "  Found ${count} file(s)"
-  sleep 2
-
-  while IFS= read -r entry; do
-    [[ -z "$entry" ]] && continue
-    local repo filepath
-    repo="${entry%%/*}"
-    filepath="${entry#*/}"
-    patch_file "$org" "$repo" "$filepath" "${pairs[@]}"
-  done <<< "$files"
+search_wait() {
+  # code search: 10 req/min
+  sleep 7
 }
 
-# ── main ─────────────────────────────────────────────────────────────────────
-
+# Validate token
 echo "Validating token..."
-login=$(api_get "${API}/user" | jq -r '.login // empty')
-[[ -z "$login" ]] && { echo "ERROR: GH_TOKEN invalid."; exit 1; }
-echo "Authenticated as: $login"
+LOGIN=$(api_get "$API/user" | python3 -c "import sys,json; print(json.load(sys.stdin).get('login',''))" 2>/dev/null || true)
+if [ -z "$LOGIN" ]; then
+  echo "ERROR: GH_TOKEN invalid."
+  exit 1
+fi
+echo "Authenticated as: $LOGIN"
+
+# ---------------------------------------------------------------------------
+# Python patcher (written once, reused for every file)
+# ---------------------------------------------------------------------------
+PATCHER=$(mktemp /tmp/patcher.XXXXXX.py)
+cat > "$PATCHER" << 'PYEOF'
+import sys, re
+
+src_str  = sys.argv[1]
+dst_str  = sys.argv[2]
+content  = sys.stdin.read()
+lines    = content.splitlines(keepends=True)
+out      = []
+changed  = False
+
+for line in lines:
+    # Never touch workflow repository guards
+    if 'if: github.repository ==' in line:
+        out.append(line)
+        continue
+    # Never touch polkit/D-Bus action IDs
+    if re.search(r'com\.github\.pieroproietti', line):
+        out.append(line)
+        continue
+    new_line = line.replace(src_str, dst_str)
+    if new_line != line:
+        changed = True
+    out.append(new_line)
+
+if changed:
+    sys.stdout.write(''.join(out))
+    sys.exit(0)
+else:
+    sys.exit(2)   # no changes — caller skips the PUT
+PYEOF
+
+# ---------------------------------------------------------------------------
+# Skip list — files we never patch
+# ---------------------------------------------------------------------------
+SKIP_EXTENSIONS="lock|sum|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|bin|exe|so|dylib|zip|tar|gz|bz2|xz|zst"
+
+should_skip() {
+  local path="$1"
+  local ext="${path##*.}"
+  echo "$ext" | grep -qE "^($SKIP_EXTENSIONS)$"
+}
+
+# ---------------------------------------------------------------------------
+# patch_file  <owner> <repo> <path> <src> <dst>
+# ---------------------------------------------------------------------------
+patch_file() {
+  local owner="$1" repo="$2" fpath="$3" src="$4" dst="$5"
+
+  should_skip "$fpath" && return 0
+
+  rate_wait
+
+  local meta
+  meta=$(api_get "$API/repos/$owner/$repo/contents/$fpath" 2>/dev/null) || return 0
+
+  local size encoding
+  size=$(echo "$meta"     | python3 -c "import sys,json; print(json.load(sys.stdin).get('size',0))")
+  encoding=$(echo "$meta" | python3 -c "import sys,json; print(json.load(sys.stdin).get('encoding',''))")
+
+  # Skip files >1 MB or non-base64
+  [ "$size" -gt 1048576 ] && return 0
+  [ "$encoding" != "base64" ] && return 0
+
+  local sha b64 decoded patched new_b64
+  sha=$(echo "$meta"  | python3 -c "import sys,json; print(json.load(sys.stdin)['sha'])")
+  b64=$(echo "$meta"  | python3 -c "import sys,json; print(json.load(sys.stdin)['content'])" | tr -d '\n')
+  decoded=$(echo "$b64" | base64 -d 2>/dev/null) || return 0
+
+  patched=$(echo "$decoded" | python3 "$PATCHER" "$src" "$dst") || {
+    local rc=$?
+    [ $rc -eq 2 ] && return 0   # no changes needed
+    return 0
+  }
+
+  new_b64=$(echo "$patched" | base64 -w 0)
+
+  local payload
+  payload=$(python3 -c "
+import json, sys
+print(json.dumps({
+  'message': 'ci: reconcile org refs ($src -> $dst)',
+  'content': sys.argv[1],
+  'sha':     sys.argv[2]
+}))" "$new_b64" "$sha")
+
+  api_put "$API/repos/$owner/$repo/contents/$fpath" -d "$payload" > /dev/null \
+    && echo "    patched: $fpath" \
+    || echo "    WARN: failed to patch $fpath"
+}
+
+# ---------------------------------------------------------------------------
+# search_and_patch  <owner> <repo> <search_term> <src> <dst>
+# ---------------------------------------------------------------------------
+search_and_patch() {
+  local owner="$1" repo="$2" term="$3" src="$4" dst="$5"
+
+  search_wait
+  rate_wait
+
+  local results
+  results=$(curl -sf -H "$AUTH" -H "Accept: application/vnd.github+json" \
+    "$API/search/code?q=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$term")+repo:$owner/$repo&per_page=100" \
+    2>/dev/null) || return 0
+
+  local count
+  count=$(echo "$results" | python3 -c "import sys,json; print(json.load(sys.stdin).get('total_count',0))" 2>/dev/null || echo 0)
+  [ "$count" -eq 0 ] && return 0
+
+  echo "  [$owner/$repo] found $count file(s) containing '$term'"
+
+  echo "$results" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for item in data.get('items', []):
+    print(item['path'])
+" | while read -r fpath; do
+    patch_file "$owner" "$repo" "$fpath" "$src" "$dst"
+  done
+}
+
+# ---------------------------------------------------------------------------
+# repo_exists  <owner> <repo>
+# ---------------------------------------------------------------------------
+repo_exists() {
+  local owner="$1" repo="$2"
+  api_get "$API/repos/$owner/$repo" > /dev/null 2>&1
+}
+
+# ---------------------------------------------------------------------------
+# Main loop — iterate over OSP repos, process only those also in UPSTREAM
+# ---------------------------------------------------------------------------
+echo ""
+echo "Fetching OSP repo list..."
+OSP_REPOS=$(api_get "$API/orgs/$OSP_ORG/repos?per_page=100&type=all" | \
+  python3 -c "import sys,json; [print(r['name']) for r in json.load(sys.stdin)]" 2>/dev/null || true)
+
+if [ -z "$OSP_REPOS" ]; then
+  # Fallback: GraphQL (handles user accounts too)
+  OSP_REPOS=$(curl -sf -H "Authorization: bearer $GH_TOKEN" \
+    -H "Content-Type: application/json" \
+    -X POST "$API/graphql" \
+    -d '{"query":"{ organization(login: \"'"$OSP_ORG"'\") { repositories(first: 100) { nodes { name } } } }"}' | \
+    python3 -c "import sys,json; d=json.load(sys.stdin); [print(n['name']) for n in d['data']['organization']['repositories']['nodes']]")
+fi
+
+echo "OSP repos found: $(echo "$OSP_REPOS" | wc -l)"
 echo ""
 
-# ── Interested-Deving-1896: pieroproietti -> Interested-Deving-1896 ──────────
-echo "========================================"
-echo "Patching ${UPSTREAM_OWNER}: pieroproietti refs"
-echo "========================================"
-process_search_results "$UPSTREAM_OWNER" "pieroproietti" \
-  "pieroproietti" "$UPSTREAM_OWNER"
-echo ""
+for REPO in $OSP_REPOS; do
+  # Skip fork-sync-all itself to avoid self-modification loops
+  [ "$REPO" = "fork-sync-all" ] && continue
 
-# ── OSP: Interested-Deving-1896 -> OSP, pieroproietti -> OSP ─────────────────
-echo "========================================"
-echo "Patching ${OSP_ORG}: upstream + pieroproietti refs"
-echo "========================================"
-process_search_results "$OSP_ORG" "Interested-Deving-1896" \
-  "Interested-Deving-1896" "$OSP_ORG" \
-  "pieroproietti" "$OSP_ORG"
-sleep 2
-process_search_results "$OSP_ORG" "pieroproietti" \
-  "Interested-Deving-1896" "$OSP_ORG" \
-  "pieroproietti" "$OSP_ORG"
-echo ""
+  # Only process repos that also exist in Interested-Deving-1896
+  if ! repo_exists "$UPSTREAM_OWNER" "$REPO"; then
+    echo "[$REPO] not in $UPSTREAM_OWNER — skipping"
+    continue
+  fi
 
-# ── OOC: Interested-Deving-1896 -> OOC, OSP -> OOC, pieroproietti -> OOC ─────
-echo "========================================"
-echo "Patching ${OOC_ORG}: upstream + OSP + pieroproietti refs"
-echo "========================================"
-for term in "Interested-Deving-1896" "OpenOS-Project-OSP" "pieroproietti"; do
-  process_search_results "$OOC_ORG" "$term" \
-    "Interested-Deving-1896" "$OOC_ORG" \
-    "OpenOS-Project-OSP"     "$OOC_ORG" \
-    "pieroproietti"          "$OOC_ORG"
-  sleep 2
+  echo "=== $REPO ==="
+
+  # --- Interested-Deving-1896 copy: pieroproietti → UPSTREAM_OWNER ---
+  search_and_patch "$UPSTREAM_OWNER" "$REPO" "pieroproietti" "pieroproietti" "$UPSTREAM_OWNER"
+
+  # --- OSP copy: Interested-Deving-1896 → OSP, pieroproietti → OSP ---
+  search_and_patch "$OSP_ORG" "$REPO" "$UPSTREAM_OWNER" "$UPSTREAM_OWNER" "$OSP_ORG"
+  search_and_patch "$OSP_ORG" "$REPO" "pieroproietti"   "pieroproietti"   "$OSP_ORG"
+
+  # --- OOC copy (if it exists): all three → OOC ---
+  if repo_exists "$OOC_ORG" "$REPO"; then
+    search_and_patch "$OOC_ORG" "$REPO" "$UPSTREAM_OWNER" "$UPSTREAM_OWNER" "$OOC_ORG"
+    search_and_patch "$OOC_ORG" "$REPO" "$OSP_ORG"        "$OSP_ORG"        "$OOC_ORG"
+    search_and_patch "$OOC_ORG" "$REPO" "pieroproietti"    "pieroproietti"   "$OOC_ORG"
+  fi
+
+  echo ""
 done
-echo ""
 
-echo "========================================"
-echo "Reconciliation complete."
-echo "========================================"
+rm -f "$PATCHER"
+echo "Done."
