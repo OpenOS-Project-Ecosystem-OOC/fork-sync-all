@@ -113,3 +113,14 @@ resolve-failures:
     - bash scripts/resolve-failures.sh
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
+
+# ── Sync upstream mirrors (scheduled weekly) ──────────────────────────────────
+# Pulls latest commits from GitHub into openos-project/upstream-mirrors.
+# Requires CI variable: GITLAB_TOKEN (api + write_repository scope, masked).
+sync-upstream-mirrors:
+  stage: sync
+  script:
+    - bash scripts/sync-upstream-mirrors.sh
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - when: manual
