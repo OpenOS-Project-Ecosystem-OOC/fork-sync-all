@@ -125,6 +125,37 @@ sync-upstream-mirrors:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - when: manual
 
+# ── Initial KDE groups mirror (manual one-shot) ───────────────────────────────
+# Creates any missing GitLab projects under kde-groups and pushes all refs.
+# Run once after adding new KDE groups, or to fill gaps after failures.
+# Requires CI variable: GITLAB_TOKEN (api + write_repository scope, masked).
+init-kde-groups-mirror:
+  stage: sync
+  image: python:3.12-alpine
+  before_script:
+    - apk add --no-cache git
+  script:
+    - python3 scripts/init-kde-groups-mirror.py
+  timeout: 6h
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ── Sync KDE groups mirrors (scheduled weekly) ────────────────────────────────
+# Pushes latest branches+tags from invent.kde.org to all projects in kde-groups.
+# Requires CI variable: GITLAB_TOKEN (api + write_repository scope, masked).
+sync-kde-groups-mirrors:
+  stage: sync
+  image: alpine:3.19
+  before_script:
+    - apk add --no-cache git curl bash python3
+  script:
+    - bash scripts/sync-kde-groups-mirrors.sh
+  timeout: 6h
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - when: manual
+
 # ── Sync KDE Neon mirrors (scheduled daily) ──────────────────────────────────
 # Mirrors all repos in neon-deving from https://invent.kde.org/neon/.
 # Requires CI variable: GITLAB_TOKEN (api + write_repository scope, masked).
