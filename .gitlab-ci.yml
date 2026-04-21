@@ -125,6 +125,20 @@ sync-upstream-mirrors:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - when: manual
 
+# ── Sync KDE Neon mirrors (scheduled daily) ──────────────────────────────────
+# Mirrors all repos in neon-deving from https://invent.kde.org/neon/.
+# Requires CI variable: GITLAB_TOKEN (api + write_repository scope, masked).
+sync-kde-neon-mirrors:
+  stage: sync
+  image: alpine:3.19
+  before_script:
+    - apk add --no-cache git curl bash python3
+  script:
+    - bash scripts/sync-kde-neon-mirrors.sh
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - when: manual
+
 # ── Sync pieroproietti GitLab forks (scheduled daily) ────────────────────────
 # Mirrors branches, tags, and releases from GitHub to the three GitLab forks:
 #   penguins-eggs, penguins-eggs-book, oa-tools
