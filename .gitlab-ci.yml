@@ -200,3 +200,57 @@ secret-scan:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/'
+
+# ── Provision maintenance pipelines across all active projects (manual) ───────
+# Pushes .gitlab/scheduled-maintenance.yml and creates a weekly schedule on
+# every actively developed project. Safe to re-run — skips existing files/schedules.
+# Run once after merge, then again whenever new active projects are added.
+provision:maintenance:
+  stage: maintain
+  image: alpine:3.19
+  before_script:
+    - apk add --no-cache bash curl jq
+  script:
+    - bash scripts/provision-maintenance.sh
+  variables:
+    DRY_RUN: "false"
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Dry-run variant — logs what would be done without making changes
+provision:maintenance:dry-run:
+  stage: maintain
+  image: alpine:3.19
+  before_script:
+    - apk add --no-cache bash curl jq
+  script:
+    - bash scripts/provision-maintenance.sh
+  variables:
+    DRY_RUN: "true"
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ── Org-wide storage maintenance (scheduled weekly) ───────────────────────────
+# Iterates all actively developed projects under openos-project and:
+#   - Forces bulk artifact expiry
+#   - Cleans up generic package versions older than 90 days
+#
+# Activated by the "Weekly org storage maintenance" schedule (MAINTENANCE=true).
+# Uses GITLAB_MAINTENANCE_TOKEN (inherited from openos-project group variable).
+# Full pipeline definition: .gitlab/scheduled-maintenance.yml
+maintain:storage:
+  stage: maintain
+  image: alpine:3.19
+  before_script:
+    - apk add --no-cache bash curl jq
+  script:
+    - bash scripts/org-storage-maintenance.sh
+  timeout: 2h
+  variables:
+    PACKAGE_MAX_AGE_DAYS: "90"
+    PACKAGE_KEEP_COUNT: "5"
+    DRY_RUN: "false"
+  rules:
+    - if: '$MAINTENANCE == "true"'
