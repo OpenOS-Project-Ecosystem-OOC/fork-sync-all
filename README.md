@@ -1,6 +1,8 @@
 <!-- AI:skip -->
 # fork-sync-all
 
+[![Built with Ona](https://ona.com/build-with-ona.svg)](https://app.ona.com/#https://github.com/OpenOS-Project-OSP/fork-sync-all)
+
 Sync and mirror infrastructure for the three-org chain:
 
 ```
