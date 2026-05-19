@@ -47,7 +47,7 @@ jobs:
       - name: Rewrite org references in OSP + OOC mirrors
         env:
           SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
-          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Changed from SYNC_TOKEN to GH_TOKEN
           UPSTREAM_OWNER: Interested-Deving-1896
           OSP_ORG: OpenOS-Project-OSP
           OOC_ORG: OpenOS-Project-Ecosystem-OOC
