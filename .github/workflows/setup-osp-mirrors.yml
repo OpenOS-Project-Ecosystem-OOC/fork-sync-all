@@ -12,7 +12,17 @@ name: Setup OSP Mirror Workflows
 on:
   schedule:
     - cron: "45 * * * *"  # Hourly at :45
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      repo_filter:
+        description: "Repo name substring filter (blank = all)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run — print actions without applying changes"
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -30,7 +40,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup OSP mirror workflows
         env:
@@ -38,6 +48,8 @@ jobs:
           UPSTREAM_OWNER: Interested-Deving-1896
           OSP_ORG: OpenOS-Project-OSP
           OOC_ORG: OpenOS-Project-Ecosystem-OOC
+          REPO_FILTER: ${{ inputs.repo_filter || '' }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
         run: |
           if [[ -z "${GH_TOKEN}" ]]; then
             echo "SYNC_TOKEN not configured — skipping."
@@ -45,15 +57,9 @@ jobs:
           fi
           bash scripts/setup-osp-mirrors.sh
 
-      - name: Rewrite org references in OSP + OOC mirrors
+      - name: Write summary
+        if: always()
         env:
-          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
-          UPSTREAM_OWNER: Interested-Deving-1896
-          OSP_ORG: OpenOS-Project-OSP
-          OOC_ORG: OpenOS-Project-Ecosystem-OOC
-        run: |
-          if [[ -z "${GH_TOKEN}" ]]; then
-            echo "SYNC_TOKEN not configured — skipping."
-            exit 0
-          fi
-          bash scripts/reconcile-org-refs.sh
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh
