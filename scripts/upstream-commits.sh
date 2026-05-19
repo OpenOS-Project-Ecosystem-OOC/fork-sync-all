@@ -14,6 +14,8 @@
 #   2. Find commits on the mirror's default branch not reachable from upstream.
 #   3. Skip commits that are mirror-infrastructure-only (reconcile, mirror-osp-to-ooc, etc.).
 #   4. Skip if the only file changes are OOC-specific (mirror-osp-to-ooc.yaml, org-ref READMEs).
+#   5. Skip commits already reachable anywhere in upstream (e.g. on a feature branch that was
+#      mirrored before being merged — prevents daily re-upstreaming of unmerged branch content).
 #   5. Create a branch in upstream from the mirror's HEAD.
 #   6. Open a PR upstream and enable auto-merge (squash).
 #
@@ -27,6 +29,12 @@ set -uo pipefail
 : "${GH_TOKEN:?GH_TOKEN is required}"
 : "${UPSTREAM_OWNER:?UPSTREAM_OWNER is required}"
 : "${MIRROR_ORGS:?MIRROR_ORGS is required}"
+
+DRY_RUN="${DRY_RUN:-false}"
+REPO_FILTER="${REPO_FILTER:-}"
+
+[[ "$DRY_RUN" == "true" ]] && echo "Dry run — no PRs will be opened."
+[[ -n "$REPO_FILTER"    ]] && echo "Repo filter: '${REPO_FILTER}'"
 
 API="https://api.github.com"
 AUTH=(-H "Authorization: token ${GH_TOKEN}" -H "Accept: application/vnd.github+json")
@@ -104,6 +112,20 @@ upstream_pr_exists() {
   count=$(api_get "${API}/repos/${UPSTREAM_OWNER}/${repo}/pulls?state=open&head=${UPSTREAM_OWNER}:${branch}&per_page=1" | \
     jq 'if type=="array" then length else 0 end' 2>/dev/null || echo 0)
   [[ "$count" -gt 0 ]]
+}
+
+# Returns 0 if a commit SHA is reachable from any branch in upstream
+# (not just the default branch). Prevents re-upstreaming commits that
+# originated in upstream but were pushed to a mirror branch first.
+commit_reachable_in_upstream() {
+  local repo="$1" sha="$2"
+  # The compare endpoint returns status "identical" or "behind" when the base
+  # already contains the SHA. We use the commit itself as the "head" and
+  # upstream default as the "base" — if ahead_by == 0 the commit is reachable.
+  local result ahead
+  result=$(api_get "${API}/repos/${UPSTREAM_OWNER}/${repo}/commits/${sha}" 2>/dev/null)
+  # If the commit exists in the upstream repo at all, it's reachable
+  [[ "$(echo "$result" | jq -r '.sha // empty')" == "$sha" ]]
 }
 
 # Returns 0 if a commit message is mirror-infrastructure-only (should not be upstreamed)
@@ -194,6 +216,11 @@ for mirror_org in $MIRROR_ORGS; do
     while IFS= read -r repo; do
       [[ -z "$repo" ]] && continue
 
+      # Apply repo name substring filter
+      if [[ -n "$REPO_FILTER" && "$repo" != *"$REPO_FILTER"* ]]; then
+        continue
+      fi
+
       # Skip repos with no upstream counterpart
       if ! upstream_exists "$repo"; then
         continue
@@ -237,16 +264,23 @@ for mirror_org in $MIRROR_ORGS; do
       unique_commits=$(echo "$compare" | jq -c '.commits[]')
       [[ -z "$unique_commits" ]] && continue
 
-      # Check if ALL unique commits are mirror-infrastructure-only
+      # Check if ALL unique commits are mirror-infrastructure-only or already
+      # reachable in upstream (e.g. originated on a feature branch in upstream
+      # that was mirrored to OSP/OOC before being merged to upstream default).
       all_infra=true
       substantive_titles=()
       while IFS= read -r commit_json; do
         msg=$(echo "$commit_json" | jq -r '.commit.message | split("\n")[0]')
         sha=$(echo "$commit_json" | jq -r '.sha')
-        if ! is_mirror_only_commit "$msg" && ! all_files_ooc_specific "$mirror_org" "$repo" "$sha"; then
-          all_infra=false
-          substantive_titles+=("$msg")
+        if is_mirror_only_commit "$msg" || all_files_ooc_specific "$mirror_org" "$repo" "$sha"; then
+          continue
         fi
+        if commit_reachable_in_upstream "$repo" "$sha"; then
+          echo "  → commit ${sha:0:8} already reachable in ${UPSTREAM_OWNER}/${repo}, skipping"
+          continue
+        fi
+        all_infra=false
+        substantive_titles+=("$msg")
       done <<< "$unique_commits"
 
       if [[ "$all_infra" == "true" ]]; then
@@ -262,6 +296,12 @@ for mirror_org in $MIRROR_ORGS; do
       if upstream_branch_exists "$repo" "$branch" || upstream_pr_exists "$repo" "$branch"; then
         echo "  → branch or PR already exists for ${branch}, skipping"
         (( skipped++ )) || true
+        continue
+      fi
+
+      if [[ "$DRY_RUN" == "true" ]]; then
+        echo "  → DRY  would push branch '${branch}' and open PR in ${UPSTREAM_OWNER}/${repo}"
+        (( opened++ )) || true
         continue
       fi
 
