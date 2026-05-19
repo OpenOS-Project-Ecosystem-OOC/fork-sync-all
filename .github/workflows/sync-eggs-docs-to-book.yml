@@ -28,15 +28,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Checkout fork-sync-all (for scripts/)
+        uses: actions/checkout@v6
+
       - name: Checkout penguins-eggs-book
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: Interested-Deving-1896/penguins-eggs-book
           token: ${{ secrets.SYNC_TOKEN }}
           path: book
 
       - name: Checkout penguins-eggs
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: Interested-Deving-1896/penguins-eggs
           ref: ${{ github.event.client_payload.ref || inputs.ref || 'all-features' }}
@@ -61,16 +64,22 @@ jobs:
           cd book
           git config user.email "sync-bot@github.com"
           git config user.name "Sync Bot"
-          git add chromiumos/
+          git add .
           if git diff --cached --quiet; then
-            echo "No changes to commit — docs/chromiumos is already up to date."
+            echo "No changes to commit — docs are already up to date."
           else
             EGGS_SHA="${{ github.event.client_payload.sha }}"
-            MSG="sync: update chromiumos docs from penguins-eggs"
+            MSG="sync: update docs from penguins-eggs"
             if [ -n "${EGGS_SHA}" ]; then
               MSG="${MSG} (${EGGS_SHA:0:7})"
             fi
             git commit -m "${MSG}"
             git push
-            echo "Pushed updated chromiumos docs to penguins-eggs-book."
+            echo "Pushed updated docs to penguins-eggs-book."
           fi
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh
