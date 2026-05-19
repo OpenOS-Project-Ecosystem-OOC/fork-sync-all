@@ -25,38 +25,58 @@ set -uo pipefail
 : "${GITLAB_TOKEN:?GITLAB_TOKEN is required}"
 : "${GITHUB_OWNER:=Interested-Deving-1896}"
 
+DRY_RUN="${DRY_RUN:-false}"
+REPO_FILTER="${REPO_FILTER:-}"
+FORCE="${FORCE:-false}"   # re-push even if GitLab project already up-to-date
+
 GL_HOST="https://gitlab.com"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# shellcheck source=scripts/branch-name-conv.sh
+source "${SCRIPT_DIR}/branch-name-conv.sh"
+
+# Helpers must be defined before any call site (including the early log lines below)
 info() { echo "[sync-to-gitlab] $*"; }
 warn() { echo "[warn] $*" >&2; }
 
-# ── Repo map: "github_repo|gitlab_path_with_namespace" ───────────────────────
-# gitlab_path_with_namespace is the full path under gitlab.com/
-REPOS=(
-  # Penguins-Eggs_Deving
-  "penguins-eggs|openos-project/penguins-eggs_deving/penguins-eggs"
-  "penguins-recovery|openos-project/penguins-eggs_deving/penguins-recovery"
-  "penguins-eggs-book|openos-project/penguins-eggs_deving/penguins-eggs-book"
-  "penguins-eggs-audit|openos-project/penguins-eggs_deving/penguins-eggs-audit"
-  "penguins-powerwash|openos-project/penguins-eggs_deving/penguins-powerwash"
-  "penguins-immutable-framework|openos-project/penguins-eggs_deving/penguins-immutable-framework"
-  "penguins-incus-platform|openos-project/penguins-eggs_deving/penguins-incus-platform"
-  "penguins-kernel-manager|openos-project/penguins-eggs_deving/penguins-kernel-manager"
-  "eggs-ai|openos-project/penguins-eggs_deving/eggs-ai"
-  "eggs-gui|openos-project/penguins-eggs_deving/eggs-gui"
-  "oa-tools|openos-project/penguins-eggs_deving/oa-tools"
-  # Immutable-Filesystem_Deving
-  "immutable-linux-framework|openos-project/immutable-filesystem_deving/immutable-linux-framework"
-  # Linux-Kernel_Filesystem_Deving
-  "liqxanmod|openos-project/linux-kernel_filesystem_deving/liqxanmod"
-  "lkm|openos-project/linux-kernel_filesystem_deving/lkm"
-  "ukm|openos-project/linux-kernel_filesystem_deving/ukm"
-  "lkf|openos-project/linux-kernel_filesystem_deving/lkf"
-  "liquorix-unified-kernel|openos-project/linux-kernel_filesystem_deving/liquorix-unified-kernel"
-  "xanmod-unified-kernel|openos-project/linux-kernel_filesystem_deving/xanmod-unified-kernel"
-  "btrfs-dwarfs-framework|openos-project/linux-kernel_filesystem_deving/btrfs-dwarfs-framework"
-  # ops
-  "fork-sync-all|openos-project/ops/fork-sync-all"
+[[ "$DRY_RUN" == "true" ]] && info "Dry run — no pushes will occur."
+[[ "$FORCE"   == "true" ]] && info "Force mode — all repos will be re-pushed."
+[[ -n "$REPO_FILTER"    ]] && info "Repo filter: '${REPO_FILTER}'"
+
+# ── Repo map: built from config/gitlab-subgroups.yml ─────────────────────────
+# Single source of truth — edit config/gitlab-subgroups.yml to add/move repos.
+SUBGROUP_CONFIG="${REPO_ROOT}/config/gitlab-subgroups.yml"
+
+mapfile -t REPOS < <(python3 - <<'PYEOF'
+import sys, re
+
+config_path = sys.argv[1] if len(sys.argv) > 1 else "config/gitlab-subgroups.yml"
+try:
+    with open(config_path) as f:
+        content = f.read()
+except FileNotFoundError:
+    sys.exit(0)
+
+current_sg = None
+current_path = None  # explicit path: field overrides key-derived path
+for line in content.splitlines():
+    sg_m = re.match(r'^  (\S+):$', line)
+    if sg_m:
+        current_sg = sg_m.group(1)
+        current_path = None  # reset for each new subgroup
+        continue
+    path_m = re.match(r'^\s+path:\s+(\S+)', line)
+    if path_m and current_sg:
+        current_path = path_m.group(1)
+        continue
+    repo_m = re.match(r'^\s+-\s+(\S+)', line)
+    if repo_m and current_sg and current_sg not in ('id', 'repos', 'path'):
+        repo = repo_m.group(1)
+        ns = current_path if current_path else f"openos-project/{current_sg}"
+        print(f"{repo}|{ns}/{repo}")
+PYEOF
+"$SUBGROUP_CONFIG"
 )
 
 # ── git push with retry ───────────────────────────────────────────────────────
@@ -65,16 +85,17 @@ REPOS=(
 # Note: this is a git-level retry, not an HTTP API retry — the exit code from
 # `git push` is non-zero on any remote rejection, including rate limiting.
 git_push_with_retry() {
-  local remote="$1" refspec="$2" max_retries=3 attempt=0
+  local remote="$1"; shift
+  local refspecs=("$@") max_retries=3 attempt=0
   while true; do
-    if git push "$remote" "$refspec" 2>&1 \
+    if git push "$remote" "${refspecs[@]}" 2>&1 \
         | sed "s/${GH_TOKEN}/***TOKEN***/g" \
         | sed "s/${GITLAB_TOKEN}/***TOKEN***/g"; then
       return 0
     fi
     (( attempt++ )) || true
     if (( attempt > max_retries )); then
-      warn "Push of ${refspec} failed after ${max_retries} attempts"
+      warn "Push failed after ${max_retries} attempts"
       return 1
     fi
     local wait=$(( attempt * 15 ))
@@ -90,10 +111,23 @@ for entry in "${REPOS[@]}"; do
   gh_repo="${entry%%|*}"
   gl_path="${entry##*|}"
 
+  # Apply repo name substring filter
+  if [[ -n "$REPO_FILTER" && "$gh_repo" != *"$REPO_FILTER"* ]]; then
+    continue
+  fi
+
   info "──────────────────────────────────────────"
   info "${GITHUB_OWNER}/${gh_repo}  →  gitlab.com/${gl_path}"
 
-  gh_url="https://${GH_TOKEN}@github.com/${GITHUB_OWNER}/${gh_repo}.git"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "  DRY  would push ${gh_repo}"
+    (( synced++ )) || true
+    continue
+  fi
+
+  # GitHub PAT authentication requires the "x-access-token:" username prefix;
+  # using the token as a bare username (no password field) causes auth failures.
+  gh_url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_OWNER}/${gh_repo}.git"
   gl_url="${GL_HOST/https:\/\//https://oauth2:${GITLAB_TOKEN}@}/${gl_path}.git"
 
   work_dir=$(mktemp -d)
@@ -109,14 +143,31 @@ for entry in "${REPOS[@]}"; do
 
   cd "$work_dir"
 
-  # Push all refs to GitLab without pruning GitLab-only refs.
-  # +refs/heads/*:refs/heads/* force-updates all GitHub branches.
-  # +refs/tags/*:refs/tags/*   force-updates all GitHub tags.
-  # GitLab-only branches (all-features, feat/*, lts, openos/ci, etc.)
-  # are untouched because we never push a delete instruction for them.
+  # Push branches to GitLab with platform-safe name encoding.
+  # branch-name-conv.sh encodes names that would be rejected by stricter
+  # platforms (e.g. GitLab rejects depth≥2 names ending in YYYY-MM-DD).
+  # GitLab-only branches (all-features, feat/*, lts, openos/ci, etc.) are
+  # untouched because we never push a delete instruction for them.
   push_ok=true
+  attempt=0
+  max_retries=3
+  while true; do
+    if push_branches_encoded "$gl_url" 2>&1 \
+        | sed "s/${GITLAB_TOKEN}/***TOKEN***/g" \
+        | sed "s/${GH_TOKEN}/***TOKEN***/g"; then
+      break
+    fi
+    (( attempt++ )) || true
+    if (( attempt > max_retries )); then
+      warn "Branch push failed after ${max_retries} attempts"
+      push_ok=false
+      break
+    fi
+    wait=$(( attempt * 15 ))
+    warn "[push-retry] attempt ${attempt}/${max_retries} failed — retrying in ${wait}s"
+    sleep "$wait"
+  done
 
-  git_push_with_retry "$gl_url" '+refs/heads/*:refs/heads/*' || push_ok=false
   git push "$gl_url" '+refs/tags/*:refs/tags/*' 2>&1 \
     | sed "s/${GITLAB_TOKEN}/***TOKEN***/g" || true  # tag failures are non-fatal
 
