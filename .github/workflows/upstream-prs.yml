@@ -29,6 +29,7 @@ permissions:
   contents: write
   pull-requests: write
   id-token: write  # Added permission for id-token
+  pull-requests: read  # Added read permission for pull-requests
   contents: read   # Added read permission for contents
 
 # ── Rate limits ──────────────────────────────────────────────────────────────
