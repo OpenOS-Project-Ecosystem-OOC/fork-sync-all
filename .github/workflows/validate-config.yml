@@ -5,17 +5,21 @@ on:
     branches: [main]
     paths:
       - config/gitlab-subgroups.yml
+      - config/workflow-sync.yml
       - scripts/validate-gitlab-subgroups.py
+      - scripts/validate-workflow-guards.py
+      - scripts/generate-gitlab-stubs.py
       - .github/workflows/**
       - .gitlab-ci.yml
-      - scripts/validate-workflow-guards.py
   pull_request:
     paths:
       - config/gitlab-subgroups.yml
+      - config/workflow-sync.yml
       - scripts/validate-gitlab-subgroups.py
+      - scripts/validate-workflow-guards.py
+      - scripts/generate-gitlab-stubs.py
       - .github/workflows/**
       - .gitlab-ci.yml
-      - scripts/validate-workflow-guards.py
   workflow_dispatch:
     inputs:
       config_file:
