@@ -31,7 +31,7 @@ on:
 
 concurrency:
   group: fork-neon-repos
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: write

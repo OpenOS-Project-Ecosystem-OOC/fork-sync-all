@@ -33,7 +33,7 @@ on:
 
 concurrency:
   group: rate-limit-rerun
-  cancel-in-progress: false   # Never cancel mid-sleep — we'd miss the re-trigger window
+  cancel-in-progress: true    # Runs every 6h — a newer run will catch any missed re-triggers
 
 permissions:
   actions: write   # needed for rerun-failed-jobs API
