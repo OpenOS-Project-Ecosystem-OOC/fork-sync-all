@@ -34,6 +34,11 @@ on:
           - osp-only
           - ooc-only
           - gitlab-only
+      force_reconcile:
+        description: "Bypass the pushed_at gate and scan all repos regardless of last push time"
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -79,6 +84,7 @@ jobs:
           REPO_FILTER: ${{ inputs.repo_filter || '' }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
           ORGS_FILTER: ${{ inputs.orgs || 'all' }}
+          FORCE_RECONCILE: ${{ inputs.force_reconcile || 'false' }}
         run: bash scripts/reconcile-org-refs.sh
       - name: Write summary
         if: always()

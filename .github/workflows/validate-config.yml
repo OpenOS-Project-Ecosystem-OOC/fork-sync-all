@@ -6,8 +6,10 @@ on:
     paths:
       - config/gitlab-subgroups.yml
       - config/workflow-sync.yml
+      - registered-imports.json
       - scripts/validate-gitlab-subgroups.py
       - scripts/validate-workflow-guards.py
+      - scripts/validate-registered-imports.py
       - scripts/generate-gitlab-stubs.py
       - .github/workflows/**
       - .gitlab-ci.yml
@@ -15,8 +17,10 @@ on:
     paths:
       - config/gitlab-subgroups.yml
       - config/workflow-sync.yml
+      - registered-imports.json
       - scripts/validate-gitlab-subgroups.py
       - scripts/validate-workflow-guards.py
+      - scripts/validate-registered-imports.py
       - scripts/generate-gitlab-stubs.py
       - .github/workflows/**
       - .gitlab-ci.yml
@@ -57,6 +61,22 @@ jobs:
 
       - name: Check rate_limit_rerun guards and .gitlab-ci.yml script refs
         run: python3 scripts/validate-workflow-guards.py
+
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh
+
+  validate-registered-imports:
+    name: Validate registered-imports.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Validate registered-imports.json schema
+        run: python3 scripts/validate-registered-imports.py
 
       - name: Write summary
         if: always()

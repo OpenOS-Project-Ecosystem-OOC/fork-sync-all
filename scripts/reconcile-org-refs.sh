@@ -254,6 +254,31 @@ repo_exists() {
 }
 
 # ---------------------------------------------------------------------------
+# repo_pushed_since  <owner> <repo> <cutoff_epoch>
+# Returns 0 (true) if the repo was pushed to at or after cutoff_epoch,
+# 1 (false) if it hasn't been touched — safe to skip code search.
+# Falls back to true (0) on any API error so we never silently skip.
+# ---------------------------------------------------------------------------
+repo_pushed_since() {
+  local owner="$1" repo="$2" cutoff="$3"
+  local pushed_at
+  pushed_at=$(api_get "$API/repos/$owner/$repo" 2>/dev/null \
+    | python3 -c "
+import sys, json
+from datetime import datetime, timezone
+d = json.load(sys.stdin)
+pushed = d.get('pushed_at') or d.get('updated_at') or ''
+if not pushed:
+    sys.exit(0)  # unknown — assume needs reconcile
+from datetime import datetime, timezone
+epoch = int(datetime.fromisoformat(pushed.replace('Z','+00:00')).timestamp())
+print(epoch)
+" 2>/dev/null) || { return 0; }  # API error — assume needs reconcile
+  [[ -z "$pushed_at" ]] && return 0
+  [[ "$pushed_at" -ge "$cutoff" ]]
+}
+
+# ---------------------------------------------------------------------------
 # Main loop — iterate over OSP repos, process only those also in UPSTREAM
 # ---------------------------------------------------------------------------
 if [[ "$ORGS_FILTER" == "gitlab-only" ]]; then
@@ -306,6 +331,15 @@ fi
 echo "OSP repos found: $(echo "$OSP_REPOS" | wc -l)"
 echo ""
 
+# Idempotency gate: skip code search for repos that haven't been pushed to
+# since the previous scheduled run. The cutoff is 75 minutes ago — slightly
+# more than the hourly schedule interval to avoid missing pushes that land
+# just before the run. Repos pushed more recently than the cutoff are always
+# scanned. On any API error, repo_pushed_since returns true (scan anyway).
+# FORCE_RECONCILE=true bypasses the gate (useful for manual dispatch).
+RECONCILE_CUTOFF=$(( $(date +%s) - 4500 ))  # 75 minutes
+[[ "${FORCE_RECONCILE:-false}" == "true" ]] && RECONCILE_CUTOFF=0
+
 for REPO in $OSP_REPOS; do
   # Skip fork-sync-all itself to avoid self-modification loops
   [ "$REPO" = "fork-sync-all" ] && continue
@@ -318,6 +352,13 @@ for REPO in $OSP_REPOS; do
   # Only process repos that also exist in Interested-Deving-1896
   if ! repo_exists "$UPSTREAM_OWNER" "$REPO"; then
     echo "[$REPO] not in $UPSTREAM_OWNER — skipping"
+    continue
+  fi
+
+  # Skip repos that haven't been pushed to since the last scheduled run.
+  # This avoids burning code-search quota on repos that haven't changed.
+  if ! repo_pushed_since "$UPSTREAM_OWNER" "$REPO" "$RECONCILE_CUTOFF"; then
+    echo "[$REPO] no push since last run — skipping"
     continue
   fi
 
@@ -531,6 +572,11 @@ for REPO in $OSP_REPOS; do
   [ "$REPO" = "fork-sync-all" ] && continue
   [[ -n "$REPO_FILTER" && "$REPO" != *"$REPO_FILTER"* ]] && continue
   ! repo_exists "$UPSTREAM_OWNER" "$REPO" && continue
+
+  if ! repo_pushed_since "$UPSTREAM_OWNER" "$REPO" "$RECONCILE_CUTOFF"; then
+    echo "[$REPO] no push since last run — skipping (label pass)"
+    continue
+  fi
 
   echo "=== $REPO (label conversion) ==="
   # Search for OSP and OOC org names in build-context files
