@@ -779,7 +779,10 @@ for owner in $SCAN_OWNERS; do
       [[ -z "$repo" ]] && continue
       archived=$(api_get "${API}/repos/${owner}/${repo}" | jq -r '.archived')
       [[ "$archived" == "true" ]] && continue
-      process_repo "$owner" "$repo"
+      # Isolate per-repo failures — a non-zero return is logged but never
+      # aborts the outer loop (set -uo pipefail would otherwise exit here).
+      process_repo "$owner" "$repo" || \
+        echo "  ⚠ process_repo failed for ${owner}/${repo} — continuing"
     done < <(echo "$repos" | jq -r '.[].name')
 
     [[ "$repo_count" -lt 100 ]] && break
