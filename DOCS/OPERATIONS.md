@@ -28,6 +28,9 @@ what consumes them, how to detect exhaustion, and how to recover.
 - `stuck-run-detector.yml` (formerly hourly) lists all queued/in-progress runs
 - `translate-readmes.yml` was triggering after 10 workflows — each trigger
   consumed dozens of API calls for the org scan
+- Bulk-cancelling queued runs during cleanup consumes ~1 req per cancel —
+  if the queue is large and quota is already low, the cancel loop itself
+  can exhaust the remaining quota
 
 **Detecting exhaustion:**
 ```bash
@@ -41,7 +44,9 @@ during REST exhaustion and can be used for read-only queries.
 
 ## GitHub Actions Runner Minutes
 
-**Free tier:** 2,000 minutes/month (resets 1st of each month).
+**Free tier:** 2,000 minutes/month. Resets on your **billing cycle date**
+(the day of the month your GitHub account was created — check
+**Settings → Billing → Actions** for the exact date).
 
 **Paid:** Billed per minute beyond the free tier; Linux runners cost 1×,
 Windows 2×, macOS 10×. All workflows in this repo use `ubuntu-latest` (Linux, 1×).
@@ -61,9 +66,7 @@ Windows 2×, macOS 10×. All workflows in this repo use `ubuntu-latest` (Linux, 
 - Skipped jobs (`if:` evaluated to false before the runner is assigned)
 - Self-hosted runners (zero cost regardless of usage)
 
-**How fork-sync-all was burning minutes:**
-
-Before the May 2026 fixes, the following patterns caused rapid exhaustion:
+**How fork-sync-all was burning minutes (before May 2026 fixes):**
 
 1. `mirror-orgs-watchdog` fired after every mirror completion (5 workflows ×
    hourly cadence = ~120 runs/day), each consuming ~1 min even on success
@@ -84,7 +87,7 @@ Symptoms (in order of appearance):
 
 Check via GitHub web UI: **Settings → Billing → Actions**.
 
-**Recovery:** Wait until the 1st of the next month. In the meantime:
+**Recovery:** Wait until the billing cycle reset date. In the meantime:
 - Cancel all queued runs (they will never start)
 - Do not push commits that trigger new workflow runs
 - Use `workflow_dispatch` manually only for critical operations
@@ -104,8 +107,27 @@ the queued run is permanently stuck.
 3. The in-progress run never finishes → queue grows indefinitely
 4. API calls to cancel are themselves rate-limited → nothing can be cleared
 
-**Fix applied (May 2026):** All workflows in this repo now use
-`cancel-in-progress: true`. A newer run always supersedes a queued one.
+**Orphaned runs:** A run can become permanently orphaned if it was triggered
+from an older version of a workflow file that contained a job (e.g.
+`Update cost profile`) that no longer exists in the current file. The run
+accepts cancel API calls but GitHub immediately re-queues it because the
+concurrency group from the old code is still technically active. These runs
+time out automatically after GitHub's maximum queue wait (~6 hours). New
+runs from the same workflow are not blocked — they use the current file.
+
+**Policy in this repo (May 2026):** All workflows use `cancel-in-progress: true`
+except those that perform multi-repo writes where mid-run cancellation would
+leave state partially applied:
+
+| Workflow | `cancel-in-progress` | Reason |
+|---|---|---|
+| `sync-template` | `false` | Propagates files to 35 repos — partial sync leaves repos inconsistent |
+| `mirror-releases` | `false` | Partial mirror leaves releases incomplete |
+| `lts-readmes` | `false` | Mid-run cancel leaves some repos un-standardised |
+| `mirror-osp-to-gitlab` | `false` | Partial GitLab mirror |
+| `create-readmes` | `false` | Mid-run cancel leaves some repos without READMEs |
+| `mirror-artifacts` | `false` | Partial artifact mirror |
+| All others | `true` | Newer run supersedes safely |
 
 **Detecting stuck runs:**
 ```bash
@@ -113,11 +135,14 @@ gh api "repos/Interested-Deving-1896/fork-sync-all/actions/runs?per_page=100" \
   --jq '[.workflow_runs[] | select(.status == "queued")] | length'
 ```
 
-**Bulk cancel (requires API quota):**
+**Bulk cancel (check quota first — cancel loop consumes ~1 req per run):**
 ```bash
+gh api rate_limit --jq '.resources.core.remaining'
+
 gh api "repos/Interested-Deving-1896/fork-sync-all/actions/runs?per_page=100" \
-  --jq '[.workflow_runs[] | select(.status == "queued") | .id] | .[]' | \
-  xargs -I{} gh api -X POST "repos/Interested-Deving-1896/fork-sync-all/actions/runs/{}/cancel"
+  --jq '[.workflow_runs[] | select(.status=="queued") | .id] | .[]' | \
+  xargs -I{} gh api -X POST \
+    "repos/Interested-Deving-1896/fork-sync-all/actions/runs/{}/cancel"
 ```
 
 ---
@@ -150,6 +175,20 @@ jobs:
 This exits immediately (no runner cost) when the conclusion doesn't match,
 while keeping the trigger automatic.
 
+**All workflow_run listeners and their gates (May 2026):**
+
+| Workflow | Gate |
+|---|---|
+| `mirror-orgs-watchdog` | `conclusion == 'failure'` |
+| `create-readmes` | `conclusion == 'success'` |
+| `inject-badges` | `conclusion == 'success'` |
+| `lts-readmes` | `conclusion == 'success'` |
+| `mirror-osp-to-gitlab` | `conclusion == 'success'` |
+| `translate-readmes` | `conclusion == 'success'` (on gate job) |
+| `update-readmes` | `conclusion == 'success'` |
+| `dwarfs-pack-caller` | `conclusion == 'success'` |
+| `rebase-lts` | `conclusion == 'success'` |
+
 ---
 
 ## Current Workflow Schedule Summary
@@ -178,8 +217,8 @@ Workflows that run on a schedule and their cadence after May 2026 fixes:
 | `mirror-orgs-full` | Daily 10:00 | |
 | `lts-readmes` | Monthly 1st | |
 
-Hourly workflows are the primary minute consumers. At ~1 min/run, 7 hourly
-workflows = ~168 min/day = ~5,040 min/month — well over the 2,000 min free
+Hourly workflows are the primary minute consumers. At ~1 min/run, 8 hourly
+workflows = ~192 min/day = ~5,760 min/month — well over the 2,000 min free
 tier. **A paid plan or self-hosted runner is required for this repo's workload.**
 
 ---
@@ -204,5 +243,5 @@ what the host machine can handle.
 |---|---|
 | GitHub API rate limit (REST) | Top of every hour |
 | GitHub API rate limit (GraphQL) | Top of every hour (separate quota) |
-| GitHub Actions minutes | 1st of each month |
+| GitHub Actions minutes | Billing cycle date (check Settings → Billing) |
 | GitHub Actions concurrent jobs (free) | N/A — blocked by minute exhaustion |
