@@ -213,6 +213,21 @@ extract_reset_epoch() {
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
+# Early-exit guard: if the rate limit is already exhausted (or nearly so),
+# scanning and re-triggering would itself consume budget and potentially
+# re-trigger workflows that will immediately fail again — creating a loop.
+# Exit 0 (not an error) so rate-limit-rerun doesn't mark itself as failed.
+_rl_remaining=$(curl -s \
+  -H "Authorization: token ${GH_TOKEN}" \
+  -H "Accept: application/vnd.github+json" \
+  "${GH_API}/rate_limit" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['rate']['remaining'])" 2>/dev/null || echo 999)
+if [[ "$_rl_remaining" -lt 100 ]]; then
+  info "Rate limit too low (${_rl_remaining} remaining) — skipping scan to avoid feedback loop."
+  echo "[]"
+  exit 0
+fi
+
 # Compute lookback cutoff (ISO 8601)
 CUTOFF=$(date -u -d "${LOOKBACK_HOURS} hours ago" "+%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
   || python3 -c "

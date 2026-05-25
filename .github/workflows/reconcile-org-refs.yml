@@ -10,9 +10,11 @@ name: Reconcile Org References
 
 on:
   schedule:
-    # Hourly at :50 — after mirror-to-osp (:00) detects new repos, patches
-    # land in Interested-Deving-1896, then mirror-to-osp picks them up next hour.
-    - cron: "50 * * * *"
+    # Daily at 05:50 UTC — org reference rewrites are not time-critical and
+    # the hourly cadence was consuming 1000-3000 API calls/hr, exhausting the
+    # 5000/hr budget. Off-peak time avoids overlap with the 02:00-03:xx mirror
+    # and README sweeps.
+    - cron: "50 5 * * *"
   workflow_dispatch:
     inputs:
       repo_filter:

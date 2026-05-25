@@ -38,6 +38,10 @@ opened=0
 skipped=0
 failed=0
 
+# Repos not pushed within this window are skipped — saves API quota on idle repos.
+# Set to 90 min (slightly > hourly interval) to avoid missing edge cases.
+PRS_CUTOFF=$(( $(date +%s) - 5400 ))
+
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 sanitize() { sed "s/${GH_TOKEN}/***TOKEN***/g"; }
@@ -152,6 +156,11 @@ enable_auto_merge() {
 
 # ── main ─────────────────────────────────────────────────────────────────────
 
+# Source GraphQL helpers if available — falls back to REST pagination
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/gh-graphql.sh
+[[ -f "${SCRIPT_DIR}/gh-graphql.sh" ]] && source "${SCRIPT_DIR}/gh-graphql.sh"
+
 echo "Validating token..."
 remaining=$(api_get "${API}/rate_limit" | jq -r '.resources.core.remaining // empty')
 [[ -z "$remaining" ]] && { echo "ERROR: GH_TOKEN invalid or missing permissions."; exit 1; }
@@ -163,12 +172,21 @@ for mirror_org in $MIRROR_ORGS; do
   echo "Scanning PRs in ${mirror_org}..."
   echo "════════════════════════════════════════"
 
-  # Get all repos in the mirror org
-  page=1
-  while true; do
-    repos=$(api_get "${API}/orgs/${mirror_org}/repos?type=all&per_page=${PER_PAGE}&page=${page}" | \
-      jq -r '.[].name' 2>/dev/null)
-    [[ -z "$repos" ]] && break
+  # Use GraphQL to list repos (1 request per 100 repos) with REST fallback
+  if declare -f graphql_repos_for_owner > /dev/null 2>&1; then
+    repos=$(graphql_repos_for_owner "$mirror_org" 2>/dev/null)
+  fi
+  if [[ -z "${repos:-}" ]]; then
+    repos=""
+    page=1
+    while true; do
+      batch=$(api_get "${API}/orgs/${mirror_org}/repos?type=all&per_page=${PER_PAGE}&page=${page}" | \
+        jq -r '.[].name' 2>/dev/null)
+      [[ -z "$batch" ]] && break
+      repos+=$'\n'"$batch"
+      (( page++ ))
+    done
+  fi
 
     while IFS= read -r repo; do
       [[ -z "$repo" ]] && continue
@@ -176,6 +194,23 @@ for mirror_org in $MIRROR_ORGS; do
 
       # Skip if no upstream counterpart
       if ! upstream_exists "$repo"; then
+        continue
+      fi
+
+      # Skip repos not pushed recently — avoids burning API quota on idle repos
+      mirror_meta=$(api_get "${API}/repos/${mirror_org}/${repo}" 2>/dev/null)
+      pushed_at=$(echo "$mirror_meta" | python3 -c "
+import sys, json
+from datetime import datetime, timezone
+d = json.load(sys.stdin)
+pushed = d.get('pushed_at') or d.get('updated_at') or ''
+if not pushed:
+    print(0)
+    sys.exit()
+epoch = int(datetime.fromisoformat(pushed.replace('Z','+00:00')).timestamp())
+print(epoch)
+" 2>/dev/null || echo 0)
+      if [[ -n "$pushed_at" && "$pushed_at" -gt 0 && "$pushed_at" -lt "$PRS_CUTOFF" ]]; then
         continue
       fi
 
@@ -257,9 +292,6 @@ for mirror_org in $MIRROR_ORGS; do
       done < <(get_open_prs "$mirror_org" "$repo")
 
     done <<< "$repos"
-
-    (( page++ ))
-  done
 done
 
 echo ""
