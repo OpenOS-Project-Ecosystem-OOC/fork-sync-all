@@ -288,8 +288,9 @@ The file has been sanitised:
 
 **Review checklist before merging:**
 - [ ] Workflow is genuinely reusable across projects (not repo-specific logic)
-- [ ] All hardcoded values have been replaced with \`workflow_dispatch\` inputs or env vars
+- [ ] No hardcoded repo or org names remain in \`run:\` shell blocks (sanitisation covers \`env:\`, \`with:\`, and \`default:\` fields but not inline shell strings)
 - [ ] Cron schedule is appropriate for a template (or removed entirely)
+- [ ] \`workflow_run:\` trigger names updated or removed (replaced with TODO by sanitisation)
 - [ ] Add to the allowlist in \`scripts/validate-workflows.sh\`
 "
     pr_url=$(open_pr "$branch" "$pr_title" "$pr_body")
