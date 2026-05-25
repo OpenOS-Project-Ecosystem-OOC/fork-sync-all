@@ -7,6 +7,11 @@
 # Covers: Interested-Deving-1896, OpenOS-Project-OSP, OpenOS-Project-Ecosystem-OOC,
 #         and GitLab (gitlab.com/openos-project subgroups).
 #
+# Efficiency: fetches each repo's full git tree in one API call, then issues
+# DELETE requests only for files that actually exist. This keeps total API
+# usage to ~2 calls per repo (tree fetch + N deletes) rather than one probe
+# per pollution path per repo.
+#
 # Requires:
 #   SYNC_TOKEN      — GitHub PAT with repo scope on all three GitHub orgs
 #   GITLAB_TOKEN    — GitLab PAT with api + write_repository on openos-project
@@ -33,7 +38,6 @@ skipped_total=0
 failed_total=0
 
 # ── Pollution file list ───────────────────────────────────────────────────────
-# Every file that should never exist in a consumer repo.
 ALL_POLLUTION_PATHS=(
   ".github/ISSUE_TEMPLATE/bug-report.yml"
   ".github/PULL_REQUEST_TEMPLATE.md"
@@ -75,69 +79,69 @@ ALL_POLLUTION_PATHS=(
 )
 
 # ── Per-repo keep lists ───────────────────────────────────────────────────────
-# Files that existed in the repo BEFORE the first template-sync commit.
-# These must not be deleted even though they appear in ALL_POLLUTION_PATHS.
-# Determined by baseline analysis against pre-template commit SHAs.
+# Files confirmed to have existed before the first template-sync commit.
 keep_list_for() {
-  local repo="$1"
-  case "$repo" in
+  case "$1" in
     penguins-incus-platform|incusbox|kapsule-incus-manager)
       echo ".devcontainer/devcontainer.json" ;;
     qt-kde-team.pages.debian.net)
       echo ".gitlab-ci.yml" ;;
-    *)
-      echo "" ;;
+    *) echo "" ;;
   esac
 }
 
 should_keep() {
-  local repo="$1" path="$2"
   local keep
-  keep=$(keep_list_for "$repo")
+  keep=$(keep_list_for "$1")
   [[ -z "$keep" ]] && return 1
-  echo "$keep" | grep -qF "$path"
+  echo "$keep" | grep -qF "$2"
 }
 
-# ── GitHub helpers ────────────────────────────────────────────────────────────
-
-gh_get_file_sha() {
-  local org="$1" repo="$2" path="$3"
-  curl --disable --silent "${GH_AUTH[@]}" \
-    "${GH_API}/repos/${org}/${repo}/contents/${path}" \
-    | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('sha',''))" 2>/dev/null
-}
-
-gh_delete_file() {
-  local org="$1" repo="$2" path="$3" sha="$4"
-  local body
-  body=$(python3 -c "
-import json,sys
-print(json.dumps({'message': sys.argv[1], 'sha': sys.argv[2]}))" \
-    "$COMMIT_MSG" "$sha")
-  local status
-  status=$(curl --disable --silent -o /dev/null -w "%{http_code}" \
-    -X DELETE "${GH_AUTH[@]}" -H "Content-Type: application/json" \
-    --data "$body" \
-    "${GH_API}/repos/${org}/${repo}/contents/${path}")
-  echo "$status"
-}
+# ── GitHub cleanup ────────────────────────────────────────────────────────────
+# One tree fetch per repo, then delete only present pollution files.
 
 gh_cleanup_repo() {
   local org="$1" repo="$2"
   local deleted=0 skipped=0 failed=0
 
-  echo "  ${org}/${repo}"
-  for path in "${ALL_POLLUTION_PATHS[@]}"; do
+  # Single API call: full recursive tree with blob SHAs
+  local tree_json
+  tree_json=$(curl --disable --silent "${GH_AUTH[@]}" \
+    "${GH_API}/repos/${org}/${repo}/git/trees/HEAD?recursive=1" 2>/dev/null)
+
+  local msg
+  msg=$(echo "$tree_json" | python3 -c \
+    "import sys,json; d=json.load(sys.stdin); print(d.get('message',''))" 2>/dev/null)
+  if [[ -n "$msg" ]]; then
+    echo "  SKIP ${org}/${repo}: ${msg}" >&2
+    return
+  fi
+
+  # Intersect tree with pollution list — emit path<TAB>sha for matches
+  local present
+  present=$(echo "$tree_json" | python3 -c "
+import sys, json
+tree = json.load(sys.stdin).get('tree', [])
+by_path = {item['path']: item['sha'] for item in tree if item['type'] == 'blob'}
+pollution = set($(printf '"%s"\n' "${ALL_POLLUTION_PATHS[@]}" | \
+  python3 -c "import sys; lines=[l.strip().strip('\"') for l in sys.stdin if l.strip()]; print('[' + ','.join(repr(l) for l in lines) + ']')"))
+for p in sorted(pollution):
+    if p in by_path:
+        print(p + '\t' + by_path[p])
+" 2>/dev/null)
+
+  [[ -z "$present" ]] && return
+
+  local hit_count
+  hit_count=$(echo "$present" | wc -l | tr -d ' ')
+  echo "  ${org}/${repo} (${hit_count} files to remove)"
+
+  while IFS=$'\t' read -r path sha; do
+    [[ -z "$path" ]] && continue
+
     if should_keep "$repo" "$path"; then
       echo "    KEEP (pre-template): ${path}"
       (( skipped++ )) || true
-      continue
-    fi
-
-    local sha
-    sha=$(gh_get_file_sha "$org" "$repo" "$path")
-    if [[ -z "$sha" ]]; then
-      # File doesn't exist — nothing to do
       continue
     fi
 
@@ -147,18 +151,26 @@ gh_cleanup_repo() {
       continue
     fi
 
-    local status
-    status=$(gh_delete_file "$org" "$repo" "$path" "$sha")
+    local body status
+    body=$(python3 -c "import json,sys
+print(json.dumps({'message':sys.argv[1],'sha':sys.argv[2]}))" \
+      "$COMMIT_MSG" "$sha")
+    status=$(curl --disable --silent -o /dev/null -w "%{http_code}" \
+      -X DELETE "${GH_AUTH[@]}" -H "Content-Type: application/json" \
+      --data "$body" \
+      "${GH_API}/repos/${org}/${repo}/contents/${path}")
+
     if [[ "$status" == "200" ]]; then
       echo "    deleted: ${path}"
       (( deleted++ )) || true
+    elif [[ "$status" == "404" ]]; then
+      echo "    already gone: ${path}"
     else
       echo "    FAILED (HTTP ${status}): ${path}" >&2
       (( failed++ )) || true
     fi
-    # Avoid secondary rate limit
-    sleep 0.3
-  done
+    sleep 0.15
+  done <<< "$present"
 
   [[ $deleted -gt 0 || $skipped -gt 0 || $failed -gt 0 ]] && \
     echo "    → deleted=${deleted} kept=${skipped} failed=${failed}"
@@ -167,48 +179,41 @@ gh_cleanup_repo() {
   failed_total=$(( failed_total + failed ))
 }
 
-# ── GitLab helpers ────────────────────────────────────────────────────────────
-
-gl_get_file_sha() {
-  local project_id="$1" path="$2"
-  local encoded_path
-  encoded_path=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1],safe=''))" "$path")
-  curl --disable --silent "${GL_AUTH[@]}" \
-    "${GL_API}/projects/${project_id}/repository/files/${encoded_path}?ref=main" \
-    | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('blob_id',''))" 2>/dev/null
-}
-
-gl_delete_file() {
-  local project_id="$1" path="$2"
-  local encoded_path
-  encoded_path=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1],safe=''))" "$path")
-  local body
-  body=$(python3 -c "
-import json,sys
-print(json.dumps({'branch':'main','commit_message':sys.argv[1]}))" "$COMMIT_MSG")
-  local status
-  status=$(curl --disable --silent -o /dev/null -w "%{http_code}" \
-    -X DELETE "${GL_AUTH[@]}" -H "Content-Type: application/json" \
-    --data "$body" \
-    "${GL_API}/projects/${project_id}/repository/files/${encoded_path}")
-  echo "$status"
-}
+# ── GitLab cleanup ────────────────────────────────────────────────────────────
 
 gl_cleanup_repo() {
   local project_id="$1" repo_name="$2"
   local deleted=0 skipped=0 failed=0
 
-  echo "  gitlab: ${repo_name} (id=${project_id})"
-  for path in "${ALL_POLLUTION_PATHS[@]}"; do
+  local tree_json
+  tree_json=$(curl --disable --silent "${GL_AUTH[@]}" \
+    "${GL_API}/projects/${project_id}/repository/tree?recursive=true&per_page=100&ref=main" 2>/dev/null)
+
+  local present
+  present=$(echo "$tree_json" | python3 -c "
+import sys, json
+tree = json.load(sys.stdin)
+if not isinstance(tree, list): sys.exit(0)
+paths = {item['path'] for item in tree if item['type'] == 'blob'}
+pollution = set($(printf '"%s"\n' "${ALL_POLLUTION_PATHS[@]}" | \
+  python3 -c "import sys; lines=[l.strip().strip('\"') for l in sys.stdin if l.strip()]; print('[' + ','.join(repr(l) for l in lines) + ']')"))
+for p in sorted(pollution):
+    if p in paths:
+        print(p)
+" 2>/dev/null)
+
+  [[ -z "$present" ]] && return
+
+  local hit_count
+  hit_count=$(echo "$present" | wc -l | tr -d ' ')
+  echo "  gitlab: ${repo_name} (${hit_count} files to remove)"
+
+  while IFS= read -r path; do
+    [[ -z "$path" ]] && continue
+
     if should_keep "$repo_name" "$path"; then
       echo "    KEEP (pre-template): ${path}"
       (( skipped++ )) || true
-      continue
-    fi
-
-    local sha
-    sha=$(gl_get_file_sha "$project_id" "$path")
-    if [[ -z "$sha" ]]; then
       continue
     fi
 
@@ -218,17 +223,27 @@ gl_cleanup_repo() {
       continue
     fi
 
-    local status
-    status=$(gl_delete_file "$project_id" "$path")
+    local encoded body status
+    encoded=$(python3 -c \
+      "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1],safe=''))" "$path")
+    body=$(python3 -c "import json,sys
+print(json.dumps({'branch':'main','commit_message':sys.argv[1]}))" "$COMMIT_MSG")
+    status=$(curl --disable --silent -o /dev/null -w "%{http_code}" \
+      -X DELETE "${GL_AUTH[@]}" -H "Content-Type: application/json" \
+      --data "$body" \
+      "${GL_API}/projects/${project_id}/repository/files/${encoded}")
+
     if [[ "$status" == "204" ]]; then
       echo "    deleted: ${path}"
       (( deleted++ )) || true
+    elif [[ "$status" == "404" ]]; then
+      echo "    already gone: ${path}"
     else
       echo "    FAILED (HTTP ${status}): ${path}" >&2
       (( failed++ )) || true
     fi
-    sleep 0.3
-  done
+    sleep 0.15
+  done <<< "$present"
 
   [[ $deleted -gt 0 || $skipped -gt 0 || $failed -gt 0 ]] && \
     echo "    → deleted=${deleted} kept=${skipped} failed=${failed}"
@@ -239,7 +254,6 @@ gl_cleanup_repo() {
 
 # ── Repo lists ────────────────────────────────────────────────────────────────
 
-# GitHub: all consumer repos (script checks existence before attempting deletes)
 GH_CONSUMERS=(
   "btrfs-dwarfs-framework" "eggs-ai" "eggs-gui" "immutable-linux-framework"
   "kport" "liquorix-unified-kernel" "liqxanmod" "lkf" "lkm" "oa-tools"
@@ -255,8 +269,6 @@ GH_CONSUMERS=(
   "niko-claude-skills" "actions-orchestrator" "build-server"
 )
 
-# GitLab: project IDs from config/gitlab-subgroups.yml
-# (fork-sync-all itself is in the ops subgroup, id 130734009)
 GL_REPOS=(
   "130734009:fork-sync-all"
   "130516820:gitlab-enhanced"
@@ -296,7 +308,8 @@ GL_REPOS=(
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-[[ "$DRY_RUN" == "true" ]] && echo "DRY RUN — no files will be deleted" || echo "LIVE RUN — deleting files"
+[[ "$DRY_RUN" == "true" ]] && echo "DRY RUN — no files will be deleted" \
+  || echo "LIVE RUN — deleting files"
 echo ""
 
 echo "=== Interested-Deving-1896 ==="
@@ -307,38 +320,31 @@ done
 echo ""
 echo "=== OpenOS-Project-OSP ==="
 for repo in "${GH_CONSUMERS[@]}"; do
-  # Check existence first
-  status=$(curl --disable --silent -o /dev/null -w "%{http_code}" \
-    "${GH_AUTH[@]}" "${GH_API}/repos/OpenOS-Project-OSP/${repo}")
-  [[ "$status" != "200" ]] && continue
   gh_cleanup_repo "OpenOS-Project-OSP" "$repo"
 done
 
 echo ""
 echo "=== OpenOS-Project-Ecosystem-OOC ==="
 for repo in "${GH_CONSUMERS[@]}"; do
-  status=$(curl --disable --silent -o /dev/null -w "%{http_code}" \
-    "${GH_AUTH[@]}" "${GH_API}/repos/OpenOS-Project-Ecosystem-OOC/${repo}")
-  [[ "$status" != "200" ]] && continue
   gh_cleanup_repo "OpenOS-Project-Ecosystem-OOC" "$repo"
 done
 
 echo ""
 echo "=== GitLab (openos-project) ==="
 for entry in "${GL_REPOS[@]}"; do
-  project_id="${entry%%:*}"
+  subgroup_id="${entry%%:*}"
   repo_name="${entry##*:}"
-  # Resolve actual numeric project ID by searching under the subgroup
   actual_id=$(curl --disable --silent "${GL_AUTH[@]}" \
-    "${GL_API}/groups/${project_id}/projects?search=${repo_name}&per_page=5" \
+    "${GL_API}/groups/${subgroup_id}/projects?search=${repo_name}&per_page=5" \
     | python3 -c "
 import sys,json
 d=json.load(sys.stdin)
-matches=[p for p in d if p.get('path','').lower()=='${repo_name}'.lower() or p.get('name','').lower()=='${repo_name}'.lower()]
+if not isinstance(d,list): sys.exit(0)
+matches=[p for p in d if p.get('path','').lower()=='${repo_name}'.lower()]
 print(matches[0]['id'] if matches else '')
 " 2>/dev/null)
   if [[ -z "$actual_id" ]]; then
-    echo "  gitlab: ${repo_name} — not found in subgroup ${project_id}"
+    echo "  gitlab: ${repo_name} — not found in subgroup ${subgroup_id}"
     continue
   fi
   gl_cleanup_repo "$actual_id" "$repo_name"
