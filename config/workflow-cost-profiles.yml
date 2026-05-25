@@ -22,25 +22,6 @@
 
 profiles:
 
-  # ── propagate-hw-detect ────────────────────────────────────────────────────
-  # hw_detect pass:  2 calls/file × 10 files × N repos  = 20N
-  # dwarfs_pack pass: 2 calls/file × 2 files × N repos  = 4N
-  # neon_build pass: 2 calls/file × 5 files × N repos   = 10N
-  # Workflow trigger: 1
-  # Total per full run (all passes, ~12 repos): ~420 REST calls
-  propagate-hw-detect:
-    rest_calls: 420
-    graphql_calls: 0
-    gitlab_calls: 0
-    ai_calls: 0
-    scales_with: repos
-    scale_factor: 34        # (20 + 4 + 10) calls per repo
-    minimum_rest_budget: 500
-    notes: >
-      2 REST calls per file per repo (SHA lookup + PUT).
-      hw_detect=10 files, dwarfs_pack=2 files, neon_build=5 files.
-      Scale factor is sum across all three passes per repo.
-
   # ── import-repo ───────────────────────────────────────────────────────────
   # Repo creation: 1, push branches: ~3, OSP mirror: ~5, OOC mirror: ~5
   # registered-imports.json update: 2 (SHA + PUT)
@@ -118,45 +99,6 @@ profiles:
     notes: >
       Scales with number of repos being mirrored and number of release
       assets per repo.
-
-  # ── dwarfs-pack-release ───────────────────────────────────────────────────
-  # Asset upload: 2 (zip + sha256), release lookup: 1, optional prune: N
-  # Total: ~5 REST calls
-  dwarfs-pack-release:
-    rest_calls: 5
-    graphql_calls: 0
-    gitlab_calls: 0
-    ai_calls: 0
-    scales_with: assets
-    scale_factor: 1         # 1 extra call per pruned asset
-    minimum_rest_budget: 20
-    notes: >
-      Low cost. Main expense is the mkdwarfs build time, not API calls.
-
-  # ── hw-detect-ci ──────────────────────────────────────────────────────────
-  # Pure CI — no external API calls beyond the workflow trigger itself
-  hw-detect-ci:
-    rest_calls: 1
-    graphql_calls: 0
-    gitlab_calls: 0
-    ai_calls: 0
-    scales_with: null
-    scale_factor: 0
-    minimum_rest_budget: 5
-    notes: >
-      No external API calls during execution. Cost is just the trigger.
-
-  # ── neon-build-ci ─────────────────────────────────────────────────────────
-  neon-build-ci:
-    rest_calls: 1
-    graphql_calls: 0
-    gitlab_calls: 0
-    ai_calls: 0
-    scales_with: null
-    scale_factor: 0
-    minimum_rest_budget: 5
-    notes: >
-      No external API calls during execution. Cost is just the trigger.
 
   # ── rate-limit-aware-dispatch (this system) ───────────────────────────────
   # Budget check: 2 REST (rate_limit + graphql probe), dispatch: 1
@@ -270,22 +212,6 @@ profiles:
       Hourly at :05. Syncs only forks whose upstream is pieroproietti.
       Cheaper than sync-forks; smaller repo set.
 
-  # ── cleanup-template-pollution ────────────────────────────────────────────
-  # Per repo: list files via Git Trees API (1) + per polluted file: GET SHA (1)
-  # + DELETE (1). Batch size default 50 files/repo.
-  # Typical run (20 consumer repos × 5 files): ~220 REST calls
-  cleanup-template-pollution:
-    rest_calls: 220
-    graphql_calls: 0
-    gitlab_calls: 0
-    ai_calls: 0
-    scales_with: repos
-    scale_factor: 11        # tree fetch + ~5 files × 2 calls per repo
-    minimum_rest_budget: 400
-    notes: >
-      Manual dispatch only. Uses Git Trees API for O(1) tree fetch per repo,
-      then DELETE per polluted file. Checkpoint prevents re-processing clean repos.
-
   # ── mirror-orgs-full ──────────────────────────────────────────────────────
   # List source repos: ~2 calls (paginated). Per repo: check/create in OSP (2)
   # + check/create in OOC (2) + git push --mirror (0 REST) = ~4 calls/repo
@@ -337,9 +263,6 @@ profiles:
 # When REST budget is low, some operations can be routed to GraphQL instead.
 # List operations that have a GraphQL equivalent.
 
-  actual_observations:
-    - run_id: 26352236145  timestamp: 2026-05-24T10:33:33Z  actual_cost: 0  scale: 80  cost_per_unit: 0.0
-    - run_id: 26367398037  timestamp: 2026-05-25T06:36:50Z  actual_cost: 0  scale: 15  cost_per_unit: 0.0
 graphql_alternatives:
   - operation: check_run_status      # REST: GET /actions/runs/{id}
     graphql_query: repository.object.checkSuites
