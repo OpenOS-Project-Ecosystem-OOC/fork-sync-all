@@ -12,20 +12,8 @@
     "added": "2026-05-25T18:45:00Z"
   },
   {
-    "source_url": "https://github.com/work1918381/GitHub-Action-CICD-PipeLine",
-    "target_name": "GitHub-Action-CICD-PipeLine",
-    "platform": "github",
-    "added": "2026-05-25T18:45:00Z"
-  },
-  {
     "source_url": "https://github.com/nikotsy/niko-claude-skills",
     "target_name": "niko-claude-skills",
-    "platform": "github",
-    "added": "2026-05-25T18:45:00Z"
-  },
-  {
-    "source_url": "https://github.com/lexbritvin/smb-share-action",
-    "target_name": "smb-share-action",
     "platform": "github",
     "added": "2026-05-25T18:45:00Z"
   },
@@ -36,20 +24,8 @@
     "added": "2026-05-25T18:45:00Z"
   },
   {
-    "source_url": "https://github.com/Amitabh7xc/Github-Actions-CI-CD-Project",
-    "target_name": "Github-Actions-CI-CD-Project",
-    "platform": "github",
-    "added": "2026-05-25T18:45:00Z"
-  },
-  {
     "source_url": "https://github.com/jakwuh/build-server",
     "target_name": "build-server",
-    "platform": "github",
-    "added": "2026-05-25T18:45:00Z"
-  },
-  {
-    "source_url": "https://github.com/stellhub/github-api-mini-tool",
-    "target_name": "github-api-mini-tool",
     "platform": "github",
     "added": "2026-05-25T18:45:00Z"
   }
