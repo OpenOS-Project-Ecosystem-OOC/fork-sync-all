@@ -78,29 +78,83 @@ file_exists_in_target() {
   [[ "$status" == "200" ]]
 }
 
-# Sanitise a workflow file:
-#   - Replace hardcoded org/owner names with generic placeholders.
-#   - Remove or genericise cron schedules (comment them out).
-#   - Strip inline secret values (keep secret references as-is).
-#   - Replace hardcoded repo names in env vars with placeholder comments.
+# Sanitise a workflow file so it is suitable as a generic template skeleton.
+#
+# Replacements applied (in order):
+#   1. Source repo name → ${REPO_NAME}
+#   2. All three known org names → ${GITHUB_OWNER} / ${OSP_ORG} / ${OOC_ORG}
+#   3. GitLab group path → ${GITLAB_GROUP}
+#   4. Hardcoded `repository: ORG/REPO` in checkout steps → ${GITHUB_OWNER}/REPO
+#   5. Hardcoded `default:` values containing ORG/REPO strings → placeholder
+#   6. `github.repository_owner == 'ORG'` guard expressions → ${GITHUB_OWNER}
+#   7. workflow_run trigger names → replaced with a TODO comment
+#   8. Cron schedules → annotated with TODO
+#   9. Static run-name lines containing project names → removed
+#  10. Step names referencing specific repo names → genericised
 sanitise_workflow() {
   local content="$1"
   local source_repo="$2"
 
-  # Strip the source repo name
-  content="${content//${source_repo}/\$\{REPO_NAME\}}"
+  # Write to a temp file so sed operates on a file, avoiding shell quoting
+  # issues with $ in replacement strings.
+  local tmp
+  tmp=$(mktemp)
+  printf '%s\n' "$content" > "$tmp"
 
-  # Strip the source owner
-  content="${content//${SOURCE_OWNER}/\$\{GITHUB_OWNER\}}"
+  # 1. Source repo name (do first so later passes don't double-substitute)
+  sed -i "s/${source_repo}/\${REPO_NAME}/g" "$tmp"
 
-  # Comment out cron schedules — they are project-specific timing decisions
-  content=$(echo "$content" | sed 's/^\( *- cron: .*\)$/\1  # TODO: set schedule for your project/')
+  # 2. Org names — longest/most-specific first to avoid partial matches
+  sed -i 's/OpenOS-Project-Ecosystem-OOC/${OOC_ORG}/g' "$tmp"
+  sed -i 's/OpenOS-Project-OSP/${OSP_ORG}/g'            "$tmp"
+  sed -i 's/OpenOS-Project/${OSP_ORG}/g'                "$tmp"
+  sed -i "s/${SOURCE_OWNER}/\${GITHUB_OWNER}/g"         "$tmp"
 
-  # Remove run-name lines that embed project-specific interpolations
-  # (keep generic run-name lines)
-  content=$(echo "$content" | sed '/^run-name:.*\${{.*inputs\./d')
+  # 3. GitLab group path
+  sed -i 's/openos-project/${GITLAB_GROUP}/g' "$tmp"
 
-  echo "$content"
+  # 4. `repository: ORG/repo` in checkout steps — catch any remaining
+  #    owner/repo pairs that survived step 2 (e.g. other hardcoded owners)
+  sed -i -E 's|(repository:[[:space:]]+)[^/$][^/]*/([^[:space:]]+)|\1${GITHUB_OWNER}/\2|g' "$tmp"
+
+  # 5. `default:` values that still contain a bare ORG/repo token
+  #    (catches things like: default: "SomeOrg/some-repo")
+  sed -i -E "s|(default:[[:space:]]+['\"]?)[A-Z][A-Za-z0-9_-]+/([A-Za-z0-9_-]+)(['\"]?)|\1\${GITHUB_OWNER}/\2\3  # TODO: set owner|g" "$tmp"
+
+  # 6. `github.repository_owner == 'ORG'` guard expressions
+  sed -i -E "s|github\.repository_owner == '[^']*'|github.repository_owner == '\${GITHUB_OWNER}'|g" "$tmp"
+
+  # 7. workflow_run trigger names — project-specific; replace the entire list
+  #    with a TODO placeholder so the reviewer fills it in
+  awk '
+    /^  workflow_run:/ { in_wr=1 }
+    in_wr && /^    workflows:/ {
+      print
+      print "      # TODO: list the workflow names that should trigger this"
+      in_wf_list=1; next
+    }
+    in_wr && in_wf_list && /^      - / { next }
+    in_wr && in_wf_list && !/^      - / { in_wf_list=0 }
+    { print }
+  ' "$tmp" > "${tmp}.awk" && mv "${tmp}.awk" "$tmp"
+
+  # 8. Cron schedules — annotate rather than remove so the reviewer sees them
+  sed -i -E 's/^([[:space:]]*- cron: .*)$/\1  # TODO: set schedule for your project/' "$tmp"
+
+  # 9. Static run-name lines containing project-specific arrow notation or
+  #    known project keywords (dynamic inputs.* run-names are kept)
+  grep -v -E '^run-name:.*→|^run-name:.*(penguins|lts|btrfs|eggs)' "$tmp" > "${tmp}.grep" \
+    && mv "${tmp}.grep" "$tmp"
+
+  # 10. Step names that reference specific repo names — genericise.
+  #     Uses / delimiter (not |) to avoid ERE treating | as alternation in
+  #     the replacement string, and a two-pass approach to avoid ${} in the
+  #     sed replacement (which triggers "unknown option" in GNU sed ERE mode).
+  sed -i -E 's/(- name: .*(Checkout|Sync|Push|Pull|Clone) )[A-Za-z][A-Za-z0-9_-]*/\1REPO_NAME_PLACEHOLDER/g' "$tmp"
+  sed -i 's/REPO_NAME_PLACEHOLDER/${REPO_NAME}/g' "$tmp"
+
+  cat "$tmp"
+  rm -f "$tmp"
 }
 
 # Create a branch in TARGET_REPO pointing at the given SHA.
