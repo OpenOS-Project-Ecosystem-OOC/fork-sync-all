@@ -23,7 +23,16 @@
 # overrides (enforced in sync-template.sh EXCLUDED_PATHS):
 #   README.md, registered-imports.json, dep-graph/, .git/, .ona/
 #   __pycache__/, *.pyc, *.pyo, node_modules/, .pytest_cache/
-#   DOCS/  (fork-sync-all operational docs — not relevant to consumers)
+#   DOCS/                    fork-sync-all operational docs — not relevant to consumers
+#   lkm/                     lkm Python package — belongs in its own repo only
+#   .clang-format            C/kernel style config — wrong for shell/Python/YAML repos
+#   .devcontainer/Dockerfile btrfs-dwarfs-framework-specific build environment
+#   .github/workflows/appimage.yml       lkm-specific build artifact
+#   .github/workflows/flatpak.yml        lkm-specific build artifact
+#   .github/workflows/publish.yml        lkm PyPI publish — OSPF1896/lkm only
+#   .github/workflows/build-arm64.yml    xanmod-unified-kernel-specific
+#   .github/workflows/bootstrap-triggers.yml  one-shot self-destruct, never re-propagate
+#   .github/workflows/ci.yml             project-specific C/cmake/kernel CI
 #
 # Note: .ona/ contains workspace-specific Ona agent data (review comments,
 # skills). Skills in .ona/skills/ are intentionally not propagated — each

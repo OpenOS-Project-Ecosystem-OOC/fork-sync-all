@@ -191,6 +191,31 @@ consumers:
     profile: mirror
     skip_osp_setup: true
 
+  # ── Registered imports ──────────────────────────────────────────────────────
+  # These repos are imported from external upstreams and tracked here.
+  # They are self-contained projects with their own CI — they only receive
+  # minimal hygiene tooling (PR automation + token rotation). No mirror
+  # workflows, no OSP/OOC setup, no project-specific build artifacts.
+  - name: matrix-lock
+    profile: standalone
+    skip_osp_setup: true
+
+  - name: github-actions-virtualization-support
+    profile: standalone
+    skip_osp_setup: true
+
+  - name: niko-claude-skills
+    profile: standalone
+    skip_osp_setup: true
+
+  - name: actions-orchestrator
+    profile: standalone
+    skip_osp_setup: true
+
+  - name: build-server
+    profile: standalone
+    skip_osp_setup: true
+
 # Example entries (uncomment and edit to activate):
 #
 # consumers:

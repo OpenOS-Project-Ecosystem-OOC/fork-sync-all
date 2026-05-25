@@ -118,6 +118,27 @@ EXCLUDED_PATHS=(
   ".pytest_cache"
   # Never propagate fork-sync-all operational docs to consumers
   "DOCS"
+  # Never propagate project-specific source trees — these belong to their own
+  # repos and must not be injected into unrelated consumers via the template.
+  "lkm"
+  # Never propagate project-specific build/packaging workflows that are only
+  # meaningful in the repo they were written for. Consumers that genuinely need
+  # these should define them locally rather than inheriting them from the template.
+  ".github/workflows/appimage.yml"
+  ".github/workflows/flatpak.yml"
+  ".github/workflows/publish.yml"
+  ".github/workflows/build-arm64.yml"
+  ".github/workflows/bootstrap-triggers.yml"
+  # Never propagate project-specific C/cmake/kernel CI — consumers have their
+  # own ci.yml or ci.yaml that reflects their actual build system.
+  ".github/workflows/ci.yml"
+  # Never propagate project-specific code style configs — these are tuned for
+  # C/kernel code and are wrong for shell/Python/YAML repos.
+  ".clang-format"
+  # .dockerignore and .editorconfig are safe to propagate but only if the
+  # consumer doesn't already have one. Handled via force:false default.
+  # .devcontainer/Dockerfile is btrfs-dwarfs-framework-specific — exclude globally.
+  ".devcontainer/Dockerfile"
 )
 
 is_excluded_path() {
