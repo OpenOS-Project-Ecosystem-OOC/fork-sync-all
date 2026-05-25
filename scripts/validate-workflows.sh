@@ -90,6 +90,7 @@ ALLOWED_WORKFLOWS=(
   "sync-eggs-docs-to-book.yml"  # skeleton: sync docs/ from one repo to another
   "upstream-commits.yml"        # push direct commits from mirrors back upstream
   "upstream-prs.yml"            # open upstream PRs for mirror commits
+  "upstream-workflow-proposal.yml" # weekly: propose new OSP-bound workflows as template skeletons
 
   # ── Utility / one-shot ────────────────────────────────────────────────────
   "generate-dep-graph.yml"      # weekly: generate dependency graph

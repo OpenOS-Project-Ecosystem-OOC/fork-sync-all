@@ -50,25 +50,25 @@ fi
 # overridden with the matching list. "all" leaves REPOS empty so get_all_repos
 # is used. "custom" passes REPOS through unchanged.
 
-OSP_BOUND="btrfs-dwarfs-framework eggs-ai eggs-gui immutable-linux-framework
-  liquorix-unified-kernel liqxanmod lkf lkm oa-tools penguins-eggs
-  penguins-eggs-audit penguins-eggs-book penguins-incus-platform
-  penguins-kernel-manager penguins-powerwash penguins-recovery ukm
-  xanmod-unified-kernel"
-
-PENGUINS_SCOPE="penguins-eggs penguins-eggs-audit penguins-eggs-book
-  penguins-eggs-ai penguins-incus-platform penguins-kernel-manager
-  penguins-powerwash penguins-recovery"
-
-KERNEL_SCOPE="lkf lkm ukm xanmod-unified-kernel liquorix-unified-kernel liqxanmod"
+# OSP-bound repo list derived from config/gitlab-subgroups.yml — single
+# source of truth. No hardcoded project names here.
+OSP_BOUND=$(python3 -c "
+import yaml, sys
+try:
+    data = yaml.safe_load(open('config/gitlab-subgroups.yml'))
+    repos = []
+    for sg in data.get('subgroups', {}).values():
+        repos.extend(sg.get('repos', []))
+    print(' '.join(sorted(set(repos))))
+except Exception as e:
+    sys.exit(0)
+" 2>/dev/null || echo "")
 
 case "$SCOPE" in
   osp-bound) REPOS="$OSP_BOUND" ;;
-  penguins)  REPOS="$PENGUINS_SCOPE" ;;
-  kernel)    REPOS="$KERNEL_SCOPE" ;;
   all)       REPOS="" ;;   # empty → get_all_repos() enumerates the org
   custom)    ;;            # REPOS passed through as-is from workflow input
-  *)         warn "Unknown scope '${SCOPE}' — falling back to custom"; ;;
+  *)         warn "Unknown scope '${SCOPE}' — falling back to osp-bound"; REPOS="$OSP_BOUND" ;;
 esac
 
 GH_API="https://api.github.com"
