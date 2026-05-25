@@ -1,11 +1,25 @@
-name: Rebuild LTS Branch (penguins-eggs)
+name: Rebuild LTS Branch
+
+# Skeleton workflow: rebases a long-lived feature branch onto the upstream
+# default branch and force-pushes the result to an LTS branch.
+#
+# Plug-and-play: set the env vars below (or override via workflow_dispatch
+# inputs) for your project. No other changes needed.
+#
+# Typical use case:
+#   - You maintain a fork with a persistent "all-features" branch
+#   - You want an "lts" branch that is always rebased onto upstream master
+#   - This runs automatically after your upstream sync workflow completes
+#
+# Trigger: runs after the workflow named in UPSTREAM_SYNC_WORKFLOW succeeds,
+# or manually via workflow_dispatch.
 
 on:
-  # Run after the pieroproietti sync so master is already up to date
   workflow_run:
-    workflows: ["Sync pieroproietti Forks"]
+    workflows:
+      # TODO: set to the name of your upstream sync workflow
+      - "Sync pieroproietti Forks"
     types: [completed]
-  # Also allow manual trigger
   workflow_dispatch:
     inputs:
       base_branch:
@@ -28,18 +42,30 @@ jobs:
   rebase-lts:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    # Only run if the triggering sync workflow succeeded (ignored for workflow_dispatch)
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout fork-sync-all
         uses: actions/checkout@v6
 
-      - name: Rebuild lts on Interested-Deving-1896/penguins-eggs
+      - name: Rebuild LTS branch
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
-          TARGET_REPO: Interested-Deving-1896/penguins-eggs
-          BASE_BRANCH: ${{ inputs.base_branch || 'master' }}
+          # TODO: set to owner/repo of the target repository
+          TARGET_REPO: ""
+          BASE_BRANCH:    ${{ inputs.base_branch    || 'master' }}
           FEATURE_BRANCH: ${{ inputs.feature_branch || 'all-features' }}
-          LTS_BRANCH: ${{ inputs.lts_branch || 'lts' }}
-        run: bash scripts/rebase-lts.sh
+          LTS_BRANCH:     ${{ inputs.lts_branch     || 'lts' }}
+        run: |
+          if [[ -z "$TARGET_REPO" ]]; then
+            echo "TARGET_REPO is not set — skipping. Set it in the workflow env."
+            exit 0
+          fi
+          bash scripts/rebase-lts.sh
+
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh
