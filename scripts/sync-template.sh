@@ -847,11 +847,21 @@ PYEOF
     [[ -n "$c_excludes" ]] && info "  exclude_paths: ${c_excludes}"
     [[ -n "$c_includes" ]] && info "  include_paths: ${c_includes}"
 
-    # Verify repo exists
-    local meta
-    meta=$(gh_get "${API}/repos/${GITHUB_OWNER}/${c_name}" 2>/dev/null) || true
+    # Verify repo exists — distinguish genuine 404 from rate-limit 403/429
+    local meta meta_http
+    meta=$(curl -sf -w "\n%{http_code}" \
+      -H "Authorization: token ${GH_TOKEN}" \
+      -H "Accept: application/vnd.github+json" \
+      "${API}/repos/${GITHUB_OWNER}/${c_name}" 2>/dev/null) || true
+    meta_http=$(echo "$meta" | tail -1)
+    meta=$(echo "$meta" | sed '$d')
+    if [[ "$meta_http" == "403" || "$meta_http" == "429" ]]; then
+      warn "  Rate limit hit verifying ${c_name} — skipping (not counted as failure)."
+      echo ""
+      continue
+    fi
     if [[ -z "$meta" || "$(echo "$meta" | jq -r '.name // empty' 2>/dev/null)" != "$c_name" ]]; then
-      warn "  Repo ${GITHUB_OWNER}/${c_name} not found — skipping."
+      warn "  Repo ${GITHUB_OWNER}/${c_name} not found (HTTP ${meta_http:-?}) — skipping."
       (( failed++ )) || true
       echo ""
       continue
