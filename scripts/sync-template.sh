@@ -275,6 +275,9 @@ commit_file() {
       info "    created ${path}"
     fi
     return 0
+  elif [[ "$http_code" == "403" || "$http_code" == "429" ]]; then
+    warn "    rate-limit on ${path} (HTTP ${http_code}) — skipping file (not counted as failure)"
+    return 0
   else
     warn "    FAILED ${path} (HTTP ${http_code})"
     return 1
