@@ -86,7 +86,7 @@ consumers:
   - name: immutable-linux-framework
     profile: mirror
 
-  - name: kport
+  - name: KPort
     profile: mirror
 
   - name: liquorix-unified-kernel

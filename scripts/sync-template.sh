@@ -863,8 +863,10 @@ PYEOF
       echo ""
       continue
     fi
-    if [[ -z "$meta" || "$(echo "$meta" | jq -r '.name // empty' 2>/dev/null)" != "$c_name" ]]; then
-      warn "  Repo ${GITHUB_OWNER}/${c_name} not found (HTTP ${meta_http:-?}) — skipping."
+    local meta_name
+    meta_name=$(echo "$meta" | jq -r '.name // empty' 2>/dev/null)
+    if [[ -z "$meta" || "${meta_name,,}" != "${c_name,,}" ]]; then
+      warn "  Repo ${GITHUB_OWNER}/${c_name} not found (HTTP ${meta_http:-?}, got name='${meta_name}') — skipping."
       (( failed++ )) || true
       echo ""
       continue
