@@ -54,13 +54,13 @@ jobs:
       - name: Derive OSP-bound repo list from config
         run: |
           repos=$(python3 -c "
-import yaml
-data = yaml.safe_load(open('config/gitlab-subgroups.yml'))
-repos = []
-for sg in data.get('subgroups', {}).values():
-    repos.extend(sg.get('repos', []))
-print(' '.join(sorted(set(repos))))
-" 2>/dev/null || echo "")
+          import yaml
+          data = yaml.safe_load(open('config/gitlab-subgroups.yml'))
+          repos = []
+          for sg in data.get('subgroups', {}).values():
+              repos.extend(sg.get('repos', []))
+          print(' '.join(sorted(set(repos))))
+          " 2>/dev/null || echo "")
           echo "OSP_REPOS_FROM_CONFIG=${repos}" >> "$GITHUB_ENV"
 
       - name: Scan and resolve failures
