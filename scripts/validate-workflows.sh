@@ -86,7 +86,7 @@ ALLOWED_WORKFLOWS=(
 
   # ── Specialised sync workflows (plug-and-play skeletons) ─────────────────
   "rebase-lts.yml"              # skeleton: rebase a feature branch onto upstream default
-  "sync-btrfs-devel-branches.yml" # skeleton: sync branches from one repo to another
+  "sync-btrfs-devel-branches.yml" # skeleton: sync branches between repos
   "sync-eggs-docs-to-book.yml"  # skeleton: sync docs/ from one repo to another
   "upstream-commits.yml"        # push direct commits from mirrors back upstream
   "upstream-prs.yml"            # open upstream PRs for mirror commits
@@ -99,7 +99,6 @@ ALLOWED_WORKFLOWS=(
   "list-chromium-repos.yml"     # manual: list Chromium GitLab repos
   "shallow-reclone-chromium.yml"        # manual: shallow-reclone large GitLab mirrors to reclaim storage
   "merge-to-monorepo.yml"       # manual: merge repos into a monorepo
-  "sync-btrfs-devel-branches.yml" # skeleton: sync branches between repos
 )
 
 # ── Check ─────────────────────────────────────────────────────────────────────

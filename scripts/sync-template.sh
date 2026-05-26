@@ -823,17 +823,17 @@ PYEOF
   info "Found ${total} enabled consumer(s)."
   echo ""
 
-  # Process each record
-  while IFS= read -r record; do
+  # Process each record (NUL-delimited so multi-line records are read whole)
+  while IFS= read -r -d $'\0' record; do
     [[ -z "$record" ]] && continue
 
     local c_name c_force c_skip_osp c_profile c_excludes c_includes
-    c_name=$(echo "$record" | sed -n '1p')
-    c_force=$(echo "$record" | sed -n '2p')
-    c_skip_osp=$(echo "$record" | sed -n '3p')
-    c_profile=$(echo "$record" | sed -n '4p')
-    c_excludes=$(echo "$record" | sed -n '5p')
-    c_includes=$(echo "$record" | sed -n '6p')
+    c_name=$(printf '%s' "$record" | sed -n '1p')
+    c_force=$(printf '%s' "$record" | sed -n '2p')
+    c_skip_osp=$(printf '%s' "$record" | sed -n '3p')
+    c_profile=$(printf '%s' "$record" | sed -n '4p')
+    c_excludes=$(printf '%s' "$record" | sed -n '5p')
+    c_includes=$(printf '%s' "$record" | sed -n '6p')
 
     [[ -z "$c_name" ]] && continue
 
@@ -887,7 +887,7 @@ content = sys.stdin.read()
 for rec in content.split('---RECORD---\n'):
     rec = rec.strip()
     if rec:
-        print(rec)
+        sys.stdout.write(rec + '\0')
 " <<< "$consumer_records")
 
   info "========================================"
