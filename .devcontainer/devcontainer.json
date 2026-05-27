@@ -7,6 +7,9 @@
     },
     "./features/git-filter-repo": {
       "version": "2.47.0"
+    },
+    "./features/gitr": {
+      "version": "latest"
     }
   },
   "remoteEnv": {
