@@ -125,10 +125,16 @@ consumers:
   - name: penguins-recovery
     profile: mirror
 
+  - name: linux-distro-prefix
+    profile: mirror
+
   - name: linux-distro-stage3
     profile: mirror
 
   - name: linux-over-the-air
+    profile: mirror
+
+  - name: penguins-eggs-prefix
     profile: mirror
 
   - name: penguins-eggs-stage3
