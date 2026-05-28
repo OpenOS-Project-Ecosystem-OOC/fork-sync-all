@@ -125,6 +125,12 @@ consumers:
   - name: penguins-recovery
     profile: mirror
 
+  - name: linux-over-the-air
+    profile: mirror
+
+  - name: penguins-over-the-air
+    profile: mirror
+
   - name: ukm
     profile: mirror
 
