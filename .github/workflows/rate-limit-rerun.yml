@@ -82,6 +82,7 @@ jobs:
           # Loop guard: this variable is visible in the re-triggered run's environment
           # via the rerun API. The scanner checks for it and skips such runs.
           RATE_LIMIT_RERUN: "true"
+          BUDGET_MINUTES: "115"
         run: bash scripts/rerun-after-rate-limit.sh
 
       - name: No candidates

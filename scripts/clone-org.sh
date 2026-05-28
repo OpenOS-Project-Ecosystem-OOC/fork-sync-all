@@ -47,6 +47,11 @@ SOURCE_BASE_URL="${SOURCE_BASE_URL:-}"
 # or left as "(auto — use platform default)" / empty to use the platform default.
 # The workflow passes all secrets as _SECRET_<NAME> env vars so we can resolve
 # them here without hardcoding a single secret name.
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 _resolve_source_token() {
   local override="${SOURCE_CREDENTIAL:-}"
   # Strip the auto-select sentinel
@@ -348,6 +353,7 @@ pids=()
 results_dir=$(mktemp -d)
 
 for entry in "${repos[@]}"; do
+    budget_check "$entry" || break
   IFS='|' read -r name is_fork is_archived is_private clone_url _ssh_url <<< "$entry"
 
   if should_skip "$name" "$is_fork" "$is_archived" "$is_private"; then
@@ -403,4 +409,5 @@ rm -rf "$results_dir"
 
 echo ""
 info "Complete — cloned: ${cloned} | skipped: ${skipped} | failed: ${failed}"
+budget_report
 [[ "$failed" -eq 0 ]] || exit 1

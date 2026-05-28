@@ -38,6 +38,11 @@ GL_API="https://gitlab.com/api/v4"
 BADGE_SVG="https://ona.com/build-with-ona.svg"
 BADGE_BASE="https://app.ona.com/#"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 info()  { echo "[inject-badges] $*"; }
 warn()  { echo "[warn] $*" >&2; }
 dry()   { echo "[dry-run] $*"; }
@@ -255,6 +260,7 @@ echo "========================================"
 
 # GitHub pass
 for org in $ORGS; do
+    budget_check "${org}" || break
   info "Scanning GitHub org: ${org}..."
   mapfile -t repos < <(list_gh_repos "$org")
   info "  Found ${#repos[@]} repos."
@@ -278,4 +284,5 @@ if [[ "$SKIP_GITLAB" != "true" ]]; then
 fi
 
 echo ""
+budget_report
 info "Done."

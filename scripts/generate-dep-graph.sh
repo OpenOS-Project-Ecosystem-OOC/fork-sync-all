@@ -32,6 +32,11 @@ PUSH_TO_REPO="${PUSH_TO_REPO:-false}"
 
 GH_API="https://api.github.com"
 HEADER_FILE=$(mktemp)
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 trap 'rm -f "$HEADER_FILE"' EXIT
 
 info() { echo "[generate-dep-graph] $*"; }
@@ -189,6 +194,7 @@ total_origins=0
 declare -A seen_slugs  # for dedup in DOT/summary
 
 for repo in "${OSP_REPOS[@]}"; do
+    budget_check "${repo}" || break
   info "── ${repo}"
 
   readme=$(get_readme_text "$repo") || {
@@ -337,4 +343,5 @@ echo "  Repos with Origins : ${repos_with_origins}"
 echo "  Repos missing      : ${repos_without_origins}"
 echo "  Total origins      : ${total_origins}"
 echo "  Output dir         : ${OUTPUT_DIR}/"
+budget_report
 echo "════════════════════════════════════════════"

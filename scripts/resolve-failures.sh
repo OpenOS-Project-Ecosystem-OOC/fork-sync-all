@@ -27,6 +27,11 @@ API="https://api.github.com"
 # automated commits cause mirror cascade loops or have their own CI pipelines
 # that should only be fixed manually or via their own upstream workflow.
 EXCLUDED_REPOS=(
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
   "Interested-Deving-1896/incus-windows-toolkit"
   "OpenOS-Project-OSP/incus-windows-toolkit"
   "OpenOS-Project-Ecosystem-OOC/incus-windows-toolkit"
@@ -653,6 +658,7 @@ resolve_notifications
 echo ""
 
 for owner in $SCAN_OWNERS; do
+    budget_check "${owner}" || break
   if [[ -n "$OSP_REPOS_OVERRIDE" && "$owner" == "Interested-Deving-1896" ]]; then
     echo "Scanning ${owner} (OSP-bound repos only — override active)..."
   else
@@ -748,4 +754,5 @@ echo "  Need manual fix: ${total_unfixable}"
 echo "========================================"
 
 # Exit 0 — failures to fix are informational, not errors
+budget_report
 exit 0

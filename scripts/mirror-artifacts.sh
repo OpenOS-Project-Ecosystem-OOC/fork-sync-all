@@ -26,6 +26,11 @@ DRY_RUN="${DRY_RUN:-false}"
 REPO_FILTER="${REPO_FILTER:-}"
 FORCE="${FORCE:-false}"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 [[ "$DRY_RUN" == "true" ]] && echo "Dry run — no writes will occur."
 [[ "$FORCE"   == "true" ]] && echo "Force mode — existing releases will be re-mirrored."
 [[ -n "$REPO_FILTER"    ]] && echo "Repo filter: '${REPO_FILTER}'"
@@ -167,6 +172,7 @@ else
 fi
 
 while IFS= read -r repo; do
+    budget_check "$repo" || break
   [[ -z "$repo" ]] && continue
   is_excluded "$repo" && continue
 
@@ -194,4 +200,5 @@ done <<< "$repos"
 
 echo "========================================"
 echo "Artifact mirror complete."
+budget_report
 echo "========================================"

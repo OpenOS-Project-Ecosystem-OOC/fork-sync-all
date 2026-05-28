@@ -32,6 +32,11 @@ set -euo pipefail
 # Per-function temp files are cleaned inline within each function.
 PATCHER=""
 BUILD_PATCHER=""
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 cleanup() { rm -f "$PATCHER" "$BUILD_PATCHER"; }
 trap cleanup EXIT
 
@@ -341,6 +346,7 @@ RECONCILE_CUTOFF=$(( $(date +%s) - 4500 ))  # 75 minutes
 [[ "${FORCE_RECONCILE:-false}" == "true" ]] && RECONCILE_CUTOFF=0
 
 for REPO in $OSP_REPOS; do
+    budget_check "${REPO}" || break
   # Skip fork-sync-all itself to avoid self-modification loops
   [ "$REPO" = "fork-sync-all" ] && continue
 
@@ -860,6 +866,5 @@ for REPO in $OSP_REPOS; do
   echo ""
 done
 
+budget_report
 echo "Done."
-
-

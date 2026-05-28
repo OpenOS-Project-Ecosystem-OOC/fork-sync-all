@@ -60,6 +60,11 @@ DRY_RUN="${DRY_RUN:-false}"
 
 GH_API="https://api.github.com"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 info()  { echo "[repo-manifest] $*"; }
 warn()  { echo "[repo-manifest][warn] $*" >&2; }
 error() { echo "[repo-manifest][error] $*" >&2; exit 1; }
@@ -330,4 +335,5 @@ case "$MODE" in
   export) do_export ;;
   import) do_import ;;
   *) error "Unknown MODE: ${MODE} (expected: export|import)" ;;
+budget_report
 esac

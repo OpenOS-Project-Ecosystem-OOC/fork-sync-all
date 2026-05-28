@@ -82,6 +82,11 @@ PROFILE="${PROFILE:-full}"
 
 API="https://api.github.com"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 info()  { echo "[sync-template] $*"; }
 warn()  { echo "[warn] $*" >&2; }
 error() { echo "[error] $*" >&2; exit 1; }
@@ -659,6 +664,7 @@ run_inject() {
 
   local ok=0 failed=0
   for repo in $TARGET_REPOS; do
+    budget_check "${repo}" || break
     [[ -z "$repo" ]] && continue
 
     # Verify repo exists
@@ -925,4 +931,5 @@ elif [[ -n "$CONSUMERS_FILE" ]]; then
   run_propagate
 else
   run_inject
+budget_report
 fi

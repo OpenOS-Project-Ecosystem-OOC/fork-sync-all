@@ -54,6 +54,8 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run == false && 'false' || 'true' }}
           FORCE_DELETE: ${{ inputs.force_delete || 'false' }}
           KEEP_PATTERNS: ${{ inputs.keep_patterns || 'lts gh-pages main master' }}
+          BUDGET_MINUTES: "55"
+          OSP_REPOS_CONFIG: config/gitlab-subgroups.yml
         run: bash scripts/cleanup-branches.sh
 
       - name: Write summary

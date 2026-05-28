@@ -83,4 +83,5 @@ jobs:
           UPSTREAM_OWNER: Interested-Deving-1896
           OSP_ORG: OpenOS-Project-OSP
           OOC_ORG: OpenOS-Project-Ecosystem-OOC
+          BUDGET_MINUTES: "55"
         run: bash scripts/reconcile-org-refs.sh

@@ -110,6 +110,7 @@ jobs:
           ONGOING_SYNC: ${{ inputs.ongoing_sync }}
           DRY_RUN: ${{ inputs.dry_run }}
           GITHUB_WORKSPACE: ${{ github.workspace }}
+          BUDGET_MINUTES: "115"
         run: bash scripts/repo-manifest.sh
 
       - name: Commit manifest and registered-imports if updated

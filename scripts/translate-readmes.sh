@@ -41,6 +41,11 @@ MODEL="${MODEL:-openai/gpt-4o}"
 # (overwrites README.md in place). Activated when SOURCE_LANG=auto and
 # TARGET_LANG=en, or explicitly via NORMALIZE_TO_EN=true.
 NORMALIZE_TO_EN="${NORMALIZE_TO_EN:-false}"
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 if [[ "$SOURCE_LANG" == "auto" && "$TARGET_LANG" == "en" ]]; then
   NORMALIZE_TO_EN="true"
 fi
@@ -373,6 +378,7 @@ failed=0
 no_source=0
 
 for repo in "${repo_list[@]}"; do
+    budget_check "${repo}" || break
   [[ -z "$repo" ]] && continue
   info "── ${repo}"
 
@@ -530,4 +536,5 @@ echo "  Failed      : ${failed}"
 echo "════════════════════════════════════════════"
 
 [[ "$failed" -gt 0 ]] && exit 1
+budget_report
 exit 0

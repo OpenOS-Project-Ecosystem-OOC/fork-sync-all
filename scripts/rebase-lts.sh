@@ -31,6 +31,11 @@ LTS_BRANCH="${LTS_BRANCH:-lts}"
 API="https://api.github.com"
 REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git"
 WORK_DIR=$(mktemp -d)
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 trap 'rm -rf "$WORK_DIR"' EXIT
 
 # ── helpers ────────────────────────────────────────────────────────────────────
@@ -230,4 +235,5 @@ echo " ${FEATURE_BRANCH} tip  : ${feature_sha:0:7} (${commit_count} commits ahea
 echo " ${LTS_BRANCH} tip      : ${lts_sha:0:7}"
 echo "========================================"
 
+budget_report
 exit 0

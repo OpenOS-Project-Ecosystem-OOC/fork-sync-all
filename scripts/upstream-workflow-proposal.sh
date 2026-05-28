@@ -32,6 +32,11 @@ REPO_FILTER="${REPO_FILTER:-}"
 API="https://api.github.com"
 AUTH=(-H "Authorization: token ${GH_TOKEN}" -H "Accept: application/vnd.github+json")
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 proposed=0
 skipped=0
 failed=0
@@ -207,6 +212,7 @@ if [[ -z "$default_sha" ]]; then
 fi
 
 for repo in $OSP_REPOS; do
+    budget_check "${repo}" || break
   # Apply optional name filter
   if [[ -n "$REPO_FILTER" && "$repo" != *"$REPO_FILTER"* ]]; then
     continue
@@ -309,4 +315,5 @@ echo ""
 echo "upstream-workflow-proposal: done — proposed=${proposed} skipped=${skipped} failed=${failed}"
 
 [[ "$failed" -gt 0 ]] && exit 1
+budget_report
 exit 0

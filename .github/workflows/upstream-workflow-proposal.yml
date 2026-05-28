@@ -64,4 +64,5 @@ jobs:
           TARGET_REPO: ${{ github.repository }}
           REPO_FILTER: ${{ inputs.repo_filter || '' }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          BUDGET_MINUTES: "25"
         run: bash scripts/upstream-workflow-proposal.sh

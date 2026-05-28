@@ -42,4 +42,5 @@ jobs:
           BASE_BRANCH: ${{ inputs.base_branch || 'master' }}
           FEATURE_BRANCH: ${{ inputs.feature_branch || 'all-features' }}
           LTS_BRANCH: ${{ inputs.lts_branch || 'lts' }}
+          BUDGET_MINUTES: "55"
         run: bash scripts/rebase-lts.sh

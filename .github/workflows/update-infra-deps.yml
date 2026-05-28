@@ -71,6 +71,8 @@ jobs:
             }}
           DRY_RUN:    ${{ inputs.dry_run || 'false' }}
           EOL_WINDOW: ${{ inputs.eol_window || '90' }}
+          BUDGET_MINUTES: "55"
+          OSP_REPOS_CONFIG: config/gitlab-subgroups.yml
         run: bash scripts/update-infra-deps.sh
       - name: Write summary
         if: always()

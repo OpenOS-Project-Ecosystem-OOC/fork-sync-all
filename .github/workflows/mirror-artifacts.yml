@@ -65,6 +65,7 @@ jobs:
       - name: Mirror artifacts
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          BUDGET_MINUTES: "55"
           UPSTREAM_OWNER: Interested-Deving-1896
           OSP_ORG: OpenOS-Project-OSP
           OOC_ORG: OpenOS-Project-Ecosystem-OOC

@@ -65,6 +65,11 @@ SOURCE_TOKEN="${SOURCE_TOKEN:-}"
 
 GH_API="https://api.github.com"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 info()  { echo "[merge-to-monorepo] $*"; }
 warn()  { echo "[merge-to-monorepo][warn] $*" >&2; }
 error() { echo "[merge-to-monorepo][error] $*" >&2; exit 1; }
@@ -233,6 +238,7 @@ nparent_merge() {
   local parent_shas=()
   local remote_idx=0
   for src_dir in "${source_dirs[@]}"; do
+    budget_check "$src_dir" || break
     local remote_name="source-${remote_idx}"
     git -C "$mono_dir" remote add "$remote_name" "$src_dir" 2>/dev/null || true
     git -C "$mono_dir" fetch "$remote_name" --tags 2>/dev/null || true
@@ -497,4 +503,5 @@ git -C "$mono_dir" push "$local_mono_url" \
 
 echo ""
 info "Complete — merged: ${merged} | failed: ${failed}"
+budget_report
 [[ "$failed" -eq 0 ]] || exit 1

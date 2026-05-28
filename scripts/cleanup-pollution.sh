@@ -33,6 +33,11 @@ GL_API="https://gitlab.com/api/v4"
 GH_AUTH=(-H "Authorization: token ${SYNC_TOKEN}" -H "Accept: application/vnd.github+json")
 GL_AUTH=(-H "PRIVATE-TOKEN: ${GITLAB_TOKEN}")
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 deleted_total=0
 skipped_total=0
 failed_total=0
@@ -327,6 +332,7 @@ echo ""
 
 echo "=== Interested-Deving-1896 ==="
 for repo in "${GH_CONSUMERS[@]}"; do
+    budget_check "${repo}" || break
   gh_cleanup_repo "Interested-Deving-1896" "$repo"
 done
 
@@ -366,4 +372,5 @@ done
 echo ""
 echo "cleanup-pollution: done — deleted=${deleted_total} kept=${skipped_total} failed=${failed_total}"
 [[ "$failed_total" -gt 0 ]] && exit 1
+budget_report
 exit 0

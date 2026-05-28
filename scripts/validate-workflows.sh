@@ -23,6 +23,11 @@
 set -uo pipefail
 
 WARN_ONLY=false
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 [[ "${1:-}" == "--warn-only" ]] && WARN_ONLY=true
 
 WORKFLOWS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.github/workflows"
@@ -108,6 +113,7 @@ ALLOWED_WORKFLOWS=(
 found_unknown=false
 
 while IFS= read -r -d '' wf_path; do
+    budget_check "$wf_path" || break
   wf_name=$(basename "$wf_path")
   found=false
   for allowed in "${ALLOWED_WORKFLOWS[@]}"; do
@@ -136,4 +142,5 @@ if [[ "$found_unknown" == "true" ]]; then
 fi
 
 echo "validate-workflows: all $(find "$WORKFLOWS_DIR" -maxdepth 1 \( -name "*.yml" -o -name "*.yaml" \) | wc -l | tr -d ' ') workflows are on the allowlist."
+budget_report
 exit 0

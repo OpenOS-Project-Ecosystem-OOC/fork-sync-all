@@ -31,6 +31,11 @@ GL_API="https://gitlab.com/api/v4"
 GH_API="https://api.github.com"
 
 # Subgroup IDs to scan (all openos-project subgroups that hold OSP-equivalent repos)
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 declare -A SUBGROUP_NAME_TO_ID=(
   [penguins-eggs_deving]=130516402
   [immutable-filesystem_deving]=130516465
@@ -234,6 +239,7 @@ failed=0
 skipped=0
 
 for group_id in "${SUBGROUP_IDS[@]}"; do
+    budget_check "$group_id" || break
   info "Scanning subgroup ${group_id} ..."
 
   while IFS='|' read -r _gl_id gl_name gl_path; do
@@ -283,4 +289,5 @@ done
 
 echo ""
 info "Complete — synced: ${synced} | skipped: ${skipped} | failed: ${failed}"
+budget_report
 [ "$failed" -eq 0 ] || exit 1

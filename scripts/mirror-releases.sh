@@ -24,6 +24,11 @@ RELEASE_TAG="${RELEASE_TAG:-}"
 # FORCE: re-mirror releases that already exist in the mirror org
 FORCE="${FORCE:-false}"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 [[ -n "$REPO_FILTER"   ]] && echo "Repo filter:   '${REPO_FILTER}'"
 [[ -n "$RELEASE_TAG"   ]] && echo "Release tag:   '${RELEASE_TAG}'"
 [[ "$FORCE"   == "true" ]] && echo "Force mode:    existing releases will be re-mirrored"
@@ -221,6 +226,7 @@ for org in "$OSP_ORG" "$OOC_ORG"; do
   echo "========================================"
 
   while IFS= read -r repo; do
+    budget_check "$repo" || break
     [[ -z "$repo" ]] && continue
     is_excluded "$repo" && continue
 
@@ -241,4 +247,5 @@ done
 
 echo "========================================"
 echo "  Release mirror complete. Repos: $total"
+budget_report
 echo "========================================"

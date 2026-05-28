@@ -129,6 +129,7 @@ jobs:
           OOC_ORG:        OpenOS-Project-Ecosystem-OOC
           FORCE:          'false'
           DRY_RUN:        'false'
+          BUDGET_MINUTES: "55"
         run: bash scripts/sync-template.sh
 
       - name: Write summary

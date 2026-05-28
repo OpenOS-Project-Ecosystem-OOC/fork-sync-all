@@ -41,6 +41,11 @@ LOOKBACK_HOURS="${LOOKBACK_HOURS:-2}"
 MAX_RUNS="${MAX_RUNS:-50}"
 GH_API="https://api.github.com"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 info()  { echo "[scan-rl] $*" >&2; }
 warn()  { echo "[scan-rl] ⚠️  $*" >&2; }
 
@@ -254,6 +259,7 @@ info "Found ${TOTAL} failed runs to inspect"
 MANIFEST="[]"
 
 while IFS='|' read -r run_id workflow_name wf_file wf_path created_at; do
+    budget_check "$wf_file" || break
   [[ -z "$run_id" ]] && continue
 
   # Skip runs older than cutoff
@@ -336,4 +342,5 @@ CANDIDATE_COUNT=$(echo "$MANIFEST" | python3 -c "import sys,json; print(len(json
 info "Scan complete — ${CANDIDATE_COUNT} rate-limit candidate(s) found"
 
 # Emit manifest to stdout
+budget_report
 echo "$MANIFEST"

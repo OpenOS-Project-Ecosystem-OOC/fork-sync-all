@@ -52,6 +52,7 @@ jobs:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
           GITHUB_OWNER: Interested-Deving-1896
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          BUDGET_MINUTES: "55"
         run: bash scripts/sync-upstream-sources.sh
       - name: Write summary
         if: always()

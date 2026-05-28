@@ -147,6 +147,7 @@ jobs:
           CLONE_DEPTH: ${{ inputs.clone_depth }}
           BACKUP_MODE: ${{ inputs.backup_mode }}
           GITHUB_WORKSPACE: ${{ github.workspace }}
+          BUDGET_MINUTES: "350"
         run: bash scripts/clone-org.sh
 
       - name: Commit registered-imports.json if updated

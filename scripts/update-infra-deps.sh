@@ -51,6 +51,11 @@ TODAY=$(date -u +%Y-%m-%d)
 BRANCH_DATE=$(date -u +%Y-%m-%d)
 PR_BRANCH="deps/update-infra-${BRANCH_DATE}"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 trap 'rm -f "$HEADER_FILE"' EXIT
 
 repos_scanned=0
@@ -763,31 +768,65 @@ echo ""
 fetch_eol_data
 echo ""
 
+_fetch_all_repos() {
+  local owner="$1"
+  local page=1 batch
+  while true; do
+    batch=$(api_get "${API}/orgs/${owner}/repos?per_page=100&page=${page}&sort=pushed")
+    count=$(echo "$batch" | jq 'if type=="array" then length else 0 end')
+    [[ "$count" -eq 0 ]] && break
+    echo "$batch" | jq -r '.[].name'
+    [[ "$count" -lt 100 ]] && break
+    (( page++ )) || true
+  done
+}
+
+_process_repo_list() {
+  local owner="$1" repo_list="$2"
+  local in_secondary=false
+  while IFS= read -r repo; do
+    [[ -z "$repo" ]] && continue
+    if [[ "$repo" == "---secondary---" ]]; then
+      in_secondary=true
+      echo "  [secondary pass — remaining budget only]"
+      continue
+    fi
+    budget_check "$repo" || break
+    archived=$(api_get "${API}/repos/${owner}/${repo}" | jq -r '.archived // "false"')
+    [[ "$archived" == "true" ]] && continue
+    process_repo "$owner" "$repo" || \
+      echo "  ⚠ process_repo failed for ${owner}/${repo} — continuing"
+  done <<< "$repo_list"
+}
+
+# OSP_REPOS_CONFIG — path to gitlab-subgroups.yml for OSP-priority ordering.
+_SCRIPT_DIR_UID="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OSP_REPOS_CONFIG="${OSP_REPOS_CONFIG:-${_SCRIPT_DIR_UID}/../config/gitlab-subgroups.yml}"
+
 for owner in $SCAN_OWNERS; do
+  budget_check "${owner}" || break
   echo "════════════════════════════════════════"
   echo "Scanning ${owner}..."
   echo ""
 
-  # Paginate repos
-  local_page=1
-  while true; do
-    repos=$(api_get "${API}/orgs/${owner}/repos?per_page=100&page=${local_page}&sort=pushed")
-    repo_count=$(echo "$repos" | jq 'if type=="array" then length else 0 end')
-    [[ "$repo_count" -eq 0 ]] && break
+  all_repos=$(_fetch_all_repos "$owner")
+  if [[ -z "$all_repos" ]]; then
+    echo "  No repos found — skipping."
+    continue
+  fi
+  total=$(echo "$all_repos" | grep -c '^.' || true)
+  echo "  Found ${total} repos."
 
-    while IFS= read -r repo; do
-      [[ -z "$repo" ]] && continue
-      archived=$(api_get "${API}/repos/${owner}/${repo}" | jq -r '.archived')
-      [[ "$archived" == "true" ]] && continue
-      # Isolate per-repo failures — a non-zero return is logged but never
-      # aborts the outer loop (set -uo pipefail would otherwise exit here).
-      process_repo "$owner" "$repo" || \
-        echo "  ⚠ process_repo failed for ${owner}/${repo} — continuing"
-    done < <(echo "$repos" | jq -r '.[].name')
+  # For Interested-Deving-1896: process OSP-bound repos first, rest second.
+  # For OSP/OOC orgs: all repos are already OSP-bound — no split needed.
+  if [[ "$owner" == "Interested-Deving-1896" ]]; then
+    echo "  OSP-bound repos first, then remaining (budget permitting)."
+    ordered=$(osp_priority_repos "$OSP_REPOS_CONFIG" "$all_repos")
+  else
+    ordered="$all_repos"
+  fi
 
-    [[ "$repo_count" -lt 100 ]] && break
-    (( local_page++ )) || true
-  done
+  _process_repo_list "$owner" "$ordered"
   echo ""
 done
 
@@ -797,4 +836,5 @@ echo "  Repos scanned (with workflows): ${repos_scanned}"
 echo "  Repos with outdated deps:       ${repos_updated}"
 echo "  PRs opened:                     ${prs_opened}"
 echo "  PRs skipped (already open):     ${prs_skipped}"
+budget_report
 echo "════════════════════════════════════════════════════════"

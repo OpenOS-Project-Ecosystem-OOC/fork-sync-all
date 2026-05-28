@@ -66,4 +66,5 @@ jobs:
           GITLAB_TOKEN: ${{ secrets.GITLAB_SYNC_TOKEN }}
           BITBUCKET_TOKEN: ${{ secrets.BITBUCKET_TOKEN }}
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+          BUDGET_MINUTES: "55"
         run: bash scripts/sync-registered-imports.sh

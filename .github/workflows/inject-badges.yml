@@ -99,4 +99,5 @@ jobs:
         env:
           JOB_STATUS: ${{ job.status }}
           INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUDGET_MINUTES: "55"
         run: bash scripts/write-summary.sh

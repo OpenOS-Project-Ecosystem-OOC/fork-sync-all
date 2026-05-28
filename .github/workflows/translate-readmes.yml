@@ -147,6 +147,7 @@ jobs:
           FORCE: ${{ inputs.force || 'false' }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
           MODEL: openai/gpt-4o
+          BUDGET_MINUTES: "115"
         run: bash scripts/translate-readmes.sh
       - name: Write summary
         if: always()

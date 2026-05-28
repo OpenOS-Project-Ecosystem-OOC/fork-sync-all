@@ -97,6 +97,7 @@ jobs:
           USE_GIT_LFS: ${{ inputs.use_git_lfs }}
           NPARENT: ${{ inputs.nparent }}
           BRANCH_MAP: ${{ inputs.branch_map }}
+          BUDGET_MINUTES: "115"
         run: bash scripts/merge-to-monorepo.sh
       - name: Write summary
         if: always()

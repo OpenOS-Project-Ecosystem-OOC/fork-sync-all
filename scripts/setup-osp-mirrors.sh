@@ -25,6 +25,11 @@ ACCEPT_HEADER="Accept: application/vnd.github+json"
 
 # Repos the script must never touch (have custom mirror setups)
 EXCLUDED_REPOS=(
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
   "fork-sync-all"
   "org-mirror"
 )
@@ -263,6 +268,7 @@ processed=0
 skipped=0
 
 for repo in "${osp_repos[@]}"; do
+    budget_check "${repo}" || break
   [[ -z "$repo" ]] && continue
   [[ -n "$REPO_FILTER" && "$repo" != *"$REPO_FILTER"* ]] && continue
 
@@ -299,4 +305,5 @@ echo "  Mirror setup complete"
 echo "  Repos processed: ${processed}"
 echo "  Repos skipped:   ${skipped}"
 echo "========================================"
+budget_report
 exit 0

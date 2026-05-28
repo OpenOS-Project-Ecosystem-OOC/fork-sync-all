@@ -37,6 +37,11 @@ EXCLUDED_REPOS="${EXCLUDED_REPOS:-org-mirror}"
 # since these are upstream forks, not actively developed OSP content.
 # Default: 500 MB. Override via MAX_REPO_SIZE_MB or MAX_REPO_SIZE_KB env var.
 # MAX_REPO_SIZE_MB is preferred (avoids fromJSON arithmetic in workflow YAML).
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 if [[ -n "${MAX_REPO_SIZE_MB:-}" ]]; then
   MAX_REPO_SIZE_KB=$(( MAX_REPO_SIZE_MB * 1024 ))
 else
@@ -157,6 +162,7 @@ mapfile -t all_repos <<< "$(get_org_repos "$UPSTREAM_OWNER")"
 # Apply filter and exclusions
 repos=()
 for repo in "${all_repos[@]}"; do
+    budget_check "$repo" || break
   [[ -z "$repo" ]] && continue
   is_excluded "$repo" && continue
   [[ -n "$REPO_FILTER" && "$repo" != *"$REPO_FILTER"* ]] && continue
@@ -198,4 +204,5 @@ done
 
 echo ""
 echo "Done: ${synced} mirrors pushed, ${oversized} oversized skipped, ${failed} failed"
+budget_report
 [[ "$failed" -eq 0 ]]

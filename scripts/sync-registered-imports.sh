@@ -36,6 +36,11 @@ FORCE_SYNC="${FORCE_SYNC:-false}"
 
 IMPORTS_FILE="registered-imports.json"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 info() { echo "[sync-registered-imports] $*"; }
 warn() { echo "[warn] $*" >&2; }
 
@@ -228,6 +233,7 @@ SYNC_CUTOFF=$(( $(date +%s) - 4500 ))  # 75 minutes
 
 # Iterate entries via python3 to handle JSON safely
 while IFS='|' read -r source_url target_name platform; do
+    budget_check "$target_name" || break
   [ -z "$source_url" ] && continue
   [[ -n "$REPO_FILTER"    && "$target_name" != *"$REPO_FILTER"*  ]] && continue
   [[ -n "$SOURCE_FILTER"  && "$platform"    != "$SOURCE_FILTER"  ]] && continue
@@ -253,4 +259,5 @@ for e in data:
 
 echo ""
 info "Complete — synced: ${synced} | skipped: ${skipped} | failed: ${failed}"
+budget_report
 [ "$failed" -eq 0 ] || exit 1

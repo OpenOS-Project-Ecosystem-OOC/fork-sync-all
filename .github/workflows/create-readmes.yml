@@ -48,4 +48,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
           GITHUB_OWNER: Interested-Deving-1896
+          BUDGET_MINUTES: "55"
         run: bash scripts/create-readmes.sh

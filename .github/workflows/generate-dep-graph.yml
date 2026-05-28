@@ -46,6 +46,7 @@ jobs:
           GITHUB_OWNER: Interested-Deving-1896
           OUTPUT_DIR: dep-graph
           PUSH_TO_REPO: ${{ inputs.push_to_repo || 'true' }}
+          BUDGET_MINUTES: "25"
         run: bash scripts/generate-dep-graph.sh
       - name: Write summary
         if: always()

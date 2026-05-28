@@ -66,6 +66,7 @@ jobs:
       - name: Scan and resolve failures
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          BUDGET_MINUTES: "115"
           WATCHDOG_REPO: ${{ github.repository }}
           SCAN_OWNERS: >-
             ${{

@@ -30,6 +30,11 @@ DRY_RUN="${DRY_RUN:-false}"
 
 API="https://api.github.com"
 HEADER_FILE=$(mktemp)
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 trap 'rm -f "$HEADER_FILE"' EXIT
 
 info() { echo "[sync-upstream-sources] $*"; }
@@ -257,6 +262,7 @@ missing=0
 failed=0
 
 for repo in "${OSP_REPOS[@]}"; do
+    budget_check "${repo}" || break
   info "── ${repo}"
 
   readme=$(get_readme_text "$repo") || {
@@ -340,4 +346,5 @@ echo "  Failed        : ${failed}"
 echo "════════════════════════════════════════════════════"
 
 [[ "$failed" -gt 0 ]] && exit 1
+budget_report
 exit 0

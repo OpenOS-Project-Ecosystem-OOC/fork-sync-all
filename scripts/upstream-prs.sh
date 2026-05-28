@@ -34,6 +34,11 @@ API="https://api.github.com"
 AUTH=(-H "Authorization: token ${GH_TOKEN}" -H "Accept: application/vnd.github+json")
 PER_PAGE=100
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 opened=0
 skipped=0
 failed=0
@@ -168,6 +173,7 @@ echo "Token valid. Core API requests remaining: $remaining"
 echo ""
 
 for mirror_org in $MIRROR_ORGS; do
+    budget_check "${mirror_org}" || break
   echo "════════════════════════════════════════"
   echo "Scanning PRs in ${mirror_org}..."
   echo "════════════════════════════════════════"
@@ -303,4 +309,5 @@ echo "  PRs failed:  ${failed}"
 echo "════════════════════════════════════════"
 
 [[ "$failed" -gt 0 ]] && exit 1
+budget_report
 exit 0

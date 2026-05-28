@@ -32,6 +32,11 @@ FORCE_DELETE="${FORCE_DELETE:-false}"
 REPO_FILTER="${REPO_FILTER:-}"
 KEEP_PATTERNS="${KEEP_PATTERNS:-lts gh-pages main master}"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 info()  { echo "[cleanup-branches] $*"; }
 warn()  { echo "[cleanup-branches] ⚠️  $*"; }
 ok()    { echo "[cleanup-branches] ✅ $*"; }
@@ -205,6 +210,7 @@ info "  Keep patterns: ${KEEP_PATTERNS}"
 echo ""
 
 for org in $ORGS; do
+    budget_check "${org}" || break
   info "=== ${org} ==="
 
   # Detect whether this is a user account or an org so we use the right endpoint.
@@ -214,11 +220,22 @@ for org in $ORGS; do
   if [[ "$account_type" == "User" ]]; then
     repo_endpoint="${GH_API}/users/${org}/repos"
     # User accounts (e.g. Interested-Deving-1896) can have thousands of repos.
-    # Scope cleanup to only OSP-mirrored repos to avoid timeout.
-    info "  User account detected — scoping to OSP-mirrored repos only"
-    osp_repos=$(gh_get "${GH_API}/orgs/OpenOS-Project-OSP/repos?per_page=100&type=all" \
-      | jq -r '.[].name' 2>/dev/null)
-    local_repos="$osp_repos"
+    # Process OSP-bound repos first (from config), then remaining if budget permits.
+    info "  User account detected — OSP-bound repos first, then remaining (budget permitting)"
+    _CLEANUP_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    _OSP_CFG="${OSP_REPOS_CONFIG:-${_CLEANUP_SCRIPT_DIR}/../config/gitlab-subgroups.yml}"
+    # Fetch all repos for the user account, then apply OSP-priority ordering
+    _all_user_repos=""
+    _cu_page=1
+    while true; do
+      _batch=$(gh_get "${GH_API}/users/${org}/repos?per_page=100&page=${_cu_page}&type=all") || break
+      _count=$(echo "$_batch" | jq 'if type=="array" then length else 0 end' 2>/dev/null || echo 0)
+      [[ "$_count" -eq 0 ]] && break
+      _all_user_repos="${_all_user_repos} $(echo "$_batch" | jq -r '.[].name' | tr '\n' ' ')"
+      [[ "$_count" -lt 100 ]] && break
+      (( _cu_page++ )) || true
+    done
+    local_repos=$(osp_priority_repos "$_OSP_CFG" "$_all_user_repos")
   else
     repo_endpoint="${GH_API}/orgs/${org}/repos"
     # Fetch all repos — paginate fully
@@ -236,13 +253,18 @@ for org in $ORGS; do
     done
   fi
 
-  for repo in $local_repos; do
+  while IFS= read -r repo; do
     [[ -z "$repo" ]] && continue
+    if [[ "$repo" == "---secondary---" ]]; then
+      info "  [secondary pass — remaining budget only]"
+      continue
+    fi
+    budget_check "$repo" || break
     if [[ -n "$REPO_FILTER" && "$repo" != "$REPO_FILTER" ]]; then
       continue
     fi
     process_repo "$org" "$repo"
-  done
+  done <<< "$local_repos"
 done
 
 echo ""
@@ -252,4 +274,5 @@ info " Repos processed : ${repos_processed}"
 info " Branches deleted: ${deleted_total}"
 info " Branches kept   : ${skipped_total}"
 [[ "$DRY_RUN" == "true" ]] && info " (dry run — no changes made)"
+budget_report
 info "========================================"

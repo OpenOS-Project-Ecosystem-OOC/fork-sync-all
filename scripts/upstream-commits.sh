@@ -33,6 +33,11 @@ set -uo pipefail
 DRY_RUN="${DRY_RUN:-false}"
 REPO_FILTER="${REPO_FILTER:-}"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 [[ "$DRY_RUN" == "true" ]] && echo "Dry run — no PRs will be opened."
 [[ -n "$REPO_FILTER"    ]] && echo "Repo filter: '${REPO_FILTER}'"
 
@@ -212,6 +217,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [[ -f "${SCRIPT_DIR}/gh-graphql.sh" ]] && source "${SCRIPT_DIR}/gh-graphql.sh"
 
 for mirror_org in $MIRROR_ORGS; do
+    budget_check "${mirror_org}" || break
   echo "════════════════════════════════════════"
   echo "Scanning direct commits in ${mirror_org}..."
   echo "════════════════════════════════════════"
@@ -389,4 +395,5 @@ echo "  PRs failed:  ${failed}"
 echo "════════════════════════════════════════"
 
 [[ "$failed" -gt 0 ]] && exit 1
+budget_report
 exit 0

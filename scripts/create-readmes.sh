@@ -37,6 +37,11 @@ AI_START="<!-- AI:start:"
 AI_END="<!-- AI:end:"
 MARKER_CLOSE=" -->"
 
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 info() { echo "[create-readmes] $*"; }
 warn() { echo "[warn] $*" >&2; }
 
@@ -284,6 +289,7 @@ created=0
 skipped=0
 
 for repo in $repos; do
+    budget_check "${repo}" || break
   [[ -n "$REPO_FILTER" && "$repo" != *"$REPO_FILTER"* ]] && continue
 
   # Skip repos that don't exist on Interested-Deving-1896 (e.g. added to OSP directly)
@@ -327,4 +333,5 @@ for repo in $repos; do
 done
 
 echo ""
+budget_report
 info "Complete — created: ${created} | skipped (already have README): ${skipped}"

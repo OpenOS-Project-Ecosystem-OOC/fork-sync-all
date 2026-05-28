@@ -28,6 +28,11 @@ source "${SCRIPT_DIR}/branch-name-conv.sh"
 # GITLAB_TOKEN is required but may be absent while the GitLab account is
 # pending reinstatement. Exit 0 (skip) rather than 1 (failure) so the
 # workflow does not generate CI failure notifications in the interim.
+
+# ── Budget guard ─────────────────────────────────────────────────────────────
+source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+budget_init
+
 if [ -z "${GITLAB_TOKEN:-}" ]; then
   echo "[mirror-osp-to-gitlab] GITLAB_TOKEN is not set — skipping."
   echo "  Set it with: gh secret set GITLAB_SYNC_TOKEN --repo OpenOS-Project-OSP/fork-sync-all"
@@ -393,6 +398,7 @@ info "Found ${#osp_repos[@]} repos."
 echo ""
 
 for name in "${osp_repos[@]}"; do
+    budget_check "$name" || break
   [[ -z "$name" ]] && continue
 
   if is_excluded "$name"; then
@@ -453,4 +459,5 @@ done
 
 echo ""
 info "Complete — synced: ${synced} | skipped: ${skipped} | failed: ${failed}"
+budget_report
 [ "$failed" -eq 0 ] || exit 1
