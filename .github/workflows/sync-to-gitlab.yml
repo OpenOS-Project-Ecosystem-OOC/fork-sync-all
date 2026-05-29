@@ -52,4 +52,5 @@ jobs:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
           GITLAB_TOKEN: ${{ secrets.GITLAB_SYNC_TOKEN }}
           GITHUB_OWNER: Interested-Deving-1896
+          BUDGET_MINUTES: "55"
         run: bash scripts/sync-to-gitlab.sh

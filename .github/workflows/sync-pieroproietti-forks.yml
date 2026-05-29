@@ -44,4 +44,5 @@ jobs:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
           GITHUB_OWNER: ${{ github.repository_owner }}
           UPSTREAM_USER: pieroproietti
+          BUDGET_MINUTES: "55"
         run: bash scripts/sync-pieroproietti-forks.sh

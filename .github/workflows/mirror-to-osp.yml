@@ -56,4 +56,5 @@ jobs:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
           UPSTREAM_OWNER: Interested-Deving-1896
           OSP_ORG: OpenOS-Project-OSP
+          BUDGET_MINUTES: "25"
         run: bash scripts/mirror-to-osp.sh

@@ -35,6 +35,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # shellcheck source=scripts/branch-name-conv.sh
 source "${SCRIPT_DIR}/branch-name-conv.sh"
+# shellcheck source=scripts/includes/budget.sh
+source "${SCRIPT_DIR}/includes/budget.sh"
 
 # Helpers must be defined before any call site (including the early log lines below)
 info() { echo "[sync-to-gitlab] $*"; }
@@ -106,9 +108,12 @@ git_push_with_retry() {
 synced=0
 failed=0
 
+budget_init
+
 for entry in "${REPOS[@]}"; do
   gh_repo="${entry%%|*}"
   gl_path="${entry##*|}"
+  budget_check "$gh_repo" || break
 
   # Apply repo name substring filter
   if [[ -n "$REPO_FILTER" && "$gh_repo" != *"$REPO_FILTER"* ]]; then
@@ -184,4 +189,5 @@ done
 
 echo ""
 info "Complete — synced: ${synced} | failed: ${failed}"
+budget_report
 [ "$failed" -eq 0 ] || exit 1

@@ -20,6 +20,10 @@ set -uo pipefail
 # Optional filters / flags (from workflow_dispatch inputs)
 DRY_RUN="${DRY_RUN:-false}"
 REPO_FILTER="${REPO_FILTER:-}"
+
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/includes/budget.sh
+source "${_SCRIPT_DIR}/includes/budget.sh"
 FORCE="${FORCE:-false}"
 
 [[ "$DRY_RUN" == "true" ]] && echo "Dry run — no pushes will occur."
@@ -166,8 +170,11 @@ mapfile -t osp_repos < <(get_osp_repos)
 echo "Found ${#osp_repos[@]} repos in ${OSP_ORG}."
 echo ""
 
+budget_init
+
 for name in "${osp_repos[@]}"; do
   [[ -z "$name" ]] && continue
+  budget_check "$name" || break
 
   if is_excluded "$name"; then
     (( skipped++ )) || true
@@ -275,4 +282,5 @@ if [[ "$synced" -eq 0 && "$failed" -gt 0 ]]; then
   exit 1
 fi
 
+budget_report
 exit 0
