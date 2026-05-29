@@ -35,6 +35,7 @@ permissions:
 jobs:
   retry:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event.workflow_run.conclusion == 'failure'
     steps:
       - name: Checkout

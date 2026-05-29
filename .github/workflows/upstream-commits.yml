@@ -45,6 +45,10 @@ permissions:
 #   sleep. Runs hourly at :47 — offset from mirror-to-osp (:00) and
 #   reconcile-org-refs (:30) to spread API usage across the hour.
 
+concurrency:
+  group: upstream-commits-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   upstream-commits:
     name: Upstream direct commits → Interested-Deving-1896

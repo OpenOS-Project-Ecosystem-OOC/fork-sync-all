@@ -76,6 +76,18 @@ ALL_POLLUTION_PATHS=(
   ".github/workflows/sync-template.yml"
   ".github/workflows/validate-config.yml"
   ".github/workflows/generate-dep-graph.yml"
+  # Org-wide workflows incorrectly propagated to consumer repos — these run
+  # centrally from fork-sync-all and must not exist on consumer repos.
+  ".github/workflows/notify-poller.yml"
+  ".github/workflows/resolve-failures.yml"
+  ".github/workflows/translate-readmes.yml"
+  ".github/workflows/update-infra-deps.yml"
+  ".github/workflows/cleanup-branches.yml"
+  # Scripts that only make sense on fork-sync-all
+  "scripts/cleanup-branches.sh"
+  "scripts/resolve-failures.sh"
+  "scripts/update-infra-deps.sh"
+  "scripts/translate-readmes.sh"
   "config/gitlab-subgroups.yml"
   "config/template-consumers.yml"
   "config/template-manifest.yml"

@@ -8,7 +8,7 @@ name: Upstream PRs from OSP + OOC
 
 on:
   schedule:
-    - cron: "30 * * * *"
+    - cron: "33 * * * *"
   workflow_dispatch:
     inputs:
       repo_filter:
@@ -33,6 +33,10 @@ permissions:
 # GitHub REST API (SYNC_TOKEN): 5 000 req/hr primary limit.
 #   upstream-prs.sh retries HTTP 403/429 up to 3 times with reset-aware sleep.
 #   Runs hourly at :30 — offset from other hourly workflows to spread usage.
+
+concurrency:
+  group: upstream-prs-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   upstream-prs:

@@ -25,6 +25,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: sync-pieroproietti-forks-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   sync:
     runs-on: ubuntu-latest

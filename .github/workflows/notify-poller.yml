@@ -25,6 +25,10 @@ permissions:
 #   defaults to 0, and no resolver trigger is sent. The next poll retries
 #   automatically 15 minutes later.
 
+concurrency:
+  group: notify-poller-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   poll:
     runs-on: ubuntu-latest

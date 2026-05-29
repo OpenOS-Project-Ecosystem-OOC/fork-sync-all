@@ -34,6 +34,10 @@ permissions:
 # Secret encryption uses PyNaCl locally — the only extra API call is the
 #   PUT /actions/secrets endpoint, which counts against the primary quota.
 
+concurrency:
+  group: setup-osp-mirrors-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -45,6 +49,8 @@ jobs:
       - name: Setup OSP mirror workflows
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          BUDGET_MINUTES: "25"
+          OSP_REPOS_CONFIG: config/gitlab-subgroups.yml
           UPSTREAM_OWNER: Interested-Deving-1896
           OSP_ORG: OpenOS-Project-OSP
           OOC_ORG: OpenOS-Project-Ecosystem-OOC

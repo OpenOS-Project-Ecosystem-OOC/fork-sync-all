@@ -495,8 +495,19 @@ ${context}" 800
 generate_ci() {
   local context="$1" owner="$2" repo="$3"
   llm_ask "$SYSTEM_PROMPT" \
-    "Write a CI section for this project's README. List the GitHub Actions workflows,
-what each does, and any required secrets. Base it on the workflow files in the context.
+    "Write a CI section for this project's README.
+
+Architecture note: this repo is managed by the fork-sync-all control plane
+(https://github.com/${owner}/fork-sync-all). Org-wide operations — branch
+cleanup, failure resolution, dependency updates, README translation, and
+upstream sync sweeps — run centrally from fork-sync-all against all repos.
+Do NOT list those as workflows on this repo.
+
+Only list the per-repo workflows that actually live in this repo's
+.github/workflows/ directory (from the context below). For each, state
+what it does and any required secrets. Then add a line noting that
+org-wide CI is managed centrally by fork-sync-all.
+
 Keep it under 15 lines.
 
 ${context}" 600

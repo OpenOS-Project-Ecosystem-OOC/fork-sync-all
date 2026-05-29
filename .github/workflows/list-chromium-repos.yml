@@ -4,6 +4,7 @@ on:
 jobs:
   list:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       GITLAB_TOKEN: ${{ secrets.GITLAB_SYNC_TOKEN }}
       GL_API: https://gitlab.com/api/v4

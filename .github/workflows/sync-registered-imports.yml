@@ -50,6 +50,10 @@ permissions:
 #   45 s) on any push failure. Clone failures are logged and skipped; the
 #   entry will be retried on the next hourly run.
 
+concurrency:
+  group: sync-registered-imports-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   sync:
     if: inputs.rate_limit_rerun != 'true'

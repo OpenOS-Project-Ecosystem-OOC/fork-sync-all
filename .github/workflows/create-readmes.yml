@@ -2,7 +2,7 @@ name: Create Missing READMEs
 
 on:
   schedule:
-    - cron: '5 3 * * *'   # Daily at 03:05 UTC — full sweep
+    - cron: '8 3 * * *'   # Daily at 03:05 UTC — full sweep
   # Run OSP-priority pass after any workflow that creates new repos
   # so freshly imported repos get a README immediately.
   workflow_run:

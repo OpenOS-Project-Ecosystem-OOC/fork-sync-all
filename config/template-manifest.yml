@@ -113,26 +113,18 @@ profiles:
   # purpose and don't participate in the mirror chain.
   infra-core:
     description: >
-      Shared CI hygiene only: PR automation, token rotation, health checks,
-      branch cleanup, failure resolution, dependency updates, README
-      translation, and README render validation. No mirror or sync workflows.
+      Per-repo CI hygiene: PR automation, token rotation, token health check,
+      and README render validation. Org-wide workflows (branch cleanup, failure
+      resolution, dep updates, README translation, notify-poller) are NOT
+      propagated — they run centrally from fork-sync-all against all repos.
     include:
       - .github/workflows/pr-automation.yml
       - .github/workflows/rotate-token.yml
       - .github/workflows/token-health.yml
-      - .github/workflows/cleanup-branches.yml
-      - .github/workflows/resolve-failures.yml
-      - .github/workflows/notify-poller.yml
-      - .github/workflows/update-infra-deps.yml
-      - .github/workflows/translate-readmes.yml
       - .github/workflows/validate-readme-render.yml
       - scripts/pr-automation.sh
       - scripts/rotate-token.sh
       - scripts/token-monitor.sh
-      - scripts/cleanup-branches.sh
-      - scripts/resolve-failures.sh
-      - scripts/update-infra-deps.sh
-      - scripts/translate-readmes.sh
       - scripts/check-readme-render.sh
       - scripts/write-summary.sh
       - .gitignore
@@ -148,26 +140,20 @@ profiles:
   # same workflow file works for any project without modification.
   upstream-sync:
     description: >
-      infra-core hygiene plus sync-registry-sources workflow and script.
+      Per-repo CI hygiene plus sync-registry-sources workflow and script.
       For repos that track upstream dependencies via a registry file.
+      Org-wide workflows (branch cleanup, failure resolution, dep updates,
+      README translation, notify-poller) are NOT propagated — they run
+      centrally from fork-sync-all against all repos.
     include:
       - .github/workflows/pr-automation.yml
       - .github/workflows/rotate-token.yml
       - .github/workflows/token-health.yml
-      - .github/workflows/cleanup-branches.yml
-      - .github/workflows/resolve-failures.yml
-      - .github/workflows/notify-poller.yml
-      - .github/workflows/update-infra-deps.yml
-      - .github/workflows/translate-readmes.yml
       - .github/workflows/sync-registry-sources.yml
       - .github/workflows/validate-readme-render.yml
       - scripts/pr-automation.sh
       - scripts/rotate-token.sh
       - scripts/token-monitor.sh
-      - scripts/cleanup-branches.sh
-      - scripts/resolve-failures.sh
-      - scripts/update-infra-deps.sh
-      - scripts/translate-readmes.sh
       - scripts/check-readme-render.sh
       - scripts/write-summary.sh
       - scripts/sync-registry-sources.sh

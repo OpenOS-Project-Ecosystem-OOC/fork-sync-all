@@ -37,6 +37,10 @@ permissions:
 #   .github/workflows/ — a missing scope logs a clear error and skips that
 #   repo rather than retrying indefinitely.
 
+concurrency:
+  group: mirror-to-osp-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   mirror:
     runs-on: ubuntu-latest

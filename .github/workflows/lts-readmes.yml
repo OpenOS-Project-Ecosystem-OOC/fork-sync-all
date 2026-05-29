@@ -99,6 +99,8 @@ jobs:
           CHANGED_REPOS: ${{ steps.repos.outputs.changed_repos }}
           PRIORITY_ONLY: ${{ steps.repos.outputs.priority_only }}
           LTS_MODE: 'true'
+          BUDGET_MINUTES: "115"
+          OSP_REPOS_CONFIG: config/gitlab-subgroups.yml
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
           FORCE_REWRITE: ${{ inputs.force || 'false' }}
         run: |

@@ -6,7 +6,7 @@ name: Mirror Releases
 
 on:
   schedule:
-    - cron: "0 * * * *"   # Hourly at :00
+    - cron: "3 * * * *"   # Hourly at :00
   workflow_dispatch:
     inputs:
       repo_filter:
