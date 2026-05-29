@@ -122,6 +122,7 @@ profiles:
       - .github/workflows/rotate-token.yml
       - .github/workflows/token-health.yml
       - .github/workflows/validate-readme-render.yml
+      - .github/dependabot.yml
       - scripts/pr-automation.sh
       - scripts/rotate-token.sh
       - scripts/token-monitor.sh
@@ -151,6 +152,7 @@ profiles:
       - .github/workflows/token-health.yml
       - .github/workflows/sync-registry-sources.yml
       - .github/workflows/validate-readme-render.yml
+      - .github/dependabot.yml
       - scripts/pr-automation.sh
       - scripts/rotate-token.sh
       - scripts/token-monitor.sh
@@ -174,6 +176,7 @@ profiles:
     include:
       - .github/workflows/pr-automation.yml
       - .github/workflows/rotate-token.yml
+      - .github/dependabot.yml
       - scripts/pr-automation.sh
       - scripts/rotate-token.sh
       - scripts/write-summary.sh
