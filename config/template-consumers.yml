@@ -126,7 +126,7 @@ consumers:
   - name: incus-windows-toolkit
     profile: mirror
 
-  - name: incusbox
+  - name: incus-linux-toolkit
     profile: mirror
 
   - name: kapsule-incus-manager

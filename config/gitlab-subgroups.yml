@@ -77,7 +77,7 @@ subgroups:
     repos:
       - incus-image-server
       - kapsule-incus-manager
-      - incusbox
+      - incus-linux-toolkit
       - Incus-MacOS-Toolkit
       - incus-windows-toolkit
       - talos
