@@ -154,15 +154,27 @@ print(json.dumps({'ref': sys.argv[1], 'inputs': json.loads(sys.argv[2])}))
 
 # ── Watch mode helpers ────────────────────────────────────────────────────────
 # fetch_latest_run <workflow_file> → "<run_id> <status> <conclusion> <created_epoch> <updated_epoch>"
+# Returns exit code 2 specifically when the failure looks like quota exhaustion
+# (empty body or rate-limit message) so the caller can back off appropriately.
 
 fetch_latest_run() {
   local wf="$1"
-  local raw
-  raw=$(curl -sf \
+  local raw http
+  raw=$(curl -sf -w "\n%{http_code}" \
     -H "Authorization: token ${GH_TOKEN}" \
     -H "Accept: application/vnd.github+json" \
     "${GH_API}/repos/${OWNER}/${REPO}/actions/workflows/${wf}/runs?per_page=1" \
-    2>/dev/null) || { warn "runs fetch failed for ${wf}"; return 1; }
+    2>/dev/null) || { warn "runs fetch failed for ${wf} (curl error)"; return 1; }
+
+  http=$(echo "$raw" | tail -1)
+  raw=$(echo "$raw" | sed '$d')
+
+  if [[ "$http" == "403" || "$http" == "429" ]]; then
+    return 2   # quota/rate-limit — caller should back off
+  fi
+  if [[ -z "$raw" ]]; then
+    warn "runs fetch returned empty body (HTTP ${http}) for ${wf}"; return 1
+  fi
 
   python3 -c "
 import sys, json
@@ -310,9 +322,37 @@ run_watch_mode() {
       return 1
     }
 
-    local run_id status conclusion created_epoch updated_epoch
-    read -r run_id status conclusion created_epoch updated_epoch \
-      < <(fetch_latest_run "$WATCH_WORKFLOW") || { sleep "$MIN_POLL_SEC"; continue; }
+    local run_id status conclusion created_epoch updated_epoch fetch_rc
+    fetch_latest_run "$WATCH_WORKFLOW" > /tmp/_qm_run_line 2>/dev/null
+    fetch_rc=$?
+    if [[ "$fetch_rc" -eq 2 ]]; then
+      # Quota exhausted — fetch quota to get reset epoch and back off adaptively
+      local all_quotas core_rem core_lim core_reset reset_in backoff_sleep
+      all_quotas=$(curl -sf \
+        -H "Authorization: token ${GH_TOKEN}" \
+        -H "Accept: application/vnd.github+json" \
+        "${GH_API}/rate_limit" 2>/dev/null) || all_quotas=""
+      core_reset=$(python3 -c "
+import sys,json
+try:
+    d=json.loads(sys.argv[1])
+    print(d.get('resources',{}).get('core',{}).get('reset',0))
+except Exception:
+    print(0)
+" "${all_quotas:-{}}" 2>/dev/null || echo 0)
+      NOW=$(date +%s)
+      reset_in=$(( core_reset - NOW ))
+      local quota_buffer=45
+      backoff_sleep=$(( reset_in > 0 ? reset_in + quota_buffer : MAX_POLL_SEC ))
+      backoff_sleep=$(( backoff_sleep > MAX_POLL_SEC ? MAX_POLL_SEC : backoff_sleep ))
+      warn "Quota exhausted during watch — backing off ${backoff_sleep}s (reset in $(format_duration $reset_in))"
+      summary_append "| #${attempt} | $(ts) | quota exhausted | — | — | — | ${backoff_sleep}s |"
+      sleep "$backoff_sleep"
+      continue
+    elif [[ "$fetch_rc" -ne 0 ]]; then
+      sleep "$MIN_POLL_SEC"; continue
+    fi
+    read -r run_id status conclusion created_epoch updated_epoch < /tmp/_qm_run_line
 
     local run_age=0
     [[ "$created_epoch" -gt 0 ]] && run_age=$(( NOW - created_epoch ))
