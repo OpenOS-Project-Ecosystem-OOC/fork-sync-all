@@ -298,18 +298,48 @@ gh_post() {
     "$url" "$@"
 }
 
+# Fetch the full recursive tree for a repo and emit "path<TAB>sha" lines.
+# One API call replaces N per-file /contents/ probes in commit_file().
+# Usage: fetch_repo_tree <owner> <repo> <branch>
+fetch_repo_tree() {
+  local owner="$1" repo="$2" branch="$3"
+  local raw
+  raw=$(curl -sf \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    "${API}/repos/${owner}/${repo}/git/trees/${branch}?recursive=1" 2>/dev/null) || { echo ""; return 1; }
+  # Emit "path<TAB>sha" for every blob — caller builds associative array
+  python3 -c "
+import sys, json
+d = json.loads(sys.argv[1])
+for item in d.get('tree', []):
+    if item.get('type') == 'blob':
+        print(item['path'] + '\t' + item['sha'])
+" "$raw"
+}
+
 # Commit a single file to a repo via the Contents API.
 # Returns 0 on success (created or updated), 1 on failure.
 # Skips if the file already exists and FORCE=false.
+#
+# $6 (optional): pre-fetched SHA for this path from fetch_repo_tree output.
+#   Pass "" if the file is known to not exist, or omit to fall back to a
+#   per-file /contents/ probe (legacy behaviour, costs 1 API call).
 commit_file() {
   local owner="$1" repo="$2" path="$3" content_b64="$4" branch="$5"
+  local prefetched_sha="${6-__UNSET__}"
 
-  # Check if file already exists
+  # Resolve existing SHA — use pre-fetched value when available
   local existing_sha=""
-  local existing
-  existing=$(gh_get "${API}/repos/${owner}/${repo}/contents/${path}?ref=${branch}" 2>/dev/null) || true
-  if [[ -n "$existing" ]]; then
-    existing_sha=$(echo "$existing" | jq -r '.sha // empty' 2>/dev/null)
+  if [[ "$prefetched_sha" == "__UNSET__" ]]; then
+    # Legacy fallback: per-file REST probe (1 API call per file)
+    local existing
+    existing=$(gh_get "${API}/repos/${owner}/${repo}/contents/${path}?ref=${branch}" 2>/dev/null) || true
+    if [[ -n "$existing" ]]; then
+      existing_sha=$(echo "$existing" | jq -r '.sha // empty' 2>/dev/null)
+    fi
+  else
+    existing_sha="$prefetched_sha"
   fi
 
   if [[ -n "$existing_sha" && "$FORCE" != "true" ]]; then
@@ -608,6 +638,21 @@ sync_into_repo() {
   branch=$(echo "$meta" | jq -r '.default_branch // "main"')
   info "  Default branch: ${branch}"
 
+  # Fetch the full repo tree once — replaces one /contents/ probe per file.
+  # Builds an associative array: tree_sha[path]=sha (empty string = not present)
+  info "  Fetching repo tree (1 API call)..."
+  declare -A tree_sha=()
+  local tree_lines
+  tree_lines=$(fetch_repo_tree "$GITHUB_OWNER" "$repo" "$branch") || true
+  if [[ -n "$tree_lines" ]]; then
+    while IFS=$'\t' read -r tpath tsha; do
+      tree_sha["$tpath"]="$tsha"
+    done <<< "$tree_lines"
+    info "  Tree fetched: ${#tree_sha[@]} blobs indexed"
+  else
+    warn "  Tree fetch failed — falling back to per-file probes"
+  fi
+
   local files_ok=0 files_failed=0
   while IFS= read -r rel; do
     local abs="${TEMPLATE_ROOT}/${rel}"
@@ -616,7 +661,15 @@ sync_into_repo() {
     local content_b64
     content_b64=$(base64 -w0 < "$abs")
 
-    if commit_file "$GITHUB_OWNER" "$repo" "$rel" "$content_b64" "$branch"; then
+    # Pass pre-fetched SHA if tree was loaded; fall back to legacy probe if not
+    local sha_arg
+    if [[ "${#tree_sha[@]}" -gt 0 ]]; then
+      sha_arg="${tree_sha[$rel]:-}"   # empty string = file not present in repo
+    else
+      sha_arg="__UNSET__"            # triggers legacy per-file probe
+    fi
+
+    if commit_file "$GITHUB_OWNER" "$repo" "$rel" "$content_b64" "$branch" "$sha_arg"; then
       (( files_ok++ )) || true
     else
       (( files_failed++ )) || true
