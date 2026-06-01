@@ -205,6 +205,8 @@ EXCLUDED_PATHS=(
   # Never propagate project-specific source trees — these belong to their own
   # repos and must not be injected into unrelated consumers via the template.
   "lkm"
+  "minidebian"
+  "ramroot"
   # Never propagate project-specific build/packaging workflows that are only
   # meaningful in the repo they were written for. Consumers that genuinely need
   # these should define them locally rather than inheriting them from the template.
@@ -958,9 +960,9 @@ PYEOF
     return 0
   fi
 
-  local total ok failed
+  local total ok failed quota_exhausted
   total=$(echo "$consumer_records" | grep -c '^---RECORD---$') || total=0
-  ok=0; failed=0
+  ok=0; failed=0; quota_exhausted=0
 
   # Resume checkpoint — persists completed repo names across restarts.
   # Each successful sync appends the repo name; on restart we skip those repos.
@@ -1014,7 +1016,10 @@ print(' '.join(names))
     fi
 
     # Stop if API quota is too low to safely process another consumer
-    quota_ok || break
+    if ! quota_ok; then
+      quota_exhausted=1
+      break
+    fi
 
     # Per-consumer force overrides global FORCE
     local effective_force="$FORCE"
@@ -1097,10 +1102,14 @@ for rec in content.split('---RECORD---\n'):
   info "========================================"
   info "  Propagate complete"
   info "  Consumers synced: ${ok} | failed: ${failed}"
+  [[ "$quota_exhausted" -eq 1 ]] && warn "  Stopped early — quota exhausted. Checkpoint preserved for resume."
   info "========================================"
 
-  if [[ "$failed" -eq 0 ]]; then
-    # All done — clear checkpoint so next run starts fresh
+  if [[ "$quota_exhausted" -eq 1 ]]; then
+    # Incomplete run — preserve checkpoint so next invocation resumes
+    return 1
+  elif [[ "$failed" -eq 0 ]]; then
+    # All consumers processed successfully — clear checkpoint
     rm -f "$checkpoint_file"
     return 0
   else
