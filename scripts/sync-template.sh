@@ -303,13 +303,25 @@ gh_post() {
 # Fetch the full recursive tree for a repo and emit "path<TAB>sha" lines.
 # One API call replaces N per-file /contents/ probes in commit_file().
 # Usage: fetch_repo_tree <owner> <repo> <branch>
+# Exit codes:
+#   0 — success, tab-separated path/sha lines on stdout
+#   1 — non-quota error (repo not found, network issue, etc.)
+#   2 — quota exhausted (HTTP 403/429) — caller should abort, not fall back
 fetch_repo_tree() {
   local owner="$1" repo="$2" branch="$3"
-  local raw
-  raw=$(curl -sf \
+  local raw http_code
+  raw=$(curl -s -w "\n__HTTP__%{http_code}" \
     -H "Authorization: token ${GH_TOKEN}" \
     -H "Accept: application/vnd.github+json" \
     "${API}/repos/${owner}/${repo}/git/trees/${branch}?recursive=1" 2>/dev/null) || { echo ""; return 1; }
+  http_code=$(echo "$raw" | grep -o '__HTTP__[0-9]*' | grep -o '[0-9]*')
+  raw=$(echo "$raw" | sed 's/__HTTP__[0-9]*$//')
+  if [[ "$http_code" == "403" || "$http_code" == "429" ]]; then
+    return 2
+  fi
+  if [[ "$http_code" != "200" ]]; then
+    return 1
+  fi
   # Emit "path<TAB>sha" for every blob — caller builds associative array
   # Pipe via stdin — avoids "Argument list too long" on large repos
   echo "$raw" | python3 -c "
@@ -645,15 +657,18 @@ sync_into_repo() {
   # Builds an associative array: tree_sha[path]=sha (empty string = not present)
   info "  Fetching repo tree (1 API call)..."
   declare -A tree_sha=()
-  local tree_lines
-  tree_lines=$(fetch_repo_tree "$GITHUB_OWNER" "$repo" "$branch") || true
-  if [[ -n "$tree_lines" ]]; then
+  local tree_lines tree_rc
+  tree_lines=$(fetch_repo_tree "$GITHUB_OWNER" "$repo" "$branch"); tree_rc=$?
+  if [[ "$tree_rc" -eq 2 ]]; then
+    warn "  Tree fetch hit quota limit (HTTP 403/429) — aborting repo to preserve headroom"
+    return 1
+  elif [[ "$tree_rc" -ne 0 || -z "$tree_lines" ]]; then
+    warn "  Tree fetch failed (rc=${tree_rc}) — falling back to per-file probes"
+  else
     while IFS=$'\t' read -r tpath tsha; do
       tree_sha["$tpath"]="$tsha"
     done <<< "$tree_lines"
     info "  Tree fetched: ${#tree_sha[@]} blobs indexed"
-  else
-    warn "  Tree fetch failed — falling back to per-file probes"
   fi
 
   local files_ok=0 files_failed=0
