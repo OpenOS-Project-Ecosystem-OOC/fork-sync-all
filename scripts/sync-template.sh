@@ -133,7 +133,7 @@ prefetch_consumer_repos() {
   for repo in "${repo_list[@]}"; do
     [[ -z "$repo" ]] && continue
     local alias
-    alias=$(echo "$repo" | tr '-.' '__' | tr '[:upper:]' '[:lower:]')
+    alias=$(echo "$repo" | tr -- '-.' '__' | tr '[:upper:]' '[:lower:]')
     query_body+="
     ${alias}: repository(owner: \"${owner}\", name: \"${repo}\") {
       name
@@ -157,7 +157,7 @@ prefetch_consumer_repos() {
   for repo in "${repo_list[@]}"; do
     [[ -z "$repo" ]] && continue
     local alias
-    alias=$(echo "$repo" | tr '-.' '__' | tr '[:upper:]' '[:lower:]')
+    alias=$(echo "$repo" | tr -- '-.' '__' | tr '[:upper:]' '[:lower:]')
     local repo_data
     repo_data=$(echo "$response" | python3 -c "
 import sys, json
