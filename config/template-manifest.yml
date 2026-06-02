@@ -30,9 +30,13 @@
 #
 #   fork-sync-all operational files (no meaning in consumer repos):
 #     DOCS/                         operational reference docs
+#     AGENTS.md                     fork-sync-all agent conventions (repo-specific)
 #     .gitlab-ci.yml                org-wide sync pipeline (sync-forks, mirror-to-osp, etc.)
 #     .gitlab/                      GitLab MR templates and scheduled maintenance
-#     .devcontainer/                fork-sync-all dev environment
+#     .devcontainer/devcontainer.json   fork-sync-all dev environment (repo-specific)
+#     .devcontainer/features/           fork-sync-all custom devcontainer features
+#     .devcontainer/devcontainer.template.json  ← propagated to consumers (Ona + headroom)
+#     .devcontainer/automations.template.yaml   ← propagated to consumers (headroom proxy)
 #     config/workflow-cost-profiles.yml
 #     config/workflow-sync.yml
 #     tests/                        pytest suite for fork-sync-all validators

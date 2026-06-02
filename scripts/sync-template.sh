@@ -202,6 +202,7 @@ EXCLUDED_PATHS=(
   ".pytest_cache"
   # Never propagate fork-sync-all operational docs to consumers
   "DOCS"
+  "AGENTS.md"
   # Never propagate project-specific source trees — these belong to their own
   # repos and must not be injected into unrelated consumers via the template.
   "lkm"
