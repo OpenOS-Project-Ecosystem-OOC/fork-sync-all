@@ -21,16 +21,7 @@ on:
   # content — catches non-English READMEs in priority repos only.
   workflow_run:
     workflows:
-      - "Add Mirror Repo"
-      - "Import Repository"
-      - "Clone Org"
-      - "Merge Repos into Monorepo"
-      - "Sync All Forks"
-      - "Sync Registered Imports"
-      - "Sync from GitLab"
-      - "Sync pieroproietti Forks"
-      - "Sync Upstream Sources"
-      - "Sync Docs to Book"
+      - "Update READMEs"
     types: [completed]
   workflow_dispatch:
     inputs:

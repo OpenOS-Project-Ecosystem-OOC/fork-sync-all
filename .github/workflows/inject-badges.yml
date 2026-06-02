@@ -22,11 +22,7 @@ on:
     - cron: '15 8 * * *'    # Daily at 08:15 UTC — moved out of 03:xx cluster
   workflow_run:
     workflows:
-      - "Mirror Interested-Deving-1896 → OSP"
       - "Mirror OSP → GitLab"
-      - "Add Mirror Repo"
-      - "Import Repository"
-      - "Clone Org"
     types: [completed]
   workflow_dispatch:
     inputs:
