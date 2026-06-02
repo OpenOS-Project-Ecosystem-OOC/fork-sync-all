@@ -150,11 +150,48 @@ except Exception:
   [[ "$pushed_at" -ge "$cutoff" ]]
 }
 
+# ensure_gh_repo <target_name>
+# Creates the GitHub repo under GITHUB_OWNER if it does not already exist.
+# No-ops silently if the repo is already there.
+ensure_gh_repo() {
+  local target_name="$1"
+  local check_rc=0
+  curl -sf \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/${GITHUB_OWNER}/${target_name}" \
+    > /dev/null 2>&1 || check_rc=$?
+  if [[ $check_rc -eq 0 ]]; then
+    return 0  # already exists
+  fi
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "  [DRY_RUN] would create ${GITHUB_OWNER}/${target_name}"
+    return 0
+  fi
+  info "  Creating ${GITHUB_OWNER}/${target_name}..."
+  local create_out create_rc=0
+  create_out=$(curl -sf -X POST \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    -H "Content-Type: application/json" \
+    "https://api.github.com/orgs/${GITHUB_OWNER}/repos" \
+    -d "{\"name\":\"${target_name}\",\"private\":false,\"auto_init\":false}" \
+    2>&1) || create_rc=$?
+  if [[ $create_rc -ne 0 ]]; then
+    warn "  Failed to create ${GITHUB_OWNER}/${target_name}: ${create_out:0:200}"
+    return 1
+  fi
+  info "  Created ${GITHUB_OWNER}/${target_name}."
+}
+
 sync_entry() {
   local source_url="$1" target_name="$2" platform="$3"
 
   info "──────────────────────────────────────────"
   info "${source_url}  →  github.com/${GITHUB_OWNER}/${target_name}"
+
+  # Ensure the target repo exists before attempting to push
+  ensure_gh_repo "$target_name" || { warn "Cannot ensure target repo — skipping"; return 1; }
 
   local clone_url
   clone_url=$(auth_clone_url "$source_url" "$platform")
