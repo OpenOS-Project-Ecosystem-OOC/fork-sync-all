@@ -736,8 +736,9 @@ extract_human_section() {
 # preserving any human content that maps to Install/Usage/Configuration/License.
 rewrite_readme() {
   local owner="$1" repo="$2" context="$3" old_content="$4"
-
-  info "  Mode: rewrite — migrating to template structure..."
+  # This function is called inside $(...) — its stdout is captured as the new
+  # README content. Do NOT emit anything to stdout except the final README.
+  # Use info()/warn() (both write to stderr) for logging, never bare echo/printf.
 
   # Generate AI sections
   local what_it_does architecture ci_section mirror_chain
@@ -843,8 +844,9 @@ EOF
 # Inject any AI sections that are missing from an otherwise-templated README.
 fill_missing_sections() {
   local owner="$1" repo="$2" context="$3" content="$4"
-
-  info "  Mode: fill — injecting missing sections..."
+  # This function is called inside $(...) — its stdout is captured as the new
+  # README content. Do NOT emit anything to stdout except the final README.
+  # Use info()/warn() (both write to stderr) for logging, never bare echo/printf.
 
   local updated_content="$content"
   local changed=false
@@ -944,11 +946,13 @@ process_repo() {
 
   case "$mode" in
     rewrite)
+      info "  Mode: rewrite — migrating to template structure..."
       updated_content=$(rewrite_readme "$owner" "$repo" "$context" "$readme_content")
       [ -n "$updated_content" ] && changed=true
       ;;
 
     fill)
+      info "  Mode: fill — injecting missing sections..."
       updated_content=$(fill_missing_sections "$owner" "$repo" "$context" "$readme_content")
       [ -n "$updated_content" ] && changed=true
       ;;
