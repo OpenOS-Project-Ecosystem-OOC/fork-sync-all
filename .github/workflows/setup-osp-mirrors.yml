@@ -11,7 +11,7 @@ name: Setup OSP Mirror Workflows
 
 on:
   schedule:
-    - cron: "45 * * * *"  # Hourly at :45
+    - cron: "45 */6 * * *"  # Every 6h — reduced from hourly to ease quota pressure
   workflow_dispatch:
     inputs:
       repo_filter:

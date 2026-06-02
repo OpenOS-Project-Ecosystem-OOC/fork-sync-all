@@ -12,7 +12,7 @@ name: Notification Poller
 
 on:
   schedule:
-    - cron: '*/30 * * * *'   # Every 30 minutes — halved to reduce quota pressure
+    - cron: '0 * * * *'   # Hourly — reduced from 30min to ease quota pressure
   workflow_dispatch: {}
 
 permissions:

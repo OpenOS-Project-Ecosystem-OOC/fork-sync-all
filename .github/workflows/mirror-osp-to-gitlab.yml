@@ -7,7 +7,7 @@ name: Mirror OSP → GitLab
 
 on:
   schedule:
-    - cron: '30 * * * *'   # Hourly at :30
+    - cron: '30 */4 * * *'   # Every 4h — reduced from hourly to ease quota pressure
   workflow_run:
     workflows:
       - "Add Mirror Repo"
