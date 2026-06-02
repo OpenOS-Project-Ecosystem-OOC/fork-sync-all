@@ -19,7 +19,7 @@ if [[ -z "$GH_TOKEN" ]]; then
   exit 1
 fi
 
-log() { echo "[$(date -u '+%H:%M:%S')] $*"; }
+log() { echo "[$(date -u '+%H:%M:%S')] $*" >&2; }
 
 # ── Rate limit helpers ─────────────────────────────────────────────────────
 

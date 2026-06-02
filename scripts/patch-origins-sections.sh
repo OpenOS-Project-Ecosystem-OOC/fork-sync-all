@@ -24,7 +24,7 @@ trap 'rm -f "$HEADER_FILE"' EXIT
 
 info() { echo "[patch-origins] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
-dry()  { echo "[dry-run] $*"; }
+dry()  { echo "[dry-run] $*" >&2; }
 
 gh_api() {
   local method="$1" url="$2"; shift 2

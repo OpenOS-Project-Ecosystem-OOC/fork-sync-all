@@ -45,7 +45,7 @@ budget_init
 
 info()  { echo "[inject-badges] $*" >&2; }
 warn()  { echo "[warn] $*" >&2; }
-dry()   { echo "[dry-run] $*"; }
+dry()   { echo "[dry-run] $*" >&2; }
 
 # ── GitHub API helpers ────────────────────────────────────────────────────────
 

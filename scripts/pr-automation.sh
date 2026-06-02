@@ -47,7 +47,7 @@ AUTH=(-H "Authorization: token ${GH_TOKEN}" -H "Accept: application/vnd.github+j
 
 info()  { echo "[pr-automation] $*" >&2; }
 warn()  { echo "[pr-automation][warn] $*" >&2; }
-dry()   { echo "[pr-automation][dry-run] $*"; }
+dry()   { echo "[pr-automation][dry-run] $*" >&2; }
 
 api_get() {
   curl --disable --silent "${AUTH[@]}" "$@"

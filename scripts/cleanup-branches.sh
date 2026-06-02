@@ -38,7 +38,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
 budget_init
 
 info()  { echo "[cleanup-branches] $*" >&2; }
-warn()  { echo "[cleanup-branches] ⚠️  $*"; }
+warn()  { echo "[cleanup-branches] ⚠️  $*" >&2; }
 ok()    { echo "[cleanup-branches] ✅ $*"; }
 
 deleted_total=0

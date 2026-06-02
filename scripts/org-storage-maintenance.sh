@@ -49,7 +49,7 @@ ACTIVE_GROUPS=(
 
 info()  { echo "[INFO]  $*" >&2; }
 warn()  { echo "[WARN]  $*" >&2; }
-dry()   { echo "[DRY]   $*"; }
+dry()   { echo "[DRY]   $*" >&2; }
 
 api_get() {
   curl -sf \

@@ -47,7 +47,7 @@ SCHEDULE_COUNTER=0
 info()  { echo "[INFO]  $*" >&2; }
 warn()  { echo "[WARN]  $*" >&2; }
 skip()  { echo "[SKIP]  $*"; }
-dry()   { echo "[DRY]   $*"; }
+dry()   { echo "[DRY]   $*" >&2; }
 
 encode() { printf '%s' "$1" | sed 's|/|%2F|g'; }
 

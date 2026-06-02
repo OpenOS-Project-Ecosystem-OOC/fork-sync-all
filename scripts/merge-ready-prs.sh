@@ -26,7 +26,7 @@ fi
 API="https://api.github.com"
 AUTH=(-H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github+json")
 
-log() { echo "[$(date -u '+%H:%M:%S')] $*"; }
+log() { echo "[$(date -u '+%H:%M:%S')] $*" >&2; }
 
 # ── Rate limit helpers ─────────────────────────────────────────────────────
 

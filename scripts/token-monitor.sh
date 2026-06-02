@@ -32,7 +32,7 @@ GH_API="https://api.github.com"
 GL_API="https://gitlab.com/api/v4"
 
 info()  { echo "[token-monitor] $*" >&2; }
-warn()  { echo "[token-monitor] ⚠️  $*"; }
+warn()  { echo "[token-monitor] ⚠️  $*" >&2; }
 ok()    { echo "[token-monitor] ✅ $*"; }
 fail()  { echo "[token-monitor] ❌ $*"; }
 
