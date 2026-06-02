@@ -104,6 +104,7 @@ subgroups:
       - fork-sync-all
       - flatpak-repo
       - org-mirror
+      - headroom
 
 # Fallback subgroup for repos not listed above
 default_subgroup: ops

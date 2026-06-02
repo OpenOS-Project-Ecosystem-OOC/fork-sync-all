@@ -14,5 +14,6 @@
   },
   "remoteEnv": {
     "GITLAB_TOKEN": "${localEnv:GITLAB_TOKEN}"
-  }
+  },
+  "postCreateCommand": "pip install --quiet 'headroom-ai[proxy,mcp]'"
 }

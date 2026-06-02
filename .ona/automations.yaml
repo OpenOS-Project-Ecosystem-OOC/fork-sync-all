@@ -1,0 +1,11 @@
+services:
+  headroom-proxy:
+    name: Headroom Proxy
+    description: >
+      Context compression proxy for AI agents. Sits on port 8787 and compresses
+      tool outputs, logs, and conversation history before they reach the LLM.
+      Reduces token consumption by 60-95% on typical agent workloads.
+      Use with: ANTHROPIC_BASE_URL=http://localhost:8787 or headroom wrap claude.
+    commands:
+      start: headroom proxy --port 8787
+      ready: curl -sf http://localhost:8787/livez
