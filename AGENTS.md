@@ -40,24 +40,32 @@ curl -sf -H "Authorization: token $SYNC_TOKEN" \
 
 ## Script conventions
 
-### `info()` and `warn()` must write to stderr
+### All logging helpers must write to stderr
 
-Every script defines `info()` and `warn()`. Both **must** use `>&2`:
+Every script defines some combination of `info()`, `warn()`, `dry()`, and `log()`.
+All **must** use `>&2`:
 
 ```bash
 info() { echo "[script-name] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
+dry()  { echo "[dry-run] $*" >&2; }
+log()  { echo "[$(date -u '+%H:%M:%S')] $*" >&2; }
 ```
 
 **Why this matters:** Several functions are called inside `$(...)` subshell captures
-where their stdout becomes the captured value (e.g. README content, repo lists).
-Any `info()` call without `>&2` inside such a function will corrupt the captured data.
+where their stdout becomes the captured value (e.g. README content, repo lists,
+API responses). Any logging call without `>&2` inside such a function will corrupt
+the captured data.
+
+This applies to `includes/gh-api.sh` too — `merge_upstream()` status messages
+must go to stderr since callers may capture its output via `result=$(merge_upstream ...)`.
 
 Known functions called inside `$(...)` captures — never emit to stdout inside these:
 - `rewrite_readme()` in `update-readmes.sh`
 - `fill_missing_sections()` in `update-readmes.sh`
 - `build_readme()` in `create-readmes.sh`
 - `generate_*()` functions in `update-readmes.sh`
+- `merge_upstream()` in `scripts/includes/gh-api.sh`
 
 ### YAML parsing
 
@@ -71,6 +79,17 @@ subgroups = config.get("subgroups", {}) or {}
 ```
 
 This applies to `gitlab-subgroups.yml` parsing in all scripts.
+
+### `includes/` scripts
+
+`scripts/includes/budget.sh` and `scripts/includes/gh-api.sh` are sourced by many
+scripts. Changes there have broad impact.
+
+- `budget.sh` — provides `budget_init`, `budget_check`, `budget_report`, and
+  `osp_priority_repos`. The latter parses `gitlab-subgroups.yml` with `yaml.safe_load`.
+- `gh-api.sh` — provides `gh_api`, `gh_api_graphql`, `merge_upstream`,
+  `get_default_sha`. All status messages use `>&2`. Guard against double-sourcing
+  is in place (`_GH_API_LOADED`).
 
 ### Tree fetches
 
