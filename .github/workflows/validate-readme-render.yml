@@ -48,16 +48,17 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.repos == '')
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check README.md
         run: |
-          bash scripts/check-readme-render.sh README.md
+          output=$(bash scripts/check-readme-render.sh README.md 2>&1)
           exit_code=$?
+          echo "$output"
           if [[ "${{ inputs.fail_on_warnings || 'false' }}" == "true" ]]; then
-            exit $exit_code
+            # Fail on warnings too: non-zero exit OR any ⚠ in output
+            echo "$output" | grep -q '⚠' && exit 1
           fi
-          # On push, only fail on errors (exit 1), not warnings (exit 0)
           exit $exit_code
 
   # ── Multi-repo check (workflow_run or dispatch with repo list) ────────────
@@ -70,7 +71,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.repos != '')
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Determine repos to check
         id: repos

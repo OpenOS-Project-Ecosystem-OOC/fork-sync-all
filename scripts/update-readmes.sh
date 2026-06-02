@@ -1162,18 +1162,30 @@ readme_skipped_budget=0
 
 # Inter-repo pacing: skip delay when quota is healthy (>2000 remaining),
 # sleep proportionally longer as quota tightens to avoid exhaustion mid-sweep.
+#
+# Quota is only re-fetched via API when the cached value drops to <=2000,
+# so a healthy full sweep costs 0 extra API calls for pacing.
+_quota_remaining=5000   # optimistic initial value; refreshed on demand
+
 _inter_repo_sleep() {
-  local remaining
-  remaining=$(curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "${GH_API}/rate_limit" \
-    | jq -r '.resources.core.remaining // 5000' 2>/dev/null) || remaining=5000
-  if   (( remaining > 2000 )); then sleep 0
-  elif (( remaining > 1000 )); then sleep 3
-  elif (( remaining >  500 )); then sleep 10
-  else                               sleep 30
+  # Only hit the API when we're in (or approaching) the low-quota range.
+  if (( _quota_remaining <= 2000 )); then
+    _quota_remaining=$(curl -sf \
+      -H "Authorization: token ${GH_TOKEN}" \
+      -H "Accept: application/vnd.github+json" \
+      "${GH_API}/rate_limit" \
+      | jq -r '.resources.core.remaining // 2001' 2>/dev/null) || _quota_remaining=2001
   fi
+
+  if   (( _quota_remaining > 2000 )); then : # no delay
+  elif (( _quota_remaining > 1000 )); then sleep 3
+  elif (( _quota_remaining >  500 )); then sleep 10
+  else                                     sleep 30
+  fi
+
+  # Decrement the cached value by a conservative per-repo estimate (10 calls)
+  # so we re-check before we actually hit the threshold, not after.
+  (( _quota_remaining -= 10 )) || true
 }
 
 _run_repo() {

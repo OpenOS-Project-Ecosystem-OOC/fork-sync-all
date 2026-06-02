@@ -73,8 +73,8 @@ done
 
 # ── 1. Leaked log lines ───────────────────────────────────────────────────────
 for (( i=0; i<total_lines; i++ )); do
-  if [[ "${lines[$i]}" =~ ^\[update-readmes\] ]]; then
-    ERRORS+=("line $(( i+1 )): leaked log line — update-readmes output written into file")
+  if [[ "${lines[$i]}" =~ ^\[update-readmes\]|^\[warn\] ]]; then
+    ERRORS+=("line $(( i+1 )): leaked log line — script output written into file: ${lines[$i]:0:60}")
   fi
 done
 
