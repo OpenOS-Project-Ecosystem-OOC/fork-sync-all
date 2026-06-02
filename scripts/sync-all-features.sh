@@ -91,7 +91,7 @@ synced=0
 failed=0
 skipped=0
 
-info()  { echo "[sync-all-features] $*"; }
+info()  { echo "[sync-all-features] $*" >&2; }
 warn()  { echo "[sync-all-features][warn] $*" >&2; }
 
 # ── gh_api ────────────────────────────────────────────────────────────────────

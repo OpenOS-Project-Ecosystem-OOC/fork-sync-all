@@ -44,7 +44,7 @@ SCHEDULE_COUNTER=0
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-info()  { echo "[INFO]  $*"; }
+info()  { echo "[INFO]  $*" >&2; }
 warn()  { echo "[WARN]  $*" >&2; }
 skip()  { echo "[SKIP]  $*"; }
 dry()   { echo "[DRY]   $*"; }

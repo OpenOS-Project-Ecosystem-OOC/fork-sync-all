@@ -31,7 +31,7 @@ STALE_DAYS="${STALE_DAYS:-90}"
 GH_API="https://api.github.com"
 GL_API="https://gitlab.com/api/v4"
 
-info()  { echo "[token-monitor] $*"; }
+info()  { echo "[token-monitor] $*" >&2; }
 warn()  { echo "[token-monitor] ⚠️  $*"; }
 ok()    { echo "[token-monitor] ✅ $*"; }
 fail()  { echo "[token-monitor] ❌ $*"; }

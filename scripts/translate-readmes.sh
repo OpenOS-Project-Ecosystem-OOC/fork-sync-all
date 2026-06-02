@@ -81,9 +81,9 @@ MODELS_API="https://models.github.ai/inference"
 HEADER_FILE=$(mktemp)
 trap 'rm -f "$HEADER_FILE"' EXIT
 
-info() { echo "[translate-readmes] $*"; }
+info() { echo "[translate-readmes] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
-dry()  { echo "[dry-run] $*"; }
+dry()  { echo "[dry-run] $*" >&2; }
 
 # ── Language metadata ─────────────────────────────────────────────────────────
 # Maps BCP-47 codes to human-readable names for prompts and file naming.

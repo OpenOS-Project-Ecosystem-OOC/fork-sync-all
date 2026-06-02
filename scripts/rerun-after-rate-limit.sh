@@ -37,7 +37,7 @@ GH_API="https://api.github.com"
 
 SUMMARY_FILE="${GITHUB_STEP_SUMMARY:-}"
 
-info()  { echo "[rerun-rl] $*"; }
+info()  { echo "[rerun-rl] $*" >&2; }
 warn()  { echo "[rerun-rl] ⚠️  $*" >&2; }
 
 summary_append() {

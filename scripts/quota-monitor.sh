@@ -86,7 +86,7 @@ GH_API="https://api.github.com"
 SUMMARY_FILE="${GITHUB_STEP_SUMMARY:-}"
 
 ts()    { date -u '+%H:%M:%S UTC'; }
-info()  { echo "[quota-monitor] $(ts)  $*"; }
+info()  { echo "[quota-monitor] $(ts)  $*" >&2; }
 warn()  { echo "[quota-monitor] $(ts) ⚠️  $*" >&2; }
 
 summary_append() {

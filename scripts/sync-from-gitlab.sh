@@ -75,7 +75,7 @@ EXCLUDED_REPOS=(
 )
 
 # Helpers must be defined before any call site (including the early log lines below)
-info() { echo "[sync-from-gitlab] $*"; }
+info() { echo "[sync-from-gitlab] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
 
 [[ "$DRY_RUN" == "true" ]] && info "Dry run — no pushes will occur."

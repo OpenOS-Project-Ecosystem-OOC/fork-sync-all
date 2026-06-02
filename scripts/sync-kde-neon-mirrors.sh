@@ -11,7 +11,7 @@ GITLAB_API="https://gitlab.com/api/v4"
 NEON_GROUP_ID="130739746"  # openos-project/kde-ecosystem-deving/neon-deving
 KDE_BASE="https://invent.kde.org/neon"
 
-info()  { echo "[kde-neon] $*"; }
+info()  { echo "[kde-neon] $*" >&2; }
 warn()  { echo "[kde-neon][warn] $*" >&2; }
 
 : "${GITLAB_TOKEN:?GITLAB_TOKEN is required}"

@@ -12,7 +12,7 @@ GITLAB_API="https://gitlab.com/api/v4"
 MIRROR_GROUP="openos-project/upstream-mirrors"
 MIRROR_GROUP_ENCODED="openos-project%2Fupstream-mirrors"
 
-info()  { echo "[sync] $*"; }
+info()  { echo "[sync] $*" >&2; }
 warn()  { echo "[warn] $*" >&2; }
 error() { echo "[error] $*" >&2; }
 

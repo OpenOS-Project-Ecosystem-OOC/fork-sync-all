@@ -45,7 +45,7 @@ DRY_RUN="${DRY_RUN:-false}"
 API="https://api.github.com"
 AUTH=(-H "Authorization: token ${GH_TOKEN}" -H "Accept: application/vnd.github+json")
 
-info()  { echo "[pr-automation] $*"; }
+info()  { echo "[pr-automation] $*" >&2; }
 warn()  { echo "[pr-automation][warn] $*" >&2; }
 dry()   { echo "[pr-automation][dry-run] $*"; }
 

@@ -91,7 +91,7 @@ synced=0
 failed=0
 skipped=0
 
-info()  { echo "[sync-registry-sources] $*"; }
+info()  { echo "[sync-registry-sources] $*" >&2; }
 warn()  { echo "[sync-registry-sources][warn] $*" >&2; }
 
 # ── gh_api ────────────────────────────────────────────────────────────────────

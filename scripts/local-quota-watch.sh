@@ -56,7 +56,7 @@ TIGHT_POLL_SEC=5
 DRY_RUN=false
 
 ts()   { date -u '+%H:%M:%S UTC'; }
-info() { echo "[local-watch] $(ts)  $*"; }
+info() { echo "[local-watch] $(ts)  $*" >&2; }
 warn() { echo "[local-watch] $(ts) ⚠️  $*" >&2; }
 
 # ── Argument parsing ──────────────────────────────────────────────────────────

@@ -47,7 +47,7 @@ ACTIVE_GROUPS=(
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-info()  { echo "[INFO]  $*"; }
+info()  { echo "[INFO]  $*" >&2; }
 warn()  { echo "[WARN]  $*" >&2; }
 dry()   { echo "[DRY]   $*"; }
 

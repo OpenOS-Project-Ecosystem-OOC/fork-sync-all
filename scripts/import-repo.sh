@@ -38,7 +38,7 @@ ONGOING_SYNC="${ONGOING_SYNC:-false}"
 
 GH_API="https://api.github.com"
 
-info()  { echo "[import-repo] $*"; }
+info()  { echo "[import-repo] $*" >&2; }
 warn()  { echo "[warn] $*" >&2; }
 error() { echo "[error] $*" >&2; exit 1; }
 

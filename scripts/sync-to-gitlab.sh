@@ -39,7 +39,7 @@ source "${SCRIPT_DIR}/branch-name-conv.sh"
 source "${SCRIPT_DIR}/includes/budget.sh"
 
 # Helpers must be defined before any call site (including the early log lines below)
-info() { echo "[sync-to-gitlab] $*"; }
+info() { echo "[sync-to-gitlab] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
 
 [[ "$DRY_RUN" == "true" ]] && info "Dry run — no pushes will occur."

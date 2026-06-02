@@ -41,7 +41,7 @@ IMPORTS_FILE="registered-imports.json"
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
 budget_init
 
-info() { echo "[sync-registered-imports] $*"; }
+info() { echo "[sync-registered-imports] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
 
 # shellcheck disable=SC2120

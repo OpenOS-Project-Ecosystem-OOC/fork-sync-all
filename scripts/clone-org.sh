@@ -94,7 +94,7 @@ BACKUP_MODE="${BACKUP_MODE:-false}"
 
 GH_API="https://api.github.com"
 
-info()  { echo "[clone-org] $*"; }
+info()  { echo "[clone-org] $*" >&2; }
 warn()  { echo "[clone-org][warn] $*" >&2; }
 error() { echo "[clone-org][error] $*" >&2; exit 1; }
 sanitize_tokens() {

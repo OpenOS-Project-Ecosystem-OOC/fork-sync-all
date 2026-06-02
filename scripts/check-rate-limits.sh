@@ -31,7 +31,7 @@ SUMMARY_FILE="${GITHUB_STEP_SUMMARY:-}"
 HEADER_TMP=$(mktemp)
 trap 'rm -f "$HEADER_TMP"' EXIT
 
-info() { echo "[rate-limits] $*"; }
+info() { echo "[rate-limits] $*" >&2; }
 warn() { echo "[rate-limits] ⚠️  $*" >&2; }
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

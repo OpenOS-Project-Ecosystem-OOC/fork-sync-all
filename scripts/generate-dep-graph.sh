@@ -39,7 +39,7 @@ budget_init
 
 trap 'rm -f "$HEADER_FILE"' EXIT
 
-info() { echo "[generate-dep-graph] $*"; }
+info() { echo "[generate-dep-graph] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
 
 # ── OSP-bound repo list (from sync-to-gitlab.sh) ─────────────────────────────

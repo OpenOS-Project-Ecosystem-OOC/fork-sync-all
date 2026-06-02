@@ -37,7 +37,7 @@ KEEP_PATTERNS="${KEEP_PATTERNS:-lts gh-pages main master}"
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
 budget_init
 
-info()  { echo "[cleanup-branches] $*"; }
+info()  { echo "[cleanup-branches] $*" >&2; }
 warn()  { echo "[cleanup-branches] ⚠️  $*"; }
 ok()    { echo "[cleanup-branches] ✅ $*"; }
 

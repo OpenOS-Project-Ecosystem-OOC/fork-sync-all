@@ -39,7 +39,7 @@ MODEL="${MODEL:-openai/gpt-4o}"
 GH_API="https://api.github.com"
 MODELS_API="https://models.github.ai/inference"
 
-info() { echo "[readme-wizard] $*"; }
+info() { echo "[readme-wizard] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
 
 # ── GitHub API helpers ────────────────────────────────────────────────────────

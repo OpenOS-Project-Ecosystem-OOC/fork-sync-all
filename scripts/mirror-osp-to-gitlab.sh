@@ -96,7 +96,7 @@ PYEOF
 # stop mirroring it entirely.
 EXCLUDED_REPOS=()
 
-info() { echo "[mirror-osp-to-gitlab] $*"; }
+info() { echo "[mirror-osp-to-gitlab] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
 
 # ── API helpers with rate-limit retry ────────────────────────────────────────

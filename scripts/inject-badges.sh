@@ -43,7 +43,7 @@ BADGE_BASE="https://app.ona.com/#"
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
 budget_init
 
-info()  { echo "[inject-badges] $*"; }
+info()  { echo "[inject-badges] $*" >&2; }
 warn()  { echo "[warn] $*" >&2; }
 dry()   { echo "[dry-run] $*"; }
 

@@ -22,7 +22,7 @@ API="https://api.github.com"
 HEADER_FILE=$(mktemp)
 trap 'rm -f "$HEADER_FILE"' EXIT
 
-info() { echo "[patch-origins] $*"; }
+info() { echo "[patch-origins] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
 dry()  { echo "[dry-run] $*"; }
 

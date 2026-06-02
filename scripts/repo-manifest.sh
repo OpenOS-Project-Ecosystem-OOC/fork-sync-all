@@ -65,7 +65,7 @@ GH_API="https://api.github.com"
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
 budget_init
 
-info()  { echo "[repo-manifest] $*"; }
+info()  { echo "[repo-manifest] $*" >&2; }
 warn()  { echo "[repo-manifest][warn] $*" >&2; }
 error() { echo "[repo-manifest][error] $*" >&2; exit 1; }
 sanitize() { sed "s/${GH_TOKEN}/***TOKEN***/g" | sed "s/${SOURCE_TOKEN}/***TOKEN***/g"; }

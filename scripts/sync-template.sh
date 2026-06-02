@@ -87,7 +87,7 @@ API="https://api.github.com"
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
 budget_init
 
-info()  { echo "[sync-template] $*"; }
+info()  { echo "[sync-template] $*" >&2; }
 warn()  { echo "[warn] $*" >&2; }
 error() { echo "[error] $*" >&2; exit 1; }
 sanitize() { sed "s/${GH_TOKEN}/***TOKEN***/g"; }

@@ -70,7 +70,7 @@ GH_API="https://api.github.com"
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
 budget_init
 
-info()  { echo "[merge-to-monorepo] $*"; }
+info()  { echo "[merge-to-monorepo] $*" >&2; }
 warn()  { echo "[merge-to-monorepo][warn] $*" >&2; }
 error() { echo "[merge-to-monorepo][error] $*" >&2; exit 1; }
 

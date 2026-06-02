@@ -21,7 +21,7 @@ set -uo pipefail
 
 VALIDATE="${VALIDATE:-true}"
 
-info() { echo "[rotate-token] $*"; }
+info() { echo "[rotate-token] $*" >&2; }
 ok()   { echo "[rotate-token] ✓ $*"; }
 fail() { echo "[rotate-token] ✗ $*" >&2; exit 1; }
 

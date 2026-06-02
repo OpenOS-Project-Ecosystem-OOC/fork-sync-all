@@ -22,7 +22,7 @@ set -uo pipefail
 
 GL_API="https://gitlab.com/api/v4"
 
-info()  { echo "[sync] $*"; }
+info()  { echo "[sync] $*" >&2; }
 warn()  { echo "[warn] $*" >&2; }
 
 # Repos: "github_path|gitlab_project_id|upstream_branches"

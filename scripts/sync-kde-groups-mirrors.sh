@@ -22,7 +22,7 @@ KDE_GROUPS_GL_PATH="openos-project/kde-ecosystem-deving/kde-groups"
 
 : "${GITLAB_TOKEN:?GITLAB_TOKEN is required}"
 
-info()  { echo "[kde-groups] $*"; }
+info()  { echo "[kde-groups] $*" >&2; }
 warn()  { echo "[kde-groups][warn] $*" >&2; }
 
 SYNCED=0
