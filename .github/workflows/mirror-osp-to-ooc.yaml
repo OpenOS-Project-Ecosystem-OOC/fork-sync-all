@@ -5,14 +5,12 @@ name: Mirror to OpenOS-Project-Ecosystem-OOC
 #   OpenOS-Project-OSP  ->(this file)->  OpenOS-Project-Ecosystem-OOC
 
 on:
-  push:
-    branches: ["**"]
-    tags: ["**"]
   schedule:
-    # Every 2h at :15 — 15 min after mirror-to-osp (*/2 :00) to allow OSP to settle.
-    # Reduced from hourly to match mirror-to-osp cadence.
+    # Every 6h at :15 — 15 min after mirror-to-osp (:00) to allow OSP to settle.
     - cron: "15 */6 * * *"
   workflow_dispatch:
+  # Note: push trigger removed — this workflow only executes in OpenOS-Project-OSP/lkm
+  # (guarded by the job-level if condition). Firing on every push here wastes runner slots.
 
 jobs:
   mirror:

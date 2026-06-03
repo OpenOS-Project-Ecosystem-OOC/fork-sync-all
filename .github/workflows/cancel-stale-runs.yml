@@ -21,6 +21,8 @@ name: Cancel Stale Runs
 on:
   push:
     branches: [main]
+    paths:
+      - '.github/workflows/**'   # only workflow changes create pre-fix stale runs
 
   workflow_dispatch:
     inputs:

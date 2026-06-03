@@ -16,14 +16,10 @@ name: Update READMEs
 
 on:
   push:
-    branches: ['**']
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'scripts/**'
-      - 'registered-imports.json'
-      - 'README.md'
-      - '.gitignore'
-      - '.devcontainer/**'
+    branches: [main]
+    paths:
+      - 'config/gitlab-subgroups.yml'   # repo list changed — re-evaluate READMEs
+      - 'config/template-manifest.yml'  # template changed — propagate to consumers
   schedule:
     - cron: '0 3 * * *'   # Full sweep daily at 03:00 UTC (off-peak)
   workflow_run:
