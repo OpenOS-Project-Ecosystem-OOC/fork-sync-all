@@ -6,9 +6,9 @@ name: Cancel Stale Runs
 #   (b) created before the fix commit that triggered this workflow — ensures
 #       pre-fix runs don't burn quota after a patch lands on main.
 #
-# Triggered automatically on every push to main so stale runs are cleared
-# immediately after a fix lands, without waiting for the next quota reset.
-# Also available as workflow_dispatch for manual one-shot cleanup.
+# Available as workflow_dispatch for manual one-shot cleanup.
+# Push trigger removed — firing on every workflow file change consumed ~800
+# calls per push cancelling its own queue, defeating the purpose.
 #
 # Safeguards:
 #   - Never cancels itself
@@ -19,11 +19,6 @@ name: Cancel Stale Runs
 #   - Concurrency group: only one instance runs at a time
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/**'   # only workflow changes create pre-fix stale runs
-
   workflow_dispatch:
     inputs:
       max_age_minutes:
