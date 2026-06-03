@@ -235,13 +235,20 @@ if [[ "$SECRET_LOCATION" == "osp-org" ]]; then
   OSP_TOKEN=$(resolve_osp_token)
 
   # GitHub org secrets API requires the public key to encrypt the value.
-  key_response=$(curl -si \
+  # Use separate header/body files to avoid tail-1 fragility with multi-line JSON.
+  _key_headers=$(mktemp)
+  _key_body=$(mktemp)
+  trap 'rm -f "$_key_headers" "$_key_body"' RETURN
+
+  curl -s \
+    -D "$_key_headers" \
+    -o "$_key_body" \
     -H "Authorization: token ${OSP_TOKEN}" \
     -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/orgs/${OSP_ORG}/actions/secrets/public-key")
+    "https://api.github.com/orgs/${OSP_ORG}/actions/secrets/public-key"
 
-  key_http=$(echo "$key_response" | head -1 | awk '{print $2}')
-  key_json=$(echo "$key_response" | tail -1)
+  key_http=$(head -1 "$_key_headers" | awk '{print $2}')
+  key_json=$(cat "$_key_body")
 
   if [[ "$key_http" == "403" ]]; then
     fail "403 fetching ${OSP_ORG} public key — the token lacks admin:org on ${OSP_ORG}.
@@ -250,21 +257,22 @@ if [[ "$SECRET_LOCATION" == "osp-org" ]]; then
     B) Set OSP_APP_ID + OSP_APP_PRIVATE_KEY: a GitHub App installed on ${OSP_ORG}
   Then re-run this workflow."
   elif [[ "$key_http" != "200" ]]; then
-    fail "Unexpected HTTP ${key_http} fetching ${OSP_ORG} public key."
+    fail "Unexpected HTTP ${key_http} fetching ${OSP_ORG} public key. Body: ${key_json}"
   fi
 
   key_id=$(echo "$key_json" | python3 -c "import json,sys; print(json.load(sys.stdin)['key_id'])")
   pub_key=$(echo "$key_json" | python3 -c "import json,sys; print(json.load(sys.stdin)['key'])")
 
   # Encrypt the secret value using libsodium (PyNaCl) — required by GitHub API.
-  encrypted=$(python3 - <<PYEOF
-import base64
-from nacl import encoding, public
+  # Pass pub_key and token_value via environment to avoid shell interpolation issues.
+  encrypted=$(PUB_KEY="$pub_key" TOKEN_VALUE="$TOKEN_VALUE" python3 - <<'PYEOF'
+import base64, os
+from nacl import public as nacl_public
 
-pub_key_bytes = base64.b64decode("${pub_key}")
-sealed = public.SealedBox(public.PublicKey(pub_key_bytes))
-encrypted = sealed.encrypt("${TOKEN_VALUE}".encode())
-print(base64.b64encode(encrypted).decode())
+pub_key_bytes = base64.b64decode(os.environ["PUB_KEY"])
+token_bytes   = os.environ["TOKEN_VALUE"].encode()
+sealed = nacl_public.SealedBox(nacl_public.PublicKey(pub_key_bytes))
+print(base64.b64encode(sealed.encrypt(token_bytes)).decode())
 PYEOF
   ) || fail "Encryption failed — ensure PyNaCl is installed (pip install pynacl)."
 
