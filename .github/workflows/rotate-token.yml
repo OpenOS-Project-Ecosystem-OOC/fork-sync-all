@@ -65,9 +65,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Install PyNaCl (needed for OSP org secret encryption)
+      - name: Install Python deps for OSP org secret rotation
         if: inputs.secret_name == 'ORG_MIRROR_OSP_TO_OOC' || inputs.secret_name == 'MIRROR_TOKEN'
-        run: pip install --quiet pynacl
+        run: pip install --quiet pynacl cryptography PyJWT
 
       - name: Update secret and validate
         env:
@@ -77,6 +77,12 @@ jobs:
           NEW_EXPIRY_DATE: ${{ inputs.new_expiry_date }}
           VALIDATE: ${{ inputs.validate }}
           REPO: ${{ github.repository }}
+          # OSP org token resolution (first available wins):
+          #   OSP_APP_ID + OSP_APP_PRIVATE_KEY — GitHub App (preferred, no expiry)
+          #   OSP_ADMIN_TOKEN                  — PAT with admin:org on OpenOS-Project-OSP
+          OSP_APP_ID: ${{ secrets.OSP_APP_ID || '' }}
+          OSP_APP_PRIVATE_KEY: ${{ secrets.OSP_APP_PRIVATE_KEY || '' }}
+          OSP_ADMIN_TOKEN: ${{ secrets.OSP_ADMIN_TOKEN || '' }}
         run: bash scripts/rotate-token.sh
       - name: Write summary
         if: always()

@@ -17,7 +17,13 @@
 #   VALIDATE        — "true" to validate the token before storing (default: true)
 #   SECRET_LOCATION — "repo" or "osp-org" (default: auto-detected from SECRET_NAME)
 #   NEW_EXPIRY_DATE — new expiry date (YYYY-MM-DD) to write into token-monitor.sh
-#                     and AGENTS.md after rotation (optional)
+#                     and AGENTS.md after rotation (optional; auto-detected if blank)
+#
+# OSP org secret rotation requires a token with admin:org on OpenOS-Project-OSP.
+# Resolution order (first available wins):
+#   1. OSP_APP_PRIVATE_KEY + OSP_APP_ID  — GitHub App installation token (preferred)
+#   2. OSP_ADMIN_TOKEN                   — PAT with admin:org on OpenOS-Project-OSP
+#   3. GH_TOKEN                          — falls back with a clear error if it 403s
 
 set -uo pipefail
 
@@ -59,6 +65,84 @@ if [[ -z "$SECRET_LOCATION" ]]; then
 fi
 
 OSP_ORG="OpenOS-Project-OSP"
+
+# ── OSP org token resolution ──────────────────────────────────────────────────
+# Resolves the token used for OpenOS-Project-OSP org API calls.
+# Priority: GitHub App > OSP_ADMIN_TOKEN PAT > GH_TOKEN (with 403 detection).
+
+OSP_APP_ID="${OSP_APP_ID:-}"
+OSP_APP_PRIVATE_KEY="${OSP_APP_PRIVATE_KEY:-}"
+OSP_ADMIN_TOKEN="${OSP_ADMIN_TOKEN:-}"
+
+resolve_osp_token() {
+  # 1. GitHub App installation token
+  if [[ -n "$OSP_APP_ID" && -n "$OSP_APP_PRIVATE_KEY" ]]; then
+    info "Obtaining GitHub App installation token for ${OSP_ORG}..."
+    app_token=$(python3 - <<PYEOF
+import time, base64, json, urllib.request, urllib.error
+
+app_id    = "${OSP_APP_ID}"
+pem       = """${OSP_APP_PRIVATE_KEY}"""
+org       = "${OSP_ORG}"
+
+# Build JWT
+try:
+    from cryptography.hazmat.primitives import serialization, hashes
+    from cryptography.hazmat.primitives.asymmetric import padding
+    from cryptography.hazmat.backends import default_backend
+    import jwt as pyjwt
+except ImportError:
+    print("ERROR: cryptography and PyJWT required for App auth (pip install cryptography PyJWT)", flush=True)
+    raise SystemExit(1)
+
+now = int(time.time())
+payload = {"iat": now - 60, "exp": now + 540, "iss": app_id}
+token = pyjwt.encode(payload, pem, algorithm="RS256")
+if isinstance(token, bytes):
+    token = token.decode()
+
+# Get installation ID for the org
+req = urllib.request.Request(
+    f"https://api.github.com/orgs/{org}/installation",
+    headers={"Authorization": f"Bearer {token}",
+             "Accept": "application/vnd.github+json"})
+try:
+    with urllib.request.urlopen(req) as r:
+        install_id = json.loads(r.read())["id"]
+except urllib.error.HTTPError as e:
+    print(f"ERROR: Could not get installation for {org}: HTTP {e.code}", flush=True)
+    raise SystemExit(1)
+
+# Exchange for installation access token
+req2 = urllib.request.Request(
+    f"https://api.github.com/app/installations/{install_id}/access_tokens",
+    data=b"{}",
+    headers={"Authorization": f"Bearer {token}",
+             "Accept": "application/vnd.github+json"},
+    method="POST")
+with urllib.request.urlopen(req2) as r:
+    print(json.loads(r.read())["token"])
+PYEOF
+    ) || { warn "GitHub App token exchange failed — falling back to OSP_ADMIN_TOKEN or GH_TOKEN."; app_token=""; }
+
+    if [[ -n "$app_token" && "$app_token" != ERROR* ]]; then
+      info "GitHub App installation token obtained."
+      echo "$app_token"
+      return 0
+    fi
+  fi
+
+  # 2. Dedicated OSP admin PAT
+  if [[ -n "$OSP_ADMIN_TOKEN" ]]; then
+    info "Using OSP_ADMIN_TOKEN for ${OSP_ORG} org operations."
+    echo "$OSP_ADMIN_TOKEN"
+    return 0
+  fi
+
+  # 3. Fall back to GH_TOKEN — will 403 if it lacks admin:org on OSP
+  info "No OSP_APP_* or OSP_ADMIN_TOKEN set — using GH_TOKEN (may 403 if it lacks admin:org on ${OSP_ORG})."
+  echo "$GH_TOKEN"
+}
 
 # ── 2. Validate token against platform API (before storing) ──────────────────
 # Validate first so a bad token is caught before it overwrites a working one.
@@ -147,20 +231,34 @@ fi
 if [[ "$SECRET_LOCATION" == "osp-org" ]]; then
   info "Updating org secret ${SECRET_NAME} in ${OSP_ORG}..."
 
+  # Resolve the token with admin:org scope on OSP (App > PAT > fallback)
+  OSP_TOKEN=$(resolve_osp_token)
+
   # GitHub org secrets API requires the public key to encrypt the value.
-  # Fetch the org's public key first.
-  key_json=$(curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
+  key_response=$(curl -si \
+    -H "Authorization: token ${OSP_TOKEN}" \
     -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/orgs/${OSP_ORG}/actions/secrets/public-key") || \
-    fail "Could not fetch public key for ${OSP_ORG} — check that GH_TOKEN has admin:org scope on ${OSP_ORG}."
+    "https://api.github.com/orgs/${OSP_ORG}/actions/secrets/public-key")
+
+  key_http=$(echo "$key_response" | head -1 | awk '{print $2}')
+  key_json=$(echo "$key_response" | tail -1)
+
+  if [[ "$key_http" == "403" ]]; then
+    fail "403 fetching ${OSP_ORG} public key — the token lacks admin:org on ${OSP_ORG}.
+  Fix options (see AGENTS.md § OSP org secret rotation):
+    A) Set OSP_ADMIN_TOKEN repo secret: a PAT with admin:org on ${OSP_ORG}
+    B) Set OSP_APP_ID + OSP_APP_PRIVATE_KEY: a GitHub App installed on ${OSP_ORG}
+  Then re-run this workflow."
+  elif [[ "$key_http" != "200" ]]; then
+    fail "Unexpected HTTP ${key_http} fetching ${OSP_ORG} public key."
+  fi
 
   key_id=$(echo "$key_json" | python3 -c "import json,sys; print(json.load(sys.stdin)['key_id'])")
   pub_key=$(echo "$key_json" | python3 -c "import json,sys; print(json.load(sys.stdin)['key'])")
 
   # Encrypt the secret value using libsodium (PyNaCl) — required by GitHub API.
   encrypted=$(python3 - <<PYEOF
-import base64, sys
+import base64
 from nacl import encoding, public
 
 pub_key_bytes = base64.b64decode("${pub_key}")
@@ -170,9 +268,9 @@ print(base64.b64encode(encrypted).decode())
 PYEOF
   ) || fail "Encryption failed — ensure PyNaCl is installed (pip install pynacl)."
 
-  http_code=$(curl -sf -o /dev/null -w "%{http_code}" \
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
     -X PUT \
-    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Authorization: token ${OSP_TOKEN}" \
     -H "Accept: application/vnd.github+json" \
     "https://api.github.com/orgs/${OSP_ORG}/actions/secrets/${SECRET_NAME}" \
     -d "{\"encrypted_value\":\"${encrypted}\",\"key_id\":\"${key_id}\",\"visibility\":\"all\"}")
@@ -199,7 +297,7 @@ echo ""
 
 if [[ "$SECRET_LOCATION" == "osp-org" ]]; then
   secret_check=$(curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Authorization: token ${OSP_TOKEN}" \
     -H "Accept: application/vnd.github+json" \
     "https://api.github.com/orgs/${OSP_ORG}/actions/secrets/${SECRET_NAME}" \
     | python3 -c "import json,sys; print(json.load(sys.stdin).get('name',''))" 2>/dev/null || echo "")

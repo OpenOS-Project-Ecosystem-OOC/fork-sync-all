@@ -227,12 +227,45 @@ Check savings: `headroom stats`
 
 ### How to rotate an OSP org secret (ORG_MIRROR_OSP_TO_OOC, MIRROR_TOKEN)
 
-OSP org secrets cannot be updated via the repo API — they live in the
-`OpenOS-Project-OSP` org and require org admin access:
+OSP org secrets live in `OpenOS-Project-OSP` and require a token with
+`admin:org` on that org. `SYNC_TOKEN` only covers `Interested-Deving-1896`.
 
-1. Generate a new PAT at https://github.com/settings/tokens
-2. Go to [OSP org secrets] and update the secret value
-3. Update the expiry date in `scripts/token-monitor.sh` (the `OSP_ORG_SECRETS` array)
+The `rotate-token.yml` workflow resolves the OSP token automatically in
+this priority order:
+
+#### Option 1 — GitHub App (preferred, permanent)
+
+A GitHub App installation token never expires and has fine-grained permissions.
+
+**One-time setup:**
+1. Create a GitHub App at https://github.com/settings/apps/new
+   - Name: `fork-sync-all-osp-rotator` (or similar)
+   - Permissions: **Organization secrets → Read and write**
+   - Uncheck everything else
+2. Install the App on `OpenOS-Project-OSP` org
+3. Note the **App ID** (shown on the app settings page)
+4. Generate a **private key** (PEM format) from the app settings page
+5. Add two repo secrets to `Interested-Deving-1896/fork-sync-all`:
+   - `OSP_APP_ID` — the numeric App ID
+   - `OSP_APP_PRIVATE_KEY` — the full PEM contents (including header/footer)
+6. Run [rotate-token.yml] — it will use the App automatically
+
+#### Option 2 — Dedicated PAT (bridge until App is set up)
+
+1. Generate a new PAT at https://github.com/settings/tokens with:
+   - `admin:org` scope
+   - Authorized for `OpenOS-Project-OSP` org (SSO authorize if required)
+2. Add it as repo secret `OSP_ADMIN_TOKEN` in `Interested-Deving-1896/fork-sync-all`
+3. Run [rotate-token.yml] — it will use `OSP_ADMIN_TOKEN` automatically
+
+#### Option 3 — Manual fallback
+
+If neither `OSP_APP_*` nor `OSP_ADMIN_TOKEN` is set, the workflow prints
+the exact error and the two options above. You can also update manually:
+
+1. Generate a new PAT with `admin:org` on `OpenOS-Project-OSP`
+2. Go to [OSP org secrets] and update the secret value directly
+3. Update the expiry date in `scripts/token-monitor.sh` (`OSP_ORG_SECRETS` array)
    and in the table above
 
 ### Automated monitoring
