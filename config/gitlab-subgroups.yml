@@ -90,6 +90,7 @@ subgroups:
     path: openos-project/kde-ecosystem-deving/neon-deving
     repos:
       - KPort
+      - kde-builder
       - ubuntu-core
       - pkg-kde-tools
       - pkg-kde-jenkins
