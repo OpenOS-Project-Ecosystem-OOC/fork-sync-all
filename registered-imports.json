@@ -40,5 +40,11 @@
     "target_name": "kde-builder",
     "platform": "github",
     "added": "2026-06-03T22:50:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/infra-dashboard",
+    "target_name": "infra-dashboard",
+    "platform": "github",
+    "added": "2026-06-04T23:53:30Z"
   }
 ]
