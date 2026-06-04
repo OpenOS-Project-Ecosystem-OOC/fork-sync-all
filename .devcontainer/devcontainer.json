@@ -10,10 +10,19 @@
     },
     "./features/gitr": {
       "version": "latest"
+    },
+    "./features/incus": {
+      "version": "latest",
+      "remote": "",
+      "remote_url": ""
     }
   },
   "remoteEnv": {
-    "GITLAB_TOKEN": "${localEnv:GITLAB_TOKEN}"
+    "GITLAB_TOKEN": "${localEnv:GITLAB_TOKEN}",
+    "INCUS_REMOTE": "${localEnv:INCUS_REMOTE}",
+    "INCUS_REMOTE_URL": "${localEnv:INCUS_REMOTE_URL}",
+    "INCUS_CLIENT_CERT": "${localEnv:INCUS_CLIENT_CERT}",
+    "INCUS_CLIENT_KEY": "${localEnv:INCUS_CLIENT_KEY}"
   },
   "postCreateCommand": "pip install --quiet 'headroom-ai[proxy,mcp]'"
 }

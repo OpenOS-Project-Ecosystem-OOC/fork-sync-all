@@ -1,0 +1,37 @@
+{
+  "id": "incus",
+  "version": "1.0.0",
+  "name": "Incus CLI + bidirectional import/export",
+  "description": "Installs the Incus client (incus CLI) and helper scripts for bidirectional image import/export between the devcontainer and a remote Incus server. Supports pushing local distrobuilder images into Incus and pulling Incus images out as OCI tarballs.",
+  "documentationURL": "https://linuxcontainers.org/incus/docs/main/",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "Incus client version to install ('latest' uses the current stable from zabbly/incus)."
+    },
+    "remote": {
+      "type": "string",
+      "default": "",
+      "description": "Default Incus remote name to configure (e.g. 'my-server'). Leave blank to skip remote setup."
+    },
+    "remote_url": {
+      "type": "string",
+      "default": "",
+      "description": "URL of the default Incus remote (e.g. 'https://incus.example.com:8443'). Required if 'remote' is set."
+    }
+  },
+  "containerEnv": {
+    "INCUS_REMOTE": "${localEnv:INCUS_REMOTE}",
+    "INCUS_REMOTE_URL": "${localEnv:INCUS_REMOTE_URL}",
+    "INCUS_CLIENT_CERT": "${localEnv:INCUS_CLIENT_CERT}",
+    "INCUS_CLIENT_KEY": "${localEnv:INCUS_CLIENT_KEY}"
+  },
+  "mounts": [
+    {
+      "source": "${localEnv:HOME}/.config/incus",
+      "target": "/root/.config/incus",
+      "type": "bind"
+    }
+  ]
+}

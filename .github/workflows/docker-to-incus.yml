@@ -1,0 +1,113 @@
+name: Docker → Incus Migration
+
+# Scans Interested-Deving-1896 repos for Docker artifacts (Dockerfile,
+# docker-compose.yml, .dockerignore) and replaces them with Incus equivalents:
+#   Dockerfile          → incus-image.yaml  (distrobuilder definition)
+#   docker-compose.yml  → incus-compose.yaml (digizyne/incus-compose format)
+#   .dockerignore       → deleted
+#
+# Triggers:
+#   - After "Add Mirror Repo" completes (catches newly added repos immediately)
+#   - Weekly sweep (Sunday 03:00 UTC) to catch repos added by other means
+#   - Manual dispatch with optional repo filter
+
+on:
+  workflow_run:
+    workflows: ["Add Mirror Repo"]
+    types: [completed]
+  schedule:
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+    inputs:
+      repo_filter:
+        description: "Repo name substring filter (blank = all)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run — print changes without committing"
+        type: boolean
+        required: false
+        default: false
+      force:
+        description: "Re-generate even if Incus files already exist"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-to-incus
+  cancel-in-progress: false
+
+# ── Rate limits ──────────────────────────────────────────────────────────────
+# Uses GraphQL (1 call per page) for repo list + REST Contents API for file
+# reads and writes. Typical run: ~5–20 API calls per repo with Docker files.
+# Budget guard exits before the 55-minute mark to stay within timeout.
+
+jobs:
+  quota-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      skip: ${{ steps.quota.outputs.skip }}
+    steps:
+      - name: Check API quota
+        id: quota
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          MIN_QUOTA: "500"
+        run: |
+          remaining=$(curl -sf \
+            -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/rate_limit" \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['resources']['core']['remaining'])" \
+            2>/dev/null || echo "0")
+          echo "remaining=${remaining}"
+          if [ "$remaining" -lt "$MIN_QUOTA" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Quota too low (${remaining} < ${MIN_QUOTA}) — skipping run."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # When triggered by workflow_run, only proceed if the upstream run succeeded
+  check-trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Evaluate trigger
+        id: check
+        run: |
+          event="${{ github.event_name }}"
+          conclusion="${{ github.event.workflow_run.conclusion }}"
+          if [ "$event" = "workflow_run" ] && [ "$conclusion" != "success" ]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "Upstream workflow did not succeed (conclusion: ${conclusion}) — skipping."
+          else
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  migrate:
+    needs: [quota-check, check-trigger]
+    if: needs.quota-check.outputs.skip == 'false' && needs.check-trigger.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout fork-sync-all
+        uses: actions/checkout@v6
+
+      - name: Replace Docker artifacts with Incus equivalents
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          UPSTREAM_OWNER: Interested-Deving-1896
+          REPO_FILTER: ${{ inputs.repo_filter || '' }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          FORCE: ${{ inputs.force || 'false' }}
+          BUDGET_MINUTES: "55"
+          COMMIT_AUTHOR_NAME: "fork-sync-all[bot]"
+          COMMIT_AUTHOR_EMAIL: "fork-sync-all@users.noreply.github.com"
+        run: bash scripts/docker-to-incus.sh
