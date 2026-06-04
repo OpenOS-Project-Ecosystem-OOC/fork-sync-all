@@ -25,12 +25,12 @@ Interested-Deving-1896  ──►  OpenOS-Project-OSP  ──►  OpenOS-Project
 
 | Workflow | Schedule | What it does |
 |---|---|---|
-| `sync-forks.yml` | Hourly `:00` | Syncs all `Interested-Deving-1896` forks with their upstreams |
-| `sync-pieroproietti-forks.yml` | Hourly `:05` | Fast-path sync for pieroproietti forks only |
-| `mirror-to-osp.yml` | Hourly `:00` | Mirrors `Interested-Deving-1896` repos into `OpenOS-Project-OSP` |
-| `mirror-osp-to-gitlab.yml` | Hourly `:30` | Mirrors `OpenOS-Project-OSP` repos into GitLab `openos-project` |
+| `sync-forks.yml` | Daily `06:00` | Syncs all `Interested-Deving-1896` forks with their upstreams |
+| `sync-pieroproietti-forks.yml` | Every 4h `:05` | Fast-path sync for pieroproietti forks only |
+| `mirror-to-osp.yml` | Every 6h `:00` | Mirrors `Interested-Deving-1896` repos into `OpenOS-Project-OSP` |
+| `mirror-osp-to-gitlab.yml` | Every 4h `:30` | Mirrors `OpenOS-Project-OSP` repos into GitLab `openos-project` |
 | `sync-from-gitlab.yml` | Daily `04:22` | Pulls GitLab `openos-project` repos back into `Interested-Deving-1896` (scheduled fallback; primary trigger is GitLab CI on push) |
-| `sync-registered-imports.yml` | Hourly `:50` | Re-syncs all repos registered via the import workflow |
+| `sync-registered-imports.yml` | Every 6h `:55` | Re-syncs all repos registered via the import workflow |
 
 ### Import
 
@@ -42,15 +42,15 @@ Interested-Deving-1896  ──►  OpenOS-Project-OSP  ──►  OpenOS-Project
 - `repo_url` — source URL (GitHub, GitLab, Bitbucket, Codeberg, Sourcehut, Gitea, or any git host)
 - `repo_name` — optional rename in `Interested-Deving-1896` (defaults to source name)
 - `mirror_to_osp_ooc` — push through the OSP → OOC chain immediately
-- `ongoing_sync` — register in `registered-imports.json` for hourly re-sync
+- `ongoing_sync` — register in `registered-imports.json` for re-sync every 6h
 
 ### Maintenance
 
 | Workflow | Schedule | What it does |
 |---|---|---|
 | `reconcile-org-refs.yml` | Manual / on push | Rewrites org names in file content across all three orgs; includes a label conversion pass for build/install/registry commands |
-| `upstream-commits.yml` | Hourly `:45` | Detects direct commits to OSP/OOC and opens PRs in `Interested-Deving-1896` |
-| `upstream-prs.yml` | Hourly `:23` | Syncs open PRs from OSP/OOC upstream into `Interested-Deving-1896` |
+| `upstream-commits.yml` | Every 6h `:47` | Detects direct commits to OSP/OOC and opens PRs in `Interested-Deving-1896` |
+| `upstream-prs.yml` | Every 6h `:33` | Syncs open PRs from OSP/OOC upstream into `Interested-Deving-1896` |
 | `add-mirror-repo.yml` | Manual | Adds a new repo to the OSP + OOC mirror chain |
 | `setup-osp-mirrors.yml` | Manual | Injects `mirror-osp-to-ooc.yaml` into all OSP repos |
 | `resolve-failures.yml` | Daily `07:30` | AI-assisted CI failure resolver (GitHub Models) |
