@@ -13,6 +13,12 @@ Interested-Deving-1896  ──►  OpenOS-Project-OSP  ──►  OpenOS-Project
 
 ---
 
+## Documentation
+
+- [Workflow Triggers](docs/workflow-triggers.md) — every workflow, its schedule, and what else triggers it ([plain text](docs/workflow-triggers.txt))
+
+---
+
 ## Workflows
 
 ### Sync & Mirror
