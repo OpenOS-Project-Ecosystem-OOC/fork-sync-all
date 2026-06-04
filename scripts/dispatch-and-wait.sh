@@ -15,7 +15,7 @@
 set -uo pipefail
 
 WORKFLOW="${1:?workflow file required}"
-TIMEOUT_MIN="${2:-30}"
+TIMEOUT_MIN="${2:-90}"
 INPUTS="${3:-{}}"
 API="https://api.github.com"
 
@@ -94,6 +94,8 @@ while true; do
     fi
   fi
 
-  info "... ${STATUS} (checking again in 30s)"
+  # Empty status means GitHub hasn't assigned a runner yet — keep waiting
+  STATUS_DISPLAY="${STATUS:-waiting for runner}"
+  info "... ${STATUS_DISPLAY} (checking again in 30s)"
   sleep 30
 done
