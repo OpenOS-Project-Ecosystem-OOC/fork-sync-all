@@ -9,6 +9,7 @@ on:
   workflow_run:
     workflows:
       - "Mirror Interested-Deving-1896 → OSP"
+      - "Add Mirror Repo"
     types: [completed]
   schedule:
     - cron: '0 9 * * *'
