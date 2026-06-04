@@ -49,6 +49,27 @@ budget_init
 info()  { echo "[scan-rl] $*" >&2; }
 warn()  { echo "[scan-rl] ⚠️  $*" >&2; }
 
+# ── Quota pre-flight ──────────────────────────────────────────────────────────
+# Each scan costs: 1 (list runs) + up to MAX_RUNS×2 (log zip HEAD+GET) calls.
+# Skip entirely if quota is too low to be useful.
+MIN_QUOTA="${MIN_QUOTA:-500}"
+_quota_json=$(curl -sf \
+  -H "Authorization: token ${GH_TOKEN}" \
+  "https://api.github.com/rate_limit" 2>/dev/null || echo '{}')
+_quota_remaining=$(echo "$_quota_json" | python3 -c \
+  "import sys,json; d=json.load(sys.stdin); print(d.get('resources',{}).get('core',{}).get('remaining',0))" 2>/dev/null || echo 0)
+_quota_reset=$(echo "$_quota_json" | python3 -c \
+  "import sys,json,datetime; d=json.load(sys.stdin); \
+   ts=d.get('resources',{}).get('core',{}).get('reset',0); \
+   print(datetime.datetime.utcfromtimestamp(ts).strftime('%H:%M UTC') if ts else 'unknown')" 2>/dev/null || echo 'unknown')
+
+if (( _quota_remaining < MIN_QUOTA )); then
+  warn "Quota too low (${_quota_remaining} < ${MIN_QUOTA}) — resets at ${_quota_reset}. Skipping scan."
+  echo "[]"
+  exit 0
+fi
+info "Quota: ${_quota_remaining} remaining (min: ${MIN_QUOTA})"
+
 gh_get() {
   local url="$1"
   curl -s \

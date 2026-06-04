@@ -55,6 +55,7 @@ jobs:
           GITHUB_REPO: fork-sync-all
           LOOKBACK_HOURS: ${{ inputs.lookback_hours || '2' }}
           MAX_RUNS: "10"
+          MIN_QUOTA: "500"
         run: |
           bash scripts/scan-rate-limit-failures.sh > /tmp/rl-manifest.json
           COUNT=$(python3 -c "import json; print(len(json.load(open('/tmp/rl-manifest.json'))))")
