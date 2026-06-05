@@ -21,12 +21,6 @@
       "description": "URL of the default Incus remote (e.g. 'https://incus.example.com:8443'). Required if 'remote' is set."
     }
   },
-  "containerEnv": {
-    "INCUS_REMOTE": "${localEnv:INCUS_REMOTE}",
-    "INCUS_REMOTE_URL": "${localEnv:INCUS_REMOTE_URL}",
-    "INCUS_CLIENT_CERT": "${localEnv:INCUS_CLIENT_CERT}",
-    "INCUS_CLIENT_KEY": "${localEnv:INCUS_CLIENT_KEY}"
-  },
   "mounts": [
     {
       "source": "${localEnv:HOME}/.config/incus",
