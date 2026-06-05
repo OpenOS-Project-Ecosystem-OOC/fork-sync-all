@@ -125,13 +125,23 @@ fi
 
 info "Running dedup + evict passes (stale threshold: ${STALE_QUEUE_MIN} min)..."
 
+# Write queued_json to a tempfile — avoids env var size limits and shell
+# quoting issues when passing large JSON through os.environ.
+_qjson_tmp=$(mktemp)
+trap 'rm -f "$_qjson_tmp"' EXIT
+echo "$queued_json" > "$_qjson_tmp"
+
 cancel_ids=$(THIS_RUN_ID="$THIS_RUN_ID" \
              STALE_QUEUE_MIN="$STALE_QUEUE_MIN" \
+             QJSON_FILE="$_qjson_tmp" \
              python3 - <<'PYEOF'
-import json, sys, os
+import json, os
 from datetime import datetime, timezone, timedelta
+from collections import defaultdict
 
-runs         = json.loads(os.environ.get("QUEUED_JSON", "[]"))
+with open(os.environ["QJSON_FILE"]) as f:
+    runs = json.load(f)
+
 this_run     = int(os.environ.get("THIS_RUN_ID", "0"))
 stale_min    = int(os.environ.get("STALE_QUEUE_MIN", "25"))
 now          = datetime.now(timezone.utc)
@@ -142,13 +152,13 @@ protected = {
     "Cancel Stale Runs",
     "Cancel Runs After Token Rotation",
     "Quota Monitor",
+    "Quota Reserve",
     "Rate-Limit Re-trigger",
     "Validate Config",
     "Token Health",
+    "Critical Deploy",
 }
 
-# Group by workflow name, sort each group newest-first
-from collections import defaultdict
 by_workflow = defaultdict(list)
 for run in runs:
     by_workflow[run["name"]].append(run)
@@ -167,59 +177,6 @@ for wf_name, wf_runs in by_workflow.items():
             continue
         to_cancel[rid] = f"dedup (newer run exists for '{wf_name}')"
     # Pass 2: evict — cancel newest if it's also stale
-    newest = wf_runs[0]
-    rid = newest["id"]
-    if rid == this_run or rid in to_cancel:
-        continue
-    created = datetime.fromisoformat(newest["created_at"].replace("Z", "+00:00"))
-    if created < stale_cutoff:
-        to_cancel[rid] = f"stale (queued {int((now - created).total_seconds() // 60)}min ago)"
-
-for rid, reason in to_cancel.items():
-    print(f"{rid}|{reason}")
-PYEOF
-)
-
-# Inject queued_json into the subshell via env
-cancel_ids=$(echo "$queued_json" | QUEUED_JSON="$(cat)" \
-             THIS_RUN_ID="$THIS_RUN_ID" \
-             STALE_QUEUE_MIN="$STALE_QUEUE_MIN" \
-             python3 - <<'PYEOF'
-import json, sys, os
-from datetime import datetime, timezone, timedelta
-from collections import defaultdict
-
-runs         = json.loads(os.environ["QUEUED_JSON"])
-this_run     = int(os.environ.get("THIS_RUN_ID", "0"))
-stale_min    = int(os.environ.get("STALE_QUEUE_MIN", "25"))
-now          = datetime.now(timezone.utc)
-stale_cutoff = now - timedelta(minutes=stale_min)
-
-protected = {
-    "Rotate Secret Token",
-    "Cancel Stale Runs",
-    "Cancel Runs After Token Rotation",
-    "Quota Monitor",
-    "Rate-Limit Re-trigger",
-    "Validate Config",
-    "Token Health",
-}
-
-by_workflow = defaultdict(list)
-for run in runs:
-    by_workflow[run["name"]].append(run)
-
-to_cancel = {}
-
-for wf_name, wf_runs in by_workflow.items():
-    if wf_name in protected:
-        continue
-    wf_runs.sort(key=lambda r: r["created_at"], reverse=True)
-    for run in wf_runs[1:]:
-        rid = run["id"]
-        if rid == this_run:
-            continue
-        to_cancel[rid] = f"dedup (newer run exists for '{wf_name}')"
     newest = wf_runs[0]
     rid = newest["id"]
     if rid == this_run or rid in to_cancel:
