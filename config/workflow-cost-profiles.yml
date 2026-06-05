@@ -302,3 +302,286 @@ graphql_alternatives:
     rest_cost: 1
     graphql_cost: 1
     notes: Use GraphQL when REST remaining < 200
+
+  # ── check-osp-ci ──────────────────────────────────────────────────────────
+  check-osp-ci:
+    rest_calls: 150
+    graphql_calls: 1
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 3
+    minimum_rest_budget: 300
+    notes: >
+      1 GraphQL call for repo list + ~3 REST calls per OSP-bound repo
+      (check CI status, read badge, read README). ~49 repos = ~150 REST.
+
+  # ── cleanup-branches ──────────────────────────────────────────────────────
+  cleanup-branches:
+    rest_calls: 200
+    graphql_calls: 0
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 4
+    minimum_rest_budget: 300
+    notes: >
+      Lists all repos (paginated) + lists branches per repo + deletes merged
+      branches. ~50 repos × 4 calls = ~200 REST.
+
+  # ── create-readmes ────────────────────────────────────────────────────────
+  create-readmes:
+    rest_calls: 200
+    graphql_calls: 1
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 4
+    minimum_rest_budget: 300
+    notes: >
+      1 GraphQL tree fetch per repo + reads existing README + writes new one.
+      Only acts on repos missing a README, so actual cost is usually lower.
+
+  # ── docker-to-incus ───────────────────────────────────────────────────────
+  docker-to-incus:
+    rest_calls: 300
+    graphql_calls: 1
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 6
+    minimum_rest_budget: 500
+    notes: >
+      1 GraphQL tree fetch per repo to find Docker artifacts + reads Dockerfile
+      + writes Incus files. Weekly Sunday run, budget-guarded.
+
+  # ── full-chain-flush ──────────────────────────────────────────────────────
+  full-chain-flush:
+    rest_calls: 20
+    graphql_calls: 0
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: none
+    scale_factor: 0
+    minimum_rest_budget: 2000
+    notes: >
+      Orchestrator only — dispatches 11 downstream workflows sequentially and
+      waits for each. Its own REST cost is ~20 calls (dispatches + status polls).
+      Requires high minimum_rest_budget because it triggers expensive workflows.
+
+  # ── generate-dep-graph ────────────────────────────────────────────────────
+  generate-dep-graph:
+    rest_calls: 100
+    graphql_calls: 1
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 2
+    minimum_rest_budget: 200
+    notes: >
+      1 GraphQL call for repo metadata + reads package manifests per repo.
+      Weekly Sunday run.
+
+  # ── inject-badges ─────────────────────────────────────────────────────────
+  inject-badges:
+    rest_calls: 150
+    graphql_calls: 1
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 3
+    minimum_rest_budget: 300
+    notes: >
+      1 GraphQL tree fetch + reads README + writes if badge missing.
+      ~49 repos × 3 calls = ~150 REST. ETag caching reduces repeat runs.
+
+  # ── lts-readmes ───────────────────────────────────────────────────────────
+  lts-readmes:
+    rest_calls: 100
+    graphql_calls: 1
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 2
+    minimum_rest_budget: 200
+    notes: >
+      Subset of update-readmes targeting LTS branches only. Monthly run.
+
+  # ── mirror-osp-to-gitlab ──────────────────────────────────────────────────
+  mirror-osp-to-gitlab:
+    rest_calls: 10
+    graphql_calls: 0
+    gitlab_calls: 100
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 2
+    minimum_rest_budget: 50
+    notes: >
+      Primarily GitLab API calls (push mirrors). GitHub REST cost is minimal
+      (~10 calls for repo list). GitLab calls scale with OSP-bound repos.
+
+  # ── mirror-releases ───────────────────────────────────────────────────────
+  mirror-releases:
+    rest_calls: 150
+    graphql_calls: 0
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 3
+    minimum_rest_budget: 300
+    notes: >
+      Lists releases per repo + creates missing releases in target org.
+      ~50 repos × 3 calls = ~150 REST.
+
+  # ── notify-poller ─────────────────────────────────────────────────────────
+  notify-poller:
+    rest_calls: 5
+    graphql_calls: 0
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: none
+    scale_factor: 0
+    minimum_rest_budget: 50
+    notes: >
+      Reads GitHub notifications with ETag caching — returns 304 Not Modified
+      on most runs, costing effectively 1 REST call.
+
+  # ── resolve-failures ──────────────────────────────────────────────────────
+  resolve-failures:
+    rest_calls: 400
+    graphql_calls: 6
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 8
+    minimum_rest_budget: 600
+    notes: >
+      Lists failed workflow runs across all repos + retries each. Heavy on
+      both REST and GraphQL. Cost scales with number of failures.
+
+  # ── setup-osp-mirrors ─────────────────────────────────────────────────────
+  setup-osp-mirrors:
+    rest_calls: 200
+    graphql_calls: 0
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 4
+    minimum_rest_budget: 300
+    notes: >
+      Creates/updates workflow files in each OSP-bound repo. ~49 repos ×
+      4 calls (read tree + read file + write file + commit) = ~200 REST.
+
+  # ── sync-btrfs-devel-branches ─────────────────────────────────────────────
+  sync-btrfs-devel-branches:
+    rest_calls: 20
+    graphql_calls: 0
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: none
+    scale_factor: 0
+    minimum_rest_budget: 50
+    notes: >
+      Syncs a small fixed set of btrfs-devel branches. Low REST cost.
+
+  # ── sync-from-gitlab ──────────────────────────────────────────────────────
+  sync-from-gitlab:
+    rest_calls: 30
+    graphql_calls: 0
+    gitlab_calls: 50
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 1
+    minimum_rest_budget: 100
+    notes: >
+      Reads from GitLab (50 calls) + pushes to GitHub (~30 REST).
+
+  # ── sync-registry-sources ─────────────────────────────────────────────────
+  sync-registry-sources:
+    rest_calls: 150
+    graphql_calls: 0
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 3
+    minimum_rest_budget: 300
+    notes: >
+      Reads registry manifest + updates source repos. ~50 entries × 3 calls.
+
+  # ── sync-to-gitlab ────────────────────────────────────────────────────────
+  sync-to-gitlab:
+    rest_calls: 10
+    graphql_calls: 0
+    gitlab_calls: 100
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 2
+    minimum_rest_budget: 50
+    notes: >
+      Pushes repos to GitLab. GitHub REST cost minimal; GitLab API scales
+      with repo count.
+
+  # ── sync-to-gitlab-variant ────────────────────────────────────────────────
+  sync-to-gitlab-variant:
+    rest_calls: 10
+    graphql_calls: 0
+    gitlab_calls: 50
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 1
+    minimum_rest_budget: 50
+    notes: >
+      Variant of sync-to-gitlab for a subset of repos. Lower cost.
+
+  # ── token-health ──────────────────────────────────────────────────────────
+  token-health:
+    rest_calls: 10
+    graphql_calls: 0
+    gitlab_calls: 5
+    ai_calls: 0
+    scales_with: none
+    scale_factor: 0
+    minimum_rest_budget: 50
+    notes: >
+      Checks token expiry via API headers (1 call per token). Opens/updates
+      a GitHub issue if tokens need attention. Weekly Monday run.
+
+  # ── update-infra-deps ─────────────────────────────────────────────────────
+  update-infra-deps:
+    rest_calls: 50
+    graphql_calls: 0
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: none
+    scale_factor: 0
+    minimum_rest_budget: 100
+    notes: >
+      Reads workflow files + opens a PR with dependency bumps. Weekly Monday.
+      Low REST cost since it only touches fork-sync-all itself.
+
+  # ── update-readmes ────────────────────────────────────────────────────────
+  update-readmes:
+    rest_calls: 500
+    graphql_calls: 1
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 10
+    minimum_rest_budget: 800
+    notes: >
+      Heaviest README workflow — reads + rewrites README for all OSP-bound
+      repos. 1 GraphQL tree fetch + ~10 REST calls per repo × 49 repos = ~500.
+      Quota-aware pacing built in (_inter_repo_sleep).
+
+  # ── upstream-workflow-proposal ────────────────────────────────────────────
+  upstream-workflow-proposal:
+    rest_calls: 100
+    graphql_calls: 0
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: repos
+    scale_factor: 2
+    minimum_rest_budget: 200
+    notes: >
+      Reads workflow files from upstream repos + opens PRs proposing updates.
+      Weekly Monday run.

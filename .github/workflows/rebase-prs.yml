@@ -19,7 +19,7 @@ on:
     branches: [main]
     types: [completed]
   schedule:
-    - cron: '0 5 * * *'   # Daily at 05:00 UTC
+    - cron: '10 5 * * *'   # Daily at 05:10 UTC — staggered from full-chain-flush
   workflow_dispatch:
     inputs:
       repo:

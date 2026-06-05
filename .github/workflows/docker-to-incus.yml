@@ -16,7 +16,7 @@ on:
     workflows: ["Add Mirror Repo"]
     types: [completed]
   schedule:
-    - cron: "0 3 * * 0"
+    - cron: "8 3 * * 0"
   workflow_dispatch:
     inputs:
       repo_filter:

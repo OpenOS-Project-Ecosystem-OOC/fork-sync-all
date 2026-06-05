@@ -9,7 +9,7 @@ name: Sync btrfs-devel Branches
 
 on:
   schedule:
-    - cron: "0 */6 * * *"   # Every 6 hours
+    - cron: "2 */6 * * *"   # Every 6 hours
   workflow_dispatch:
     inputs:
       branches:

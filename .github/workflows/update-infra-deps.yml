@@ -18,7 +18,7 @@ name: Update Infrastructure Dependencies
 
 on:
   schedule:
-    - cron: '0 6 * * 1'   # Weekly on Monday at 06:00 UTC
+    - cron: '11 6 * * 1'   # Weekly Monday at 06:11 UTC — staggered from 06:00 cluster
   workflow_dispatch:
     inputs:
       dry_run:
