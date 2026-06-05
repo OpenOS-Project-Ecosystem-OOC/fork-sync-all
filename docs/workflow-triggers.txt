@@ -306,6 +306,11 @@ Queue Manager  (queue-manager.yml)
 Quota Monitor  (quota-monitor.yml)
   dispatch
 
+Quota Reserve  (quota-reserve.yml)
+  schedule   */10 * * * *  (*/10 * * * *)
+  workflow_run  Rate-Limit Re-trigger
+  dispatch
+
 Rebase PRs  (rebase-prs.yml)
   schedule   Daily 05:10  (10 5 * * *)
   workflow_run  CI
@@ -330,6 +335,7 @@ Trigger Artifact Mirror  (trigger-artifact-mirror.yml)
 SCHEDULE SUMMARY (UTC)
 ----------------------
 
+*/10 * * * *                   Quota Reserve
 */15 * * * *                   Queue Manager
 Every 6h at :00                Mirror Interested-Deving-1896 → OSP
 Daily 02:00                    Mirror Orgs

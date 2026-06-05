@@ -126,6 +126,7 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 | Merge Repos into Monorepo | `merge-to-monorepo.yml` | dispatch |
 | Queue Manager | `queue-manager.yml` | `Rate-Limit Re-trigger` completes · dispatch |
 | Quota Monitor | `quota-monitor.yml` | dispatch |
+| Quota Reserve | `quota-reserve.yml` | `Rate-Limit Re-trigger` completes · dispatch |
 | Rebase PRs | `rebase-prs.yml` | `CI` completes · `Validate Config` completes · dispatch |
 | Repo Manifest | `repo-manifest.yml` | dispatch |
 | Setup GitLab CI Schedules | `setup-gitlab-schedules.yml` | dispatch |
@@ -176,3 +177,4 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 | Daily 09:17 | | Sync to GitLab |
 | Daily 10:30 | | Translate READMEs |
 | */15 * * * * | | Queue Manager |
+| */10 * * * * | | Quota Reserve |
