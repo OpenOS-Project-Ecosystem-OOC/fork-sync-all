@@ -127,6 +127,7 @@ subgroups:
       - incus_container_gui_setup
       - lxd_incus_gui_apps
       # ── Dev workflow ───────────────────────────────────────────────────────
+      - dotdrop
       - ezpodman-sandbox
       - incus-docker
       # ── SDKs ───────────────────────────────────────────────────────────────
