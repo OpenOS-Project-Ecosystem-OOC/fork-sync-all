@@ -250,6 +250,10 @@ SCRIPT
 
 chmod +x /usr/local/bin/incus-import /usr/local/bin/incus-export
 
+# ── Ensure Incus config dir exists ───────────────────────────────────────────
+# Avoids bind-mount failures when the host path doesn't exist.
+mkdir -p /root/.config/incus
+
 # ── Shell completions ─────────────────────────────────────────────────────────
 if command -v incus >/dev/null 2>&1 && [ -d /etc/bash_completion.d ]; then
   incus completion bash > /etc/bash_completion.d/incus 2>/dev/null || true

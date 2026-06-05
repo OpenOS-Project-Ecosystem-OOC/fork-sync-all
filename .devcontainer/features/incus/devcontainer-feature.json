@@ -21,11 +21,5 @@
       "description": "URL of the default Incus remote (e.g. 'https://incus.example.com:8443'). Required if 'remote' is set."
     }
   },
-  "mounts": [
-    {
-      "source": "${localEnv:HOME}/.config/incus",
-      "target": "/root/.config/incus",
-      "type": "bind"
-    }
-  ]
+  "mounts": []
 }
