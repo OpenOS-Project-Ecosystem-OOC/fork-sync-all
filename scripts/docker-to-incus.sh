@@ -118,6 +118,48 @@ print(json.dumps({
 
 b64_encode() { python3 -c "import sys,base64; print(base64.b64encode(sys.stdin.buffer.read()).decode())" < /dev/stdin; }
 
+# ── dotdrop template resolution ───────────────────────────────────────────────
+# If dotdrop is available and .dotdrop/config.yaml exists, use managed templates
+# instead of the inline Python generators. Falls back to inline generators when
+# dotdrop is not installed (e.g. in GitHub Actions without the devcontainer).
+DOTDROP_CONFIG="${_SCRIPT_DIR}/../.dotdrop/config.yaml"
+DOTDROP_BIN=$(command -v dotdrop 2>/dev/null || true)
+
+# Detect stack type from Dockerfile content
+detect_stack() {
+  local content="$1"
+  if echo "$content" | grep -qi "^FROM.*rust\|cargo build\|rustup"; then
+    echo "rust-service"
+  elif echo "$content" | grep -qi "^FROM.*golang\|^FROM.*go:\|go build\|go mod"; then
+    echo "go-service"
+  elif echo "$content" | grep -qi "bun run start\|next build\|next start\|nextjs"; then
+    echo "nextjs-app"
+  elif echo "$content" | grep -qi "bun\|vite build\|vite"; then
+    echo "vite-app"
+  else
+    echo "generic"
+  fi
+}
+
+# Render a dotdrop template for a given profile and component, writing to stdout.
+# Falls back to the inline Python generator if dotdrop is unavailable.
+render_dotdrop_template() {
+  local profile="$1" component="$2" template_file="$3"
+  local tpl_path="${_SCRIPT_DIR}/../.dotdrop/dotfiles/templates/${profile}/${template_file}"
+
+  if [[ -n "$DOTDROP_BIN" && -f "$DOTDROP_CONFIG" && -f "$tpl_path" ]]; then
+    # Use dotdrop's template engine to render with variable substitution
+    "$DOTDROP_BIN" template \
+      -c "$DOTDROP_CONFIG" \
+      -V "component=${component}" \
+      -V "dst_dir=/tmp/dotdrop-render-$$" \
+      "$tpl_path" 2>/dev/null || cat "$tpl_path"
+  else
+    # Return raw template with manual substitution as fallback
+    sed "s/{{@@ component @@}}/${component}/g" "$tpl_path" 2>/dev/null || true
+  fi
+}
+
 # ── Repo list via GraphQL ─────────────────────────────────────────────────────
 
 info "Fetching repo list for ${UPSTREAM_OWNER}..."
@@ -182,8 +224,18 @@ info "Found ${repo_count} repos to scan."
 
 # generate_incus_image REPO COMPONENT DOCKERFILE_CONTENT DOCKERFILE_PATH
 # Emits a distrobuilder YAML definition derived from the Dockerfile.
+# Uses dotdrop-managed templates when available; falls back to inline Python.
 generate_incus_image() {
   local repo="$1" component="$2" dockerfile="$3" dockerfile_path="$4"
+  local stack
+  stack=$(detect_stack "$dockerfile")
+  local rendered
+  rendered=$(render_dotdrop_template "$stack" "$component" "incus-image.yaml")
+  if [[ -n "$rendered" && "$rendered" != *"{{@@"* ]]; then
+    echo "$rendered"
+    return
+  fi
+  # Fall through to inline Python generator
   python3 - "$repo" "$component" "$dockerfile_path" <<'PYEOF'
 import sys, re, textwrap
 
@@ -386,8 +438,19 @@ PYEOF
 # Emits a blincus cloud-init template (YAML) compatible with:
 #   blincus launch -t <component> <instance-name>
 # Template is installed to ~/.config/blincus/cloud-init/<component>.yaml
+# Uses dotdrop-managed templates when available; falls back to inline Python.
 generate_blincus_template() {
-  local repo="$1" component="$2" dockerfile_path="$4"
+  local repo="$1" component="$2" dockerfile="$3" dockerfile_path="$4"
+  local stack
+  stack=$(detect_stack "$dockerfile")
+  local rendered
+  rendered=$(render_dotdrop_template "$stack" "$component" "blincus.yaml")
+  if [[ -n "$rendered" && "$rendered" != *"{{@@"* ]]; then
+    echo "$rendered"
+    return
+  fi
+  # Fall through to inline Python generator
+  local dockerfile_path="$4"
   python3 - "$repo" "$component" "$dockerfile_path" <<'PYEOF'
 import sys, re
 

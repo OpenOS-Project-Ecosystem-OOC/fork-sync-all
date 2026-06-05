@@ -11,6 +11,11 @@
     "./features/gitr": {
       "version": "latest"
     },
+    "./features/dotdrop": {
+      "version": "latest",
+      "dotfiles_repo": "",
+      "profile": ""
+    },
     "./features/incus": {
       "version": "latest",
       "remote": "",

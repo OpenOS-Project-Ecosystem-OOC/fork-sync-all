@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+# Installs dotdrop and optionally deploys a dotfiles profile.
+# Runs inside the devcontainer build context as root.
+set -uo pipefail
+
+VERSION="${VERSION:-latest}"
+DOTFILES_REPO="${DOTFILES_REPO:-}"
+PROFILE="${PROFILE:-}"
+
+# ── Install dotdrop via pip ───────────────────────────────────────────────────
+# Python is guaranteed by the ghcr.io/devcontainers/features/python:1 feature
+# which is declared before this one in devcontainer.json.
+echo "==> Installing dotdrop (version: ${VERSION})..."
+
+if [[ "$VERSION" == "latest" ]]; then
+  pip install --quiet --upgrade dotdrop
+else
+  pip install --quiet "dotdrop==${VERSION}"
+fi
+
+DOTDROP_BIN=$(command -v dotdrop 2>/dev/null || echo "")
+if [[ -z "$DOTDROP_BIN" ]]; then
+  # pip may install to a user path not yet on PATH — try common locations
+  for candidate in /usr/local/bin/dotdrop ~/.local/bin/dotdrop; do
+    [[ -x "$candidate" ]] && DOTDROP_BIN="$candidate" && break
+  done
+fi
+
+if [[ -z "$DOTDROP_BIN" ]]; then
+  echo "==> dotdrop install failed — not found on PATH after pip install." >&2
+  exit 1
+fi
+
+echo "dotdrop $(${DOTDROP_BIN} --version 2>/dev/null || echo 'installed') at ${DOTDROP_BIN}"
+
+# ── Create fork-sync-all dotdrop config skeleton ─────────────────────────────
+# This config manages the Incus/blincus template profiles used by
+# docker-to-incus.sh. Each profile corresponds to a repo type.
+DOTDROP_CONFIG_DIR="/workspaces/fork-sync-all/.dotdrop"
+mkdir -p "${DOTDROP_CONFIG_DIR}/dotfiles"
+
+if [[ ! -f "${DOTDROP_CONFIG_DIR}/config.yaml" ]]; then
+  cat > "${DOTDROP_CONFIG_DIR}/config.yaml" << 'EOF'
+# dotdrop configuration for fork-sync-all
+# Manages Incus/blincus template profiles per repo type.
+#
+# Profiles correspond to application stacks detected by docker-to-incus.sh:
+#   rust-service   — Rust/Cargo binary services (musl static linking)
+#   go-service     — Go binary services
+#   nextjs-app     — Next.js + Bun applications
+#   vite-app       — Vite/TanStack applications (Bun runtime)
+#   generic        — Fallback for unrecognised stacks
+#
+# Usage:
+#   dotdrop install -c .dotdrop/config.yaml -p rust-service
+#   dotdrop files   -c .dotdrop/config.yaml -p nextjs-app
+#   dotdrop compare -c .dotdrop/config.yaml -p go-service
+
+config:
+  backup: true
+  banner: false
+  create: true
+  dotpath: dotfiles
+  ignoreempty: false
+  keepdot: false
+  longkey: false
+  showdiff: false
+  workdir: ~/.config/dotdrop
+
+dotfiles:
+  f_incus_image_rust:
+    src: templates/rust-service/incus-image.yaml
+    dst: "{{@@ dst_dir @@}}/incus-image.yaml"
+  f_blincus_rust:
+    src: templates/rust-service/blincus.yaml
+    dst: "{{@@ dst_dir @@}}/blincus-{{@@ component @@}}.yaml"
+  f_incus_image_go:
+    src: templates/go-service/incus-image.yaml
+    dst: "{{@@ dst_dir @@}}/incus-image.yaml"
+  f_blincus_go:
+    src: templates/go-service/blincus.yaml
+    dst: "{{@@ dst_dir @@}}/blincus-{{@@ component @@}}.yaml"
+  f_incus_image_nextjs:
+    src: templates/nextjs-app/incus-image.yaml
+    dst: "{{@@ dst_dir @@}}/incus-image.yaml"
+  f_blincus_nextjs:
+    src: templates/nextjs-app/blincus.yaml
+    dst: "{{@@ dst_dir @@}}/blincus-{{@@ component @@}}.yaml"
+  f_incus_image_vite:
+    src: templates/vite-app/incus-image.yaml
+    dst: "{{@@ dst_dir @@}}/incus-image.yaml"
+  f_blincus_vite:
+    src: templates/vite-app/blincus.yaml
+    dst: "{{@@ dst_dir @@}}/blincus-{{@@ component @@}}.yaml"
+  f_incus_image_generic:
+    src: templates/generic/incus-image.yaml
+    dst: "{{@@ dst_dir @@}}/incus-image.yaml"
+  f_blincus_generic:
+    src: templates/generic/blincus.yaml
+    dst: "{{@@ dst_dir @@}}/blincus-{{@@ component @@}}.yaml"
+
+variables:
+  dst_dir: "/tmp/dotdrop-output"
+  component: "app"
+
+profiles:
+  rust-service:
+    dotfiles:
+      - f_incus_image_rust
+      - f_blincus_rust
+  go-service:
+    dotfiles:
+      - f_incus_image_go
+      - f_blincus_go
+  nextjs-app:
+    dotfiles:
+      - f_incus_image_nextjs
+      - f_blincus_nextjs
+  vite-app:
+    dotfiles:
+      - f_incus_image_vite
+      - f_blincus_vite
+  generic:
+    dotfiles:
+      - f_incus_image_generic
+      - f_blincus_generic
+EOF
+  echo "==> Created .dotdrop/config.yaml"
+fi
+
+# ── Create template stubs if they don't exist ─────────────────────────────────
+for stack in rust-service go-service nextjs-app vite-app generic; do
+  mkdir -p "${DOTDROP_CONFIG_DIR}/dotfiles/templates/${stack}"
+  # Only create stubs — docker-to-incus.sh populates real content
+  for tpl in incus-image.yaml blincus.yaml; do
+    tpl_path="${DOTDROP_CONFIG_DIR}/dotfiles/templates/${stack}/${tpl}"
+    if [[ ! -f "$tpl_path" ]]; then
+      cat > "$tpl_path" << STUB
+# dotdrop template: ${stack}/${tpl}
+# Populated by scripts/docker-to-incus.sh
+# Variables available: {{@@ component @@}}, {{@@ dst_dir @@}}
+# See .dotdrop/config.yaml for profile definitions.
+STUB
+    fi
+  done
+done
+
+# ── Optionally clone and deploy a personal dotfiles repo ──────────────────────
+if [[ -n "$DOTFILES_REPO" ]]; then
+  echo "==> Cloning dotfiles from ${DOTFILES_REPO}..."
+  DOTFILES_DIR="${HOME}/dotfiles"
+  if [[ ! -d "$DOTFILES_DIR/.git" ]]; then
+    git clone --depth=1 "$DOTFILES_REPO" "$DOTFILES_DIR" 2>/dev/null \
+      || { echo "==> Failed to clone dotfiles repo — skipping." >&2; }
+  fi
+
+  if [[ -d "$DOTFILES_DIR" ]]; then
+    DEPLOY_PROFILE="${PROFILE:-$(hostname)}"
+    echo "==> Deploying dotdrop profile '${DEPLOY_PROFILE}'..."
+    cd "$DOTFILES_DIR"
+    # Try dotdrop config in standard locations
+    for cfg in config.yaml dotdrop/config.yaml .dotdrop/config.yaml; do
+      if [[ -f "$cfg" ]]; then
+        ${DOTDROP_BIN} install -c "$cfg" -p "$DEPLOY_PROFILE" --force 2>/dev/null \
+          && echo "==> dotdrop profile '${DEPLOY_PROFILE}' deployed." \
+          || echo "==> dotdrop deploy failed — check ${DOTFILES_DIR}/${cfg}" >&2
+        break
+      fi
+    done
+  fi
+fi
+
+echo ""
+echo "==> dotdrop feature installed:"
+echo "    dotdrop        — dotfile manager with profile-based deployment"
+echo "    .dotdrop/      — fork-sync-all template profiles (rust/go/nextjs/vite/generic)"
+echo ""
+echo "    Usage:"
+echo "      dotdrop install -c .dotdrop/config.yaml -p rust-service"
+echo "      dotdrop files   -c .dotdrop/config.yaml -p nextjs-app"
