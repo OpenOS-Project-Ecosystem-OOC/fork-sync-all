@@ -298,6 +298,12 @@ Merge Repos into Monorepo  (merge-to-monorepo.yml)
 Quota Monitor  (quota-monitor.yml)
   dispatch
 
+Rebase PRs  (rebase-prs.yml)
+  schedule   Daily 05:00  (0 5 * * *)
+  workflow_run  CI
+  workflow_run  Validate Config
+  dispatch
+
 Repo Manifest  (repo-manifest.yml)
   dispatch
 
@@ -324,6 +330,7 @@ Weekly Sun 03:00               Docker → Incus Migration
 Weekly Sun 03:00               Generate OSP Dependency Graph
 Monthly 1st 03:00              LTS README Standardisation
 Monthly 1st 04:00              Cleanup Stale Branches
+Daily 05:00                    Rebase PRs
 Monthly 1st 05:00              Full Chain Flush
 Daily 06:00                    Sync All Forks
 Weekly Mon 06:00               Update Infrastructure Dependencies

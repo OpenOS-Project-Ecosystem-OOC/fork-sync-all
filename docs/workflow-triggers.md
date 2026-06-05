@@ -124,6 +124,7 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 | List Chromium GitLab Repos | `list-chromium-repos.yml` | dispatch |
 | Merge Repos into Monorepo | `merge-to-monorepo.yml` | dispatch |
 | Quota Monitor | `quota-monitor.yml` | dispatch |
+| Rebase PRs | `rebase-prs.yml` | `CI` completes · `Validate Config` completes · dispatch |
 | Repo Manifest | `repo-manifest.yml` | dispatch |
 | Setup GitLab CI Schedules | `setup-gitlab-schedules.yml` | dispatch |
 | Shallow Reclone Large GitLab Mirrors | `shallow-reclone-chromium.yml` | dispatch |
@@ -152,6 +153,7 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 | Every 4h at :30 | | Mirror OSP → GitLab |
 | Every 4h at :50 | | Sync to GitLab Variant |
 | Monthly 1st 05:00 | | Full Chain Flush |
+| Daily 05:00 | | Rebase PRs |
 | Daily 05:50 | | Reconcile Org References |
 | Every 6h at :00 | | Mirror Interested-Deving-1896 → OSP |
 | Daily 06:00 | | Sync All Forks |
