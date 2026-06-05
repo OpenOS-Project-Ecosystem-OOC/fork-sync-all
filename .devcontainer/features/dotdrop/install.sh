@@ -1,37 +1,65 @@
 #!/usr/bin/env bash
 # Installs dotdrop and optionally deploys a dotfiles profile.
 # Runs inside the devcontainer build context as root.
+#
+# pip may not be on PATH yet when this feature runs (feature ordering is not
+# guaranteed). We install python3-pip via apt as a fallback, then use pip3.
 set -uo pipefail
 
 VERSION="${VERSION:-latest}"
 DOTFILES_REPO="${DOTFILES_REPO:-}"
 PROFILE="${PROFILE:-}"
 
-# ── Install dotdrop via pip ───────────────────────────────────────────────────
-# Python is guaranteed by the ghcr.io/devcontainers/features/python:1 feature
-# which is declared before this one in devcontainer.json.
-echo "==> Installing dotdrop (version: ${VERSION})..."
+# ── Ensure pip is available ───────────────────────────────────────────────────
+PIP_BIN=""
+for candidate in pip pip3 pip3.12 pip3.11 pip3.10; do
+  if command -v "$candidate" >/dev/null 2>&1; then
+    PIP_BIN="$candidate"
+    break
+  fi
+done
 
-if [[ "$VERSION" == "latest" ]]; then
-  pip install --quiet --upgrade dotdrop
-else
-  pip install --quiet "dotdrop==${VERSION}"
-fi
-
-DOTDROP_BIN=$(command -v dotdrop 2>/dev/null || echo "")
-if [[ -z "$DOTDROP_BIN" ]]; then
-  # pip may install to a user path not yet on PATH — try common locations
-  for candidate in /usr/local/bin/dotdrop ~/.local/bin/dotdrop; do
-    [[ -x "$candidate" ]] && DOTDROP_BIN="$candidate" && break
+if [[ -z "$PIP_BIN" ]]; then
+  echo "==> pip not found — installing python3-pip via apt..."
+  apt-get update -qq 2>/dev/null || true
+  apt-get install -y --no-install-recommends python3-pip 2>/dev/null || true
+  for candidate in pip3 pip; do
+    command -v "$candidate" >/dev/null 2>&1 && PIP_BIN="$candidate" && break
   done
 fi
 
-if [[ -z "$DOTDROP_BIN" ]]; then
-  echo "==> dotdrop install failed — not found on PATH after pip install." >&2
-  exit 1
+if [[ -z "$PIP_BIN" ]]; then
+  echo "==> pip unavailable — dotdrop will not be installed." >&2
+  echo "    Install manually: pip install dotdrop" >&2
+  # Non-fatal: create config skeleton and exit cleanly
+  PIP_BIN=""
 fi
 
-echo "dotdrop $(${DOTDROP_BIN} --version 2>/dev/null || echo 'installed') at ${DOTDROP_BIN}"
+# ── Install dotdrop via pip ───────────────────────────────────────────────────
+DOTDROP_BIN=""
+if [[ -n "$PIP_BIN" ]]; then
+  echo "==> Installing dotdrop (version: ${VERSION}) via ${PIP_BIN}..."
+  if [[ "$VERSION" == "latest" ]]; then
+    "$PIP_BIN" install --quiet --upgrade --break-system-packages dotdrop 2>/dev/null \
+      || "$PIP_BIN" install --quiet --upgrade dotdrop 2>/dev/null \
+      || true
+  else
+    "$PIP_BIN" install --quiet --break-system-packages "dotdrop==${VERSION}" 2>/dev/null \
+      || "$PIP_BIN" install --quiet "dotdrop==${VERSION}" 2>/dev/null \
+      || true
+  fi
+
+  for candidate in dotdrop /usr/local/bin/dotdrop /usr/bin/dotdrop ~/.local/bin/dotdrop; do
+    command -v "$candidate" >/dev/null 2>&1 && DOTDROP_BIN="$candidate" && break
+    [[ -x "$candidate" ]] && DOTDROP_BIN="$candidate" && break
+  done
+
+  if [[ -n "$DOTDROP_BIN" ]]; then
+    echo "dotdrop $("$DOTDROP_BIN" --version 2>/dev/null || echo 'installed') at ${DOTDROP_BIN}"
+  else
+    echo "==> dotdrop binary not found after install — will skip deployment." >&2
+  fi
+fi
 
 # ── Create fork-sync-all dotdrop config skeleton ─────────────────────────────
 # This config manages the Incus/blincus template profiles used by
@@ -146,7 +174,7 @@ STUB
 done
 
 # ── Optionally clone and deploy a personal dotfiles repo ──────────────────────
-if [[ -n "$DOTFILES_REPO" ]]; then
+if [[ -n "$DOTFILES_REPO" && -n "$DOTDROP_BIN" ]]; then
   echo "==> Cloning dotfiles from ${DOTFILES_REPO}..."
   DOTFILES_DIR="${HOME}/dotfiles"
   if [[ ! -d "$DOTFILES_DIR/.git" ]]; then
@@ -171,9 +199,11 @@ if [[ -n "$DOTFILES_REPO" ]]; then
 fi
 
 echo ""
-echo "==> dotdrop feature installed:"
-echo "    dotdrop        — dotfile manager with profile-based deployment"
-echo "    .dotdrop/      — fork-sync-all template profiles (rust/go/nextjs/vite/generic)"
+echo "==> dotdrop feature setup complete:"
+[[ -n "$DOTDROP_BIN" ]] \
+  && echo "    dotdrop — installed at ${DOTDROP_BIN}" \
+  || echo "    dotdrop — NOT installed (install manually: pip install dotdrop)"
+echo "    .dotdrop/ — fork-sync-all template profiles (rust/go/nextjs/vite/generic)"
 echo ""
 echo "    Usage:"
 echo "      dotdrop install -c .dotdrop/config.yaml -p rust-service"
