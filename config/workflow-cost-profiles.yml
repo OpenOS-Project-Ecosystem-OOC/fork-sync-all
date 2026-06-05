@@ -38,6 +38,22 @@ profiles:
       Repo creation + branch push + OSP/OOC mirror setup +
       registered-imports.json write-back.
 
+  # ── quota-reserve ─────────────────────────────────────────────────────────
+  # Quota check: 1, list queued runs: 1-3, cancel per run: 1 each
+  # Typical run: ~3 calls when quota is healthy (exits early), ~10 when acting
+  quota-reserve:
+    rest_calls: 3
+    graphql_calls: 0
+    gitlab_calls: 0
+    ai_calls: 0
+    scales_with: cancelled_runs
+    scale_factor: 1           # 1 cancel call per cancelled run
+    minimum_rest_budget: 5    # intentionally very low — must run even at low quota
+    notes: >
+      Exits immediately if quota >= RESERVE_FLOOR (costs 1 call).
+      When acting, costs 1-3 (list) + 1 per cancellation.
+      Runs every 10 min; designed to be nearly free when quota is healthy.
+
   # ── critical-deploy ───────────────────────────────────────────────────────
   # Phase 1 (git push): 0 REST calls
   # Phase 2 (queue clear): same as queue-manager (~5-20 calls)
