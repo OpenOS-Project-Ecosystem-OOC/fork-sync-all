@@ -21,7 +21,7 @@ API="https://api.github.com"
 
 info() { echo "[dispatch-wait] $*" >&2; }
 ok()   { echo "[dispatch-wait] ✓ $*" >&2; }
-fail() { echo "[dispatch-wait] ✗ $*" >&2; exit 1; }
+fail() { echo "[dispatch-wait] ✗ $1" >&2; exit "${2:-1}"; }
 
 # Record time before dispatch so we can find the new run
 BEFORE_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -86,12 +86,20 @@ while true; do
   CONCLUSION=$(echo "$RUN_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('conclusion',''))" 2>/dev/null || echo "")
 
   if [[ "$STATUS" == "completed" ]]; then
-    if [[ "$CONCLUSION" == "success" || "$CONCLUSION" == "skipped" ]]; then
-      ok "${WORKFLOW} completed: ${CONCLUSION}"
-      exit 0
-    else
-      fail "${WORKFLOW} completed with: ${CONCLUSION}"
-    fi
+    case "$CONCLUSION" in
+      success|skipped)
+        ok "${WORKFLOW} completed: ${CONCLUSION}"
+        exit 0
+        ;;
+      cancelled)
+        # Cancelled by queue-manager or manually — not a workflow failure.
+        # Exit 2 so callers can distinguish cancellation from real failures.
+        fail "${WORKFLOW} was cancelled (exit 2)" 2
+        ;;
+      *)
+        fail "${WORKFLOW} completed with: ${CONCLUSION}"
+        ;;
+    esac
   fi
 
   # Empty status means GitHub hasn't assigned a runner yet — keep waiting

@@ -60,21 +60,18 @@ fail() { echo "[critical-deploy] ✗ $*" >&2; exit 1; }
 
 # ── Quota check ───────────────────────────────────────────────────────────────
 
-remaining=$(curl -sf \
+read -r remaining reset_at < <(curl -sf \
   -H "Authorization: token ${GH_TOKEN}" \
   -H "Accept: application/vnd.github+json" \
   "${API}/rate_limit" \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['resources']['core']['remaining'])" \
-  || echo 0)
-
-reset_at=$(curl -sf \
-  -H "Authorization: token ${GH_TOKEN}" \
-  -H "Accept: application/vnd.github+json" \
-  "${API}/rate_limit" \
-  | python3 -c "import sys,json,datetime; \
-    r=json.load(sys.stdin)['resources']['core']['reset']; \
-    print(datetime.datetime.fromtimestamp(r,tz=datetime.timezone.utc).strftime('%H:%M UTC'))" \
-  || echo "unknown")
+  | python3 -c "
+import sys, json, datetime
+d = json.load(sys.stdin).get('resources', {}).get('core', {})
+remaining = d.get('remaining', 0)
+reset_ts  = d.get('reset', 0)
+reset_at  = datetime.datetime.fromtimestamp(reset_ts, tz=datetime.timezone.utc).strftime('%H:%M UTC') if reset_ts else 'unknown'
+print(remaining, reset_at)
+" 2>/dev/null || echo "0 unknown")
 
 info "Quota: ${remaining} remaining (resets ${reset_at}, min required: ${MIN_QUOTA})"
 
@@ -194,9 +191,16 @@ for workflow in ${WORKFLOWS}; do
   if [[ "$WAIT_FOR_EACH" == "true" ]]; then
     GH_TOKEN="${GH_TOKEN}" \
     REPO="${REPO}" \
-    bash "${SCRIPT_DIR}/dispatch-and-wait.sh" "${workflow}" "${TIMEOUT_MIN}" "${WORKFLOW_INPUTS}" \
-      && ok "${workflow} completed." \
-      || { warn "${workflow} failed or timed out — continuing with next workflow."; (( failed++ )) || true; }
+    bash "${SCRIPT_DIR}/dispatch-and-wait.sh" "${workflow}" "${TIMEOUT_MIN}" "${WORKFLOW_INPUTS}"
+    daw_exit=$?
+    if [[ $daw_exit -eq 0 ]]; then
+      ok "${workflow} completed."
+    elif [[ $daw_exit -eq 2 ]]; then
+      warn "${workflow} was cancelled by queue-manager — re-queuing is safe, continuing."
+    else
+      warn "${workflow} failed or timed out — continuing with next workflow."
+      (( failed++ )) || true
+    fi
   else
     # Fire and forget — dispatch without waiting
     HTTP_CODE=$(curl -sf -w "%{http_code}" -o /dev/null \

@@ -55,15 +55,14 @@ rl_json=$(curl -sf \
   -H "Accept: application/vnd.github+json" \
   "${API}/rate_limit" || echo "{}")
 
-remaining=$(echo "$rl_json" | python3 -c \
-  "import sys,json; d=json.load(sys.stdin); print(d.get('resources',{}).get('core',{}).get('remaining',0))" \
-  2>/dev/null || echo 0)
-
-reset_at=$(echo "$rl_json" | python3 -c \
-  "import sys,json,datetime; \
-   r=json.load(sys.stdin).get('resources',{}).get('core',{}).get('reset',0); \
-   print(datetime.datetime.fromtimestamp(r,tz=datetime.timezone.utc).strftime('%H:%M UTC') if r else 'unknown')" \
-  2>/dev/null || echo "unknown")
+read -r remaining reset_at < <(echo "$rl_json" | python3 -c "
+import sys, json, datetime
+d = json.load(sys.stdin).get('resources', {}).get('core', {})
+remaining = d.get('remaining', 0)
+reset_ts  = d.get('reset', 0)
+reset_at  = datetime.datetime.fromtimestamp(reset_ts, tz=datetime.timezone.utc).strftime('%H:%M UTC') if reset_ts else 'unknown'
+print(remaining, reset_at)
+" 2>/dev/null || echo "0 unknown")
 
 info "Quota: ${remaining} remaining (reserve floor: ${RESERVE_FLOOR}, resets: ${reset_at})"
 
@@ -173,28 +172,56 @@ PYEOF
 total_queued=$(echo "$queued_json" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
 info "Found ${total_queued} queued run(s)."
 
-# ── Select cancellation candidates ───────────────────────────────────────────
-# Sort by tier descending (tier 4 first), then by age descending (oldest first).
-# Stop once projected savings cover the deficit.
+# ── Select cancellation candidates and cancel ─────────────────────────────────
+# Write queued_json to tempfile — avoids env var size limits and quoting issues.
+# Sort tier-4-first (lowest priority), then oldest first within each tier.
 # Never cancel tier 1 or runs within GRACE_MIN.
 
-cancel_ids=$(THIS_RUN_ID="$THIS_RUN_ID" \
-             GRACE_MIN="$GRACE_MIN" \
-             RESERVE_FLOOR="$RESERVE_FLOOR" \
-             python3 - <<'PYEOF'
-import json, sys, os
+_qjson_tmp=$(mktemp)
+trap 'rm -f "$_qjson_tmp"' EXIT
+echo "$queued_json" > "$_qjson_tmp"
+
+cancelled=0
+cancelled_names=()
+
+while IFS='|' read -r run_id name tier age; do
+  [[ -z "$run_id" ]] && continue
+
+  if [[ "$DRY_RUN" == "true" ]]; then
+    dry "Would cancel ${run_id} (${name}, ${tier}, ${age})"
+    (( cancelled++ )) || true
+    cancelled_names+=("${name}")
+  else
+    info "Cancelling ${run_id} (${name}, ${tier}, ${age})..."
+    http_code=$(curl -sf -o /dev/null -w "%{http_code}" \
+      -X POST \
+      -H "Authorization: token ${GH_TOKEN}" \
+      -H "Accept: application/vnd.github+json" \
+      "${API}/repos/${REPO}/actions/runs/${run_id}/cancel" || echo "000")
+
+    if [[ "$http_code" == "202" || "$http_code" == "204" ]]; then
+      (( cancelled++ )) || true
+      cancelled_names+=("${name}")
+      ok "Cancelled ${name} (${tier})"
+    else
+      info "Warning: cancel returned HTTP ${http_code} for ${run_id}"
+    fi
+  fi
+done < <(THIS_RUN_ID="$THIS_RUN_ID" GRACE_MIN="$GRACE_MIN" QJSON_FILE="$_qjson_tmp" \
+  python3 - <<'PYEOF'
+import json, os
 from datetime import datetime, timezone, timedelta
-from collections import defaultdict
 
-runs        = json.loads(os.environ["QUEUED_JSON"])
-this_run    = int(os.environ.get("THIS_RUN_ID", "0"))
-grace_min   = int(os.environ.get("GRACE_MIN", "5"))
-now         = datetime.now(timezone.utc)
-grace_cut   = now - timedelta(minutes=grace_min)
+with open(os.environ["QJSON_FILE"]) as f:
+    runs = json.load(f)
 
-# Tier map — unknown workflows default to tier 3 (MEDIUM)
+this_run  = int(os.environ.get("THIS_RUN_ID", "0"))
+grace_min = int(os.environ.get("GRACE_MIN", "5"))
+now       = datetime.now(timezone.utc)
+grace_cut = now - timedelta(minutes=grace_min)
+
 tier_map = {
-    # Tier 1 — CRITICAL
+    # Tier 1 — CRITICAL (never cancelled)
     "Rotate Secret Token": 1, "Queue Manager": 1, "Quota Reserve": 1,
     "Critical Deploy": 1, "Cancel Stale Runs": 1,
     "Cancel Runs After Token Rotation": 1, "Validate Config": 1,
@@ -209,103 +236,7 @@ tier_map = {
     "Check OSP-Bound CI Status": 3, "Rebase PRs": 3,
     "Reconcile Org References": 3, "Sync btrfs-devel Branches": 3,
     "Sync pieroproietti Forks": 3,
-    # Tier 4 — LOW
-    "Translate READMEs": 4, "LTS README Standardisation": 4,
-    "Generate Dependency Graph": 4, "Upstream Workflow Proposal": 4,
-    "Update Infra Dependencies": 4, "Update Workflow Triggers Doc": 4,
-    "Notification Poller": 4, "Mirror Artifacts": 4, "Mirror Releases": 4,
-    "Upstream PRs from OSP + OOC": 4,
-    "Upstream Direct Commits from OSP + OOC": 4, "Repo Manifest": 4,
-}
-
-# Estimated REST calls saved per cancellation (rough — avoids loading cost profiles)
-# A cancelled run saves its estimated consumption; we use conservative minimums.
-SAVINGS_BY_TIER = {1: 0, 2: 500, 3: 200, 4: 100}
-
-candidates = []
-for run in runs:
-    rid     = run["id"]
-    name    = run["name"]
-    created = datetime.fromisoformat(run["created_at"].replace("Z", "+00:00"))
-    tier    = tier_map.get(name, 3)
-
-    if rid == this_run:
-        continue
-    if tier == 1:
-        continue
-    if created > grace_cut:
-        continue  # too new — give it a chance
-
-    candidates.append({
-        "id": rid, "name": name, "tier": tier,
-        "created": created, "savings": SAVINGS_BY_TIER.get(tier, 100),
-    })
-
-# Sort: highest tier (lowest priority) first, then oldest first
-candidates.sort(key=lambda r: (-r["tier"], r["created"]))
-
-for c in candidates:
-    age_min = int((now - c["created"]).total_seconds() // 60)
-    print(f"{c['id']}|{c['name']}|tier{c['tier']}|{age_min}min old")
-PYEOF
-)
-
-# ── Cancel ────────────────────────────────────────────────────────────────────
-
-cancelled=0
-cancelled_names=()
-
-if [[ -z "$cancel_ids" ]]; then
-  info "No cancellable runs found — all queued runs are critical or within grace period."
-else
-  while IFS='|' read -r run_id name tier age; do
-    [[ -z "$run_id" ]] && continue
-
-    if [[ "$DRY_RUN" == "true" ]]; then
-      dry "Would cancel ${run_id} (${name}, ${tier}, ${age})"
-      (( cancelled++ )) || true
-      cancelled_names+=("${name}")
-    else
-      info "Cancelling ${run_id} (${name}, ${tier}, ${age})..."
-      http_code=$(curl -sf -o /dev/null -w "%{http_code}" \
-        -X POST \
-        -H "Authorization: token ${GH_TOKEN}" \
-        -H "Accept: application/vnd.github+json" \
-        "${API}/repos/${REPO}/actions/runs/${run_id}/cancel" || echo "000")
-
-      if [[ "$http_code" == "202" || "$http_code" == "204" ]]; then
-        (( cancelled++ )) || true
-        cancelled_names+=("${name}")
-        ok "Cancelled ${name} (${tier})"
-      else
-        info "Warning: cancel returned HTTP ${http_code} for ${run_id}"
-      fi
-    fi
-  done <<< "$(echo "$queued_json" | QUEUED_JSON="$(cat)" \
-    THIS_RUN_ID="$THIS_RUN_ID" GRACE_MIN="$GRACE_MIN" \
-    RESERVE_FLOOR="$RESERVE_FLOOR" python3 - <<'PYEOF'
-import json, sys, os
-from datetime import datetime, timezone, timedelta
-
-runs        = json.loads(os.environ["QUEUED_JSON"])
-this_run    = int(os.environ.get("THIS_RUN_ID", "0"))
-grace_min   = int(os.environ.get("GRACE_MIN", "5"))
-now         = datetime.now(timezone.utc)
-grace_cut   = now - timedelta(minutes=grace_min)
-
-tier_map = {
-    "Rotate Secret Token": 1, "Queue Manager": 1, "Quota Reserve": 1,
-    "Critical Deploy": 1, "Cancel Stale Runs": 1,
-    "Cancel Runs After Token Rotation": 1, "Validate Config": 1,
-    "Token Health": 1, "Rate-Limit Re-trigger": 1, "Quota Monitor": 1,
-    "Mirror Interested-Deving-1896 → OSP": 2, "Mirror OSP → GitLab": 2,
-    "Mirror to OpenOS-Project-Ecosystem-OOC": 2, "Sync Registered Imports": 2,
-    "Sync Forks": 2, "Full Chain Flush": 2,
-    "Create Missing READMEs": 3, "Update READMEs": 3,
-    "Validate README Render": 3, "Inject Built-with-Ona Badges": 3,
-    "Check OSP-Bound CI Status": 3, "Rebase PRs": 3,
-    "Reconcile Org References": 3, "Sync btrfs-devel Branches": 3,
-    "Sync pieroproietti Forks": 3,
+    # Tier 4 — LOW (cancelled first)
     "Translate READMEs": 4, "LTS README Standardisation": 4,
     "Generate Dependency Graph": 4, "Upstream Workflow Proposal": 4,
     "Update Infra Dependencies": 4, "Update Workflow Triggers Doc": 4,
@@ -325,12 +256,16 @@ for run in runs:
     age_min = int((now - created).total_seconds() // 60)
     candidates.append((tier, created, rid, name, age_min))
 
+if not candidates:
+    import sys
+    print("[quota-reserve] No cancellable runs — all critical or within grace period.", file=sys.stderr)
+
+# Sort: highest tier (lowest priority) first, then oldest first
 candidates.sort(key=lambda r: (-r[0], r[1]))
 for tier, created, rid, name, age_min in candidates:
     print(f"{rid}|{name}|tier{tier}|{age_min}min old")
 PYEOF
-  )"
-fi
+)
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 
