@@ -72,53 +72,72 @@ GROUPS = [
 ]
 
 # ── Cron → human-readable ─────────────────────────────────────────────────────
-def cron_to_human(cron: str) -> str:
-    """Convert a cron expression to a short human-readable string."""
+def cron_to_parts(cron: str) -> tuple[str, str]:
+    """Return (frequency, time) for a cron expression.
+
+    frequency — how often: Daily, Weekly, Monthly, Every Nh, Every N min
+    time      — when: HH:MM, day-of-week, day-of-month, or :MM for sub-hourly
+    """
     parts = cron.strip().split()
     if len(parts) != 5:
-        return cron
+        return ("", cron)
 
     minute, hour, dom, month, dow = parts
 
-    # Monthly
+    # Every N minutes  e.g. */15 * * * *
+    if re.match(r'^\*/\d+$', minute) and hour == "*" and dom == "*" and month == "*" and dow == "*":
+        n = minute.split("/")[1]
+        return (f"Every {n} min", "")
+
+    # Every N hours  e.g. 10 */4 * * *
+    if re.match(r'^\*/\d+$', hour) and dom == "*" and month == "*" and dow == "*":
+        n = hour.split("/")[1]
+        try:
+            m = int(minute)
+            return (f"Every {n}h", f"at :{m:02d}")
+        except ValueError:
+            pass
+
+    # Monthly  e.g. 0 5 1 * *
     if dom != "*" and month == "*" and dow == "*":
         try:
             d = int(dom)
             suffix = {1: "st", 2: "nd", 3: "rd"}.get(d if d < 20 else d % 10, "th")
             h, m = int(hour), int(minute)
-            return f"Monthly {d}{suffix} {h:02d}:{m:02d}"
+            return ("Monthly", f"{d}{suffix} {h:02d}:{m:02d}")
         except ValueError:
             pass
 
-    # Weekly
+    # Weekly  e.g. 0 9 * * 1
     if dow != "*" and dom == "*":
         days = {"0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed",
                 "4": "Thu", "5": "Fri", "6": "Sat", "7": "Sun"}
         day_name = days.get(dow, dow)
         try:
             h, m = int(hour), int(minute)
-            return f"Weekly {day_name} {h:02d}:{m:02d}"
+            return ("Weekly", f"{day_name} {h:02d}:{m:02d}")
         except ValueError:
             pass
 
-    # Every N hours
-    if re.match(r'^\*/\d+$', hour) and dom == "*" and month == "*" and dow == "*":
-        n = hour.split("/")[1]
-        try:
-            m = int(minute)
-            return f"Every {n}h at :{m:02d}"
-        except ValueError:
-            pass
-
-    # Daily
+    # Daily  e.g. 30 7 * * *
     if hour != "*" and re.match(r'^\d+$', hour) and dom == "*" and month == "*" and dow == "*":
         try:
             h, m = int(hour), int(minute)
-            return f"Daily {h:02d}:{m:02d}"
+            return ("Daily", f"{h:02d}:{m:02d}")
         except ValueError:
             pass
 
-    return cron
+    return ("", cron)
+
+
+def cron_to_human(cron: str) -> str:
+    """Convert a cron expression to a single human-readable string (legacy)."""
+    freq, time = cron_to_parts(cron)
+    if not freq:
+        return cron
+    if not time:
+        return freq
+    return f"{freq} {time}"
 
 
 # ── Parse a single workflow file ──────────────────────────────────────────────
@@ -254,14 +273,14 @@ def generate_md(grouped: dict, all_wfs: list, now: str) -> str:
     schedule_rows = []
     for wf in all_wfs:
         for cron in wf["schedules"]:
-            human = cron_to_human(cron)
-            schedule_rows.append((cron, human, wf["name"]))
+            freq, time = cron_to_parts(cron)
+            schedule_rows.append((cron, freq, time, wf["name"]))
 
     # Sort by cron minute then hour
     def sort_key(row):
         parts = row[0].strip().split()
         if len(parts) != 5:
-            return (99, 99, row[2])
+            return (99, 99, row[3])
         minute, hour = parts[0], parts[1]
         try:
             m = int(minute)
@@ -271,10 +290,10 @@ def generate_md(grouped: dict, all_wfs: list, now: str) -> str:
             h = int(hour.split("/")[-1]) if "/" in hour else int(hour.replace("*", "99"))
         except ValueError:
             h = 99
-        return (h, m, row[2])
+        return (h, m, row[3])
 
-    for _, human, name in sorted(schedule_rows, key=sort_key):
-        lines.append(f"| {human} | | {name} |")
+    for _, freq, time, name in sorted(schedule_rows, key=sort_key):
+        lines.append(f"| {time} | {freq} | {name} |")
 
     lines.append("")
     return "\n".join(lines)

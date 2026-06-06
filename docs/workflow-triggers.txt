@@ -319,14 +319,14 @@ OTA Discover  (ota-discover.yml)
   dispatch
 
 Queue Manager  (queue-manager.yml)
-  schedule   */15 * * * *  (*/15 * * * *)
+  schedule   Every 15 min  (*/15 * * * *)
   dispatch
 
 Quota Monitor  (quota-monitor.yml)
   dispatch
 
 Quota Reserve  (quota-reserve.yml)
-  schedule   */10 * * * *  (*/10 * * * *)
+  schedule   Every 10 min  (*/10 * * * *)
   dispatch
 
 Rebase PRs  (rebase-prs.yml)
@@ -353,8 +353,8 @@ Trigger Artifact Mirror  (trigger-artifact-mirror.yml)
 SCHEDULE SUMMARY (UTC)
 ----------------------
 
-*/10 * * * *                   Quota Reserve
-*/15 * * * *                   Queue Manager
+Every 10 min                   Quota Reserve
+Every 15 min                   Queue Manager
 Every 6h at :00                Mirror Interested-Deving-1896 → OSP
 Daily 02:00                    Mirror Orgs
 Monthly 1st 03:00              LTS README Standardisation

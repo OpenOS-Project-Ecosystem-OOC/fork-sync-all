@@ -142,42 +142,42 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 
 | Time | Frequency | Workflow |
 |---|---|---|
-| Daily 01:30 | | Sync Upstream Sources |
-| Daily 02:00 | | Mirror Orgs |
-| Every 2h at :05 | | Rate-Limit Re-trigger |
-| Every 2h at :32 | | Notification Poller |
-| Monthly 1st 03:00 | | LTS README Standardisation |
-| Daily 03:05 | | Sync Registry Sources |
-| Weekly Sun 03:08 | | Docker → Incus Migration |
-| Weekly Sun 03:10 | | Generate OSP Dependency Graph |
-| Daily 03:15 | | Update READMEs |
-| Monthly 1st 04:00 | | Cleanup Stale Branches |
-| Every 4h at :07 | | Sync pieroproietti Forks |
-| Every 4h at :10 | | Mirror Artifacts |
-| Daily 04:22 | | Sync from GitLab |
-| Every 4h at :30 | | Mirror OSP → GitLab |
-| Every 4h at :50 | | Sync to GitLab Variant |
-| Monthly 1st 05:00 | | Full Chain Flush |
-| Daily 05:10 | | Rebase PRs |
-| Daily 05:50 | | Reconcile Org References |
-| Every 6h at :00 | | Mirror Interested-Deving-1896 → OSP |
-| Every 6h at :02 | | Sync btrfs-devel Branches |
-| Every 6h at :03 | | Mirror Releases |
-| Weekly Mon 06:06 | | Upstream Workflow Proposal |
-| Daily 06:07 | | Sync All Forks |
-| Weekly Mon 06:11 | | Update Infrastructure Dependencies |
-| Every 6h at :15 | | Mirror to OpenOS-Project-Ecosystem-OOC |
-| Every 6h at :33 | | Upstream PRs from OSP + OOC |
-| Daily 06:45 | | OTA Discover |
-| Every 6h at :45 | | Setup OSP Mirror Workflows |
-| Every 6h at :47 | | Upstream Direct Commits from OSP + OOC |
-| Every 6h at :55 | | Sync Registered Imports |
-| Daily 07:08 | | Create Missing READMEs |
-| Daily 07:30 | | Resolve CI Failures |
-| Daily 08:15 | | Inject Built-with-Ona Badges |
-| Weekly Mon 09:00 | | Token Health Monitor |
-| Daily 09:05 | | Check OSP-Bound CI Status |
-| Daily 09:17 | | Sync to GitLab |
-| Daily 10:30 | | Translate READMEs |
-| */15 * * * * | | Queue Manager |
-| */10 * * * * | | Quota Reserve |
+| 01:30 | Daily | Sync Upstream Sources |
+| 02:00 | Daily | Mirror Orgs |
+| at :05 | Every 2h | Rate-Limit Re-trigger |
+| at :32 | Every 2h | Notification Poller |
+| 1st 03:00 | Monthly | LTS README Standardisation |
+| 03:05 | Daily | Sync Registry Sources |
+| Sun 03:08 | Weekly | Docker → Incus Migration |
+| Sun 03:10 | Weekly | Generate OSP Dependency Graph |
+| 03:15 | Daily | Update READMEs |
+| 1st 04:00 | Monthly | Cleanup Stale Branches |
+| at :07 | Every 4h | Sync pieroproietti Forks |
+| at :10 | Every 4h | Mirror Artifacts |
+| 04:22 | Daily | Sync from GitLab |
+| at :30 | Every 4h | Mirror OSP → GitLab |
+| at :50 | Every 4h | Sync to GitLab Variant |
+| 1st 05:00 | Monthly | Full Chain Flush |
+| 05:10 | Daily | Rebase PRs |
+| 05:50 | Daily | Reconcile Org References |
+| at :00 | Every 6h | Mirror Interested-Deving-1896 → OSP |
+| at :02 | Every 6h | Sync btrfs-devel Branches |
+| at :03 | Every 6h | Mirror Releases |
+| Mon 06:06 | Weekly | Upstream Workflow Proposal |
+| 06:07 | Daily | Sync All Forks |
+| Mon 06:11 | Weekly | Update Infrastructure Dependencies |
+| at :15 | Every 6h | Mirror to OpenOS-Project-Ecosystem-OOC |
+| at :33 | Every 6h | Upstream PRs from OSP + OOC |
+| 06:45 | Daily | OTA Discover |
+| at :45 | Every 6h | Setup OSP Mirror Workflows |
+| at :47 | Every 6h | Upstream Direct Commits from OSP + OOC |
+| at :55 | Every 6h | Sync Registered Imports |
+| 07:08 | Daily | Create Missing READMEs |
+| 07:30 | Daily | Resolve CI Failures |
+| 08:15 | Daily | Inject Built-with-Ona Badges |
+| Mon 09:00 | Weekly | Token Health Monitor |
+| 09:05 | Daily | Check OSP-Bound CI Status |
+| 09:17 | Daily | Sync to GitLab |
+| 10:30 | Daily | Translate READMEs |
+|  | Every 15 min | Queue Manager |
+|  | Every 10 min | Quota Reserve |
