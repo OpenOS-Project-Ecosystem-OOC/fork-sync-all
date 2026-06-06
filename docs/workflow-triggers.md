@@ -108,7 +108,9 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 
 | Workflow | File | Schedule | Also triggers on |
 |---|---|---|---|
+| Critical Deploy | `critical-deploy.yml` | — | dispatch |
 | Full Chain Flush | `full-chain-flush.yml` | Monthly 1st 05:00 | dispatch |
+| Pre-Flush Prep | `pre-flush-prep.yml` | — | dispatch |
 
 ---
 
@@ -118,7 +120,6 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 |---|---|---|
 | Cancel Stale Runs | `cancel-stale-runs.yml` | dispatch |
 | Clone Org | `clone-org.yml` | dispatch |
-| Critical Deploy | `critical-deploy.yml` | dispatch |
 | Docker → Incus Migration | `docker-to-incus.yml` | `Add Mirror Repo` completes · dispatch |
 | Fork KDE Neon Repos | `fork-neon-repos.yml` | dispatch |
 | GitLab Storage Scan | `gl-storage-scan.yml` | dispatch |

@@ -277,8 +277,14 @@ Validate Config  (validate-config.yml)
 FULL PIPELINE
 -------------
 
+Critical Deploy  (critical-deploy.yml)
+  dispatch
+
 Full Chain Flush  (full-chain-flush.yml)
   schedule   Monthly 1st 05:00  (0 5 1 * *)
+  dispatch
+
+Pre-Flush Prep  (pre-flush-prep.yml)
   dispatch
 
 
@@ -289,9 +295,6 @@ Cancel Stale Runs  (cancel-stale-runs.yml)
   dispatch
 
 Clone Org  (clone-org.yml)
-  dispatch
-
-Critical Deploy  (critical-deploy.yml)
   dispatch
 
 Docker → Incus Migration  (docker-to-incus.yml)

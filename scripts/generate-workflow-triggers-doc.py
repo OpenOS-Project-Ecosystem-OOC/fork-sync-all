@@ -57,7 +57,9 @@ GROUPS = [
         "update-workflow-triggers-doc",
     ]),
     ("Full Pipeline", [
+        "pre-flush-prep",
         "full-chain-flush",
+        "critical-deploy",
     ]),
     ("Utility / On-Demand", [
         "cancel-stale-runs", "quota-monitor", "clone-org",
@@ -66,6 +68,7 @@ GROUPS = [
         "list-chromium", "setup-gitlab-schedules", "trigger-artifact",
         "ci",
     ]),
+    # Note: critical-deploy, pre-flush-prep, full-chain-flush → "Full Pipeline"
 ]
 
 # ── Cron → human-readable ─────────────────────────────────────────────────────
