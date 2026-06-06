@@ -155,6 +155,55 @@ All hourly/daily/frequent workflows include a quota pre-flight step before doing
 any API work. The step sets `skip=true` when remaining < `MIN_QUOTA` and subsequent
 steps check `if: steps.quota.outputs.skip == 'false'`.
 
+### Path filters + required status checks (gate job pattern)
+
+When a workflow uses path filters to skip jobs on irrelevant changes, required
+status checks will block PRs indefinitely if the filtered jobs never run.
+Fix this with a gate job that always runs and reflects the filtered outcomes:
+
+```yaml
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      shell: ${{ steps.filter.outputs.shell }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shell:
+              - '**/*.sh'
+
+  lint:
+    name: ShellCheck
+    needs: changes
+    if: needs.changes.outputs.shell == 'true'
+    runs-on: ubuntu-latest
+    steps: [...]
+
+  # Set THIS as the required status check — not the individual jobs above.
+  ci-required:
+    name: CI Required
+    runs-on: ubuntu-latest
+    needs: [lint]
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          if echo "${{ join(needs.*.result, ' ') }}" | grep -qw "failure"; then
+            exit 1
+          fi
+```
+
+**Branch protection must require `CI Required`** (the gate job name), not the
+individual filtered job names. If the individual names are listed as required
+checks, PRs that skip those jobs will be permanently blocked.
+
+Applied in: `btrfs-dwarfs-framework/.github/workflows/ci.yaml`
+
 ---
 
 ## OSP-bound repo list
