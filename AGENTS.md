@@ -261,9 +261,11 @@ The "PAT name" column is the display name shown at [github.com/settings/tokens](
 | `ADD_MIRROR_REPO_SYNC` | `fork-sync-all-ona` | admin:repo_hook, read:org, repo, workflow | GitHub / I-D-1896 | 2026-08-13 | add-mirror-repo.yml | [rotate-token.yml] |
 | `GITLAB_SYNC_TOKEN` | `fork-sync-all-sync` | api, read_repository, write_repository | GitLab / openos-project | 2027-05-13 | sync-to-gitlab.yml, mirror-osp-to-gitlab.yml, sync-from-gitlab.yml | [rotate-token.yml] |
 | `GITLAB_TOKEN` | `Ona-Env-Secret` | api | GitLab / openos-project | 2027-05-17 | Ona dev environment (injected as GITLAB_TOKEN env var); also used by gl-storage-scan, sync-to-gitlab-variant, cleanup-pollution, reconcile-org-refs | [rotate-token.yml] |
-| `FORK_SYNC_TOKEN` | unknown | unknown | GitHub | unknown | ⚠️ not referenced in any workflow — candidate for deletion | [rotate-token.yml] |
-| `GITLAB_TOKEN_EXTRA` | unknown | unknown | GitLab | unknown | ⚠️ not referenced in any workflow — candidate for deletion | [rotate-token.yml] |
-| `MODELS_TOKEN` | unknown | unknown | unknown | unknown | ⚠️ not referenced in any workflow — candidate for deletion | [rotate-token.yml] |
+| `BITBUCKET_TOKEN` | n/a (opt-in) | Bitbucket API | Bitbucket | unknown | sync-registered-imports.yml, clone-org.yml, import-repo.yml — skipped if unset | [rotate-token.yml] |
+| `GITEA_TOKEN` | n/a (opt-in) | Gitea API | Gitea instance | unknown | sync-registered-imports.yml, clone-org.yml, import-repo.yml — skipped if unset | [rotate-token.yml] |
+| `FORK_SYNC_TOKEN` | unknown | unknown | GitHub | unknown | ⚠️ not referenced in any workflow — delete from org secrets | [rotate-token.yml] |
+| `GITLAB_TOKEN_EXTRA` | unknown | unknown | GitLab | unknown | ⚠️ not referenced in any workflow — delete from org secrets | [rotate-token.yml] |
+| `MODELS_TOKEN` | unknown | unknown | unknown | unknown | ⚠️ not referenced in any workflow — delete from org secrets | [rotate-token.yml] |
 | `ACTIVITYSMITH_API_KEY` | n/a (external service) | ActivitySmith API | ActivitySmith | unknown | full-chain-flush.yml (live activity tracking) — optional, skipped if unset | manual |
 | `ACTIVITYSMITH_CHANNELS` | n/a (external service) | ActivitySmith channel IDs | ActivitySmith | n/a | full-chain-flush.yml — optional, skipped if unset | manual |
 | `ANTHROPIC_API_KEY` | n/a (external service) | Anthropic API | Anthropic | n/a | validate-config.yml (AgentShield scan) — optional, skipped if unset | manual |
