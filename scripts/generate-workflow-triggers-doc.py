@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 import yaml
 
 REPO_URL = "https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows"
+ACTIONS_URL = "https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows"
 
 # ── Group definitions ─────────────────────────────────────────────────────────
 # Each group has a display name and a list of filename substrings that belong
@@ -254,16 +255,18 @@ def generate_md(grouped: dict, all_wfs: list, now: str) -> str:
             lines.append("|---|---|---|")
             for wf in wfs:
                 trigger = md_also_triggers(wf)
-                link = f"[↗]({REPO_URL}/{wf['file']})"
-                lines.append(f"| {wf['name']} {link} | `{wf['file']}` | {trigger} |")
+                file_link = f"[↗]({REPO_URL}/{wf['file']})"
+                run_link = f"[▶ Run]({ACTIONS_URL}/{wf['file']})"
+                lines.append(f"| {wf['name']} {file_link} {run_link} | `{wf['file']}` | {trigger} |")
         else:
             lines.append("| Workflow | File | Schedule | Also triggers on |")
             lines.append("|---|---|---|---|")
             for wf in wfs:
                 sched   = md_schedule(wf)
                 also    = md_also_triggers(wf)
-                link = f"[↗]({REPO_URL}/{wf['file']})"
-                lines.append(f"| {wf['name']} {link} | `{wf['file']}` | {sched} | {also} |")
+                file_link = f"[↗]({REPO_URL}/{wf['file']})"
+                run_link = f"[▶ Run]({ACTIONS_URL}/{wf['file']})"
+                lines.append(f"| {wf['name']} {file_link} {run_link} | `{wf['file']}` | {sched} | {also} |")
         lines.append("")
 
     # Schedule summary
@@ -301,8 +304,8 @@ def generate_md(grouped: dict, all_wfs: list, now: str) -> str:
 
     for _, freq, time, name in sorted(schedule_rows, key=sort_key):
         fname = name_to_file.get(name, "")
-        link = f" [↗]({REPO_URL}/{fname})" if fname else ""
-        lines.append(f"| {time} | {freq} | {name}{link} |")
+        links = f" [↗]({REPO_URL}/{fname}) [▶ Run]({ACTIONS_URL}/{fname})" if fname else ""
+        lines.append(f"| {time} | {freq} | {name}{links} |")
 
     lines.append("")
     return "\n".join(lines)
