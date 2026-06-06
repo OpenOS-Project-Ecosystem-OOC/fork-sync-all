@@ -118,7 +118,7 @@ jobs:
 
       - name: Checkout
         if: ${{ steps.quota_preflight.outputs.skip == 'false' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # ── Step 1: Clear the runway ────────────────────────────────────────────
       - name: "Step 1: Cancel stale queued runs"
