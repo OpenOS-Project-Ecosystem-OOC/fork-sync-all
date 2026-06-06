@@ -167,6 +167,7 @@ subgroups:
       - flatpak-repo
       - org-mirror
       - headroom
+      - build-server
 
   yaml-tooling_deving:
     id: 133909501
@@ -181,6 +182,8 @@ subgroups:
       - activitysmith-github-action
       - agentshield
       - pkgbuild-action
+      - actions-orchestrator
+      - github-actions-virtualization-support
       # ── Directory structure validation ─────────────────────────────────────
       - directory-model
       - katachi
@@ -211,6 +214,7 @@ subgroups:
       - y2j
       - xml-yaml-json-converter
       - graphize
+      - matrix-lock
 
   cachyos_deving:
     id: 133909503
@@ -250,6 +254,7 @@ subgroups:
       - netclaw
       # ── Notification / alerting ────────────────────────────────────────────
       - notificare
+      - niko-claude-skills
 
 # Fallback subgroup for repos not listed above
 default_subgroup: ops
