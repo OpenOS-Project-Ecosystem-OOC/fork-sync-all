@@ -65,7 +65,7 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 | Inject Built-with-Ona Badges | `inject-badges.yml` | Daily 08:15 | `Mirror OSP → GitLab` completes · dispatch |
 | LTS README Standardisation | `lts-readmes.yml` | Monthly 1st 03:00 | `Rebuild LTS Branch (penguins-eggs)` completes · dispatch |
 | README Wizard | `readme-wizard.yml` | — | dispatch |
-| Translate READMEs | `translate-readmes.yml` | Daily 10:30 | `Update READMEs` completes · dispatch |
+| Translate READMEs | `translate-readmes.yml` | Daily 10:30 | `Update READMEs` completes · `Add Mirror Repo` completes · `Import Repository` completes · `Clone Org` completes · `Merge Repos into Monorepo` completes · `Sync All Forks` completes · `Sync Registered Imports` completes · `Sync from GitLab` completes · `Sync pieroproietti Forks` completes · `Sync Upstream Sources` completes · `Sync penguins-eggs docs to penguins-eggs-book` completes · dispatch |
 | Update READMEs | `update-readmes.yml` | Daily 03:15 | push to `config/gitlab-subgroups.yml`, `config/template-manifest.yml` · `Sync Registered Imports` completes · dispatch |
 | Validate README Render | `validate-readme-render.yml` | — | push to `README.md` · `Update READMEs` completes · dispatch |
 
@@ -124,6 +124,7 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 | GitLab Storage Scan | `gl-storage-scan.yml` | dispatch |
 | List Chromium GitLab Repos | `list-chromium-repos.yml` | dispatch |
 | Merge Repos into Monorepo | `merge-to-monorepo.yml` | dispatch |
+| OTA Discover | `ota-discover.yml` | dispatch |
 | Queue Manager | `queue-manager.yml` | dispatch |
 | Quota Monitor | `quota-monitor.yml` | dispatch |
 | Quota Reserve | `quota-reserve.yml` | dispatch |
@@ -166,6 +167,7 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 | Weekly Mon 06:11 | | Update Infrastructure Dependencies |
 | Every 6h at :15 | | Mirror to OpenOS-Project-Ecosystem-OOC |
 | Every 6h at :33 | | Upstream PRs from OSP + OOC |
+| Daily 06:45 | | OTA Discover |
 | Every 6h at :45 | | Setup OSP Mirror Workflows |
 | Every 6h at :47 | | Upstream Direct Commits from OSP + OOC |
 | Every 6h at :55 | | Sync Registered Imports |
