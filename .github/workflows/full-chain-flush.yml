@@ -43,6 +43,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
       REPO: ${{ github.repository }}
+      HAS_ACTIVITYSMITH: ${{ secrets.ACTIVITYSMITH_API_KEY != '' }}
 
     steps:
       - name: Quota pre-flight
@@ -64,7 +65,7 @@ jobs:
       # ── ActivitySmith Live Activity (opt-in: set ACTIVITYSMITH_API_KEY secret) ──
       - name: "ActivitySmith: start Live Activity"
         id: activity
-        if: ${{ secrets.ACTIVITYSMITH_API_KEY != '' }}
+        if: ${{ env.HAS_ACTIVITYSMITH == 'true' }}
         uses: ActivitySmithHQ/activitysmith-github-action@v1
         with:
           action: start_live_activity
@@ -388,7 +389,7 @@ jobs:
               url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
       - name: "ActivitySmith: failure push notification"
-        if: ${{ failure() && secrets.ACTIVITYSMITH_API_KEY != '' }}
+        if: ${{ failure() && env.HAS_ACTIVITYSMITH == 'true' }}
         uses: ActivitySmithHQ/activitysmith-github-action@v1
         with:
           action: send_push_notification

@@ -209,7 +209,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Opt-in: only runs when the secret is set. Fails on critical findings.
-    if: ${{ secrets.ANTHROPIC_API_KEY != '' || true }}
+    if: always()
     steps:
       - uses: actions/checkout@v6
 
