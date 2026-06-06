@@ -6,7 +6,7 @@ name: OTA Discover
 
 on:
   schedule:
-    - cron: '45 6 * * *'   # Daily at 06:45 UTC
+    - cron: '38 6 * * *'   # staggered off :45 collision with setup-osp-mirrors
   workflow_dispatch:
     inputs:
       dry_run:

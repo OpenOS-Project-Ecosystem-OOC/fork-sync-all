@@ -16,7 +16,7 @@ on:
     # Daily at 01:30 UTC — after sync-forks (06:00) would be redundant for
     # forks already covered there; this catches origins not in that set.
     # Offset from sync-pieroproietti-forks (:05) and sync-forks (06:00).
-    - cron: '30 1 * * *'
+    - cron: '37 1 * * *'   # staggered off :30 boundary
   workflow_dispatch:
     inputs:
       dry_run:

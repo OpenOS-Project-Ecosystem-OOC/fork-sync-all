@@ -2,7 +2,7 @@ name: Token Health Monitor
 
 on:
   schedule:
-    - cron: '0 9 * * 1'
+    - cron: '24 9 * * 1'  # staggered off sync-to-gitlab :17
   workflow_dispatch:
     inputs:
       warn_days:

@@ -25,7 +25,7 @@ name: LTS README Standardisation
 
 on:
   schedule:
-    - cron: '0 3 1 * *'   # Monthly on the 1st at 03:00 UTC
+    - cron: '19 3 1 * *'   # staggered off :00 boundary
   workflow_run:
     workflows: ["Rebuild LTS Branch (penguins-eggs)"]
     types: [completed]

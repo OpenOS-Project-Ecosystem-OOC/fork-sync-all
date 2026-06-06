@@ -8,7 +8,7 @@ name: Mirror Orgs
 
 on:
   schedule:
-    - cron: "0 2 * * *"   # Daily at 02:00 UTC (full mirror sweep)
+    - cron: "17 2 * * *"   # staggered off :00 boundary
   workflow_dispatch:
     inputs:
       repo_filter:

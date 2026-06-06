@@ -14,7 +14,7 @@ name: Full Chain Flush
 
 on:
   schedule:
-    - cron: '0 5 1 * *'   # Monthly on the 1st at 05:00 UTC
+    - cron: '17 5 1 * *'   # staggered off :00 boundary
   workflow_dispatch:
     inputs:
       dry_run:

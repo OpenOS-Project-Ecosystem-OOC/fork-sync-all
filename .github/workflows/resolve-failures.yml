@@ -2,7 +2,7 @@ name: Resolve CI Failures
 
 on:
   schedule:
-    - cron: "30 7 * * *" # Daily at 07:30 UTC — full sweep regardless of notifications
+    - cron: "43 7 * * *" # staggered off :30 boundary
   workflow_dispatch:
     inputs:
       repo_filter:

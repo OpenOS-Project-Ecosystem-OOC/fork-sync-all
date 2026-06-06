@@ -16,7 +16,7 @@ on:
     # Daily at 10:30 UTC — moved out of 03:xx cluster.
     # Still after update-readmes (03:00) and create-readmes (07:08).
     # Full org scan (scope=all), normalize non-English READMEs to English.
-    - cron: '30 10 * * *'
+    - cron: '43 10 * * *'  # staggered off :30 boundary
   # Run OSP-bound normalize pass after any workflow that creates or pushes
   # content — catches non-English READMEs in priority repos only.
   workflow_run:
