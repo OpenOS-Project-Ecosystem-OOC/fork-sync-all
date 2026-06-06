@@ -70,6 +70,9 @@ subgroups:
       - linux-powerwash
       - linux-pivot
       - linux-distro-prefix
+      # ── CachyOS kernel repos ───────────────────────────────────────────────
+      - linux-cachyos
+      - kernel-patches
 
   incus_deving:
     id: 130516536
@@ -136,7 +139,7 @@ subgroups:
       - podclaw
 
   taubyte_deving:
-    id: -1  # TODO: create subgroup at gitlab.com/openos-project/taubyte_deving and update id
+    id: 133909500
     path: openos-project/taubyte_deving
     repos:
       # All 51 taubyte/* repos merged into one monorepo via merge-to-monorepo.yml
@@ -164,6 +167,89 @@ subgroups:
       - flatpak-repo
       - org-mirror
       - headroom
+
+  yaml-tooling_deving:
+    id: 133909501
+    path: openos-project/yaml-tooling_deving
+    repos:
+      # ── GitHub Actions workflow tooling ────────────────────────────────────
+      - CI-Debugger
+      - gavi
+      - yamler
+      - github-actions-workflow-ts
+      - fluent-github-actions
+      - activitysmith-github-action
+      - agentshield
+      - pkgbuild-action
+      # ── Directory structure validation ─────────────────────────────────────
+      - directory-model
+      - katachi
+      - deardir
+      - dirstructx
+      - pyvert
+      # ── YAML filesystem / FUSE ─────────────────────────────────────────────
+      - yaml-fuse
+      - scriptfs
+      # ── Workflow automation ────────────────────────────────────────────────
+      - denoflow
+      # ── Data layer / content ───────────────────────────────────────────────
+      - velite
+      # ── AI / LLM tooling ──────────────────────────────────────────────────
+      - llm-docs-generator
+      - project-memory-mcp
+      - mnemonic
+      # ── Code generation from YAML ─────────────────────────────────────────
+      - models-generator
+      - blueprint
+      # ── Config management ─────────────────────────────────────────────────
+      - confmgr
+      - system-cleanup-manager
+      # ── YAML utilities ────────────────────────────────────────────────────
+      - yaml-sort
+      - yamllint-ts
+      - super-yaml
+      - y2j
+      - xml-yaml-json-converter
+      - graphize
+
+  cachyos_deving:
+    id: 133909503
+    path: openos-project/cachyos_deving
+    repos:
+      # ── Package management ─────────────────────────────────────────────────
+      - CachyOS-PKGBUILDS
+      - repo-manage-util
+      - cachyos-repo-add-script
+      # ── Hardware / system ──────────────────────────────────────────────────
+      - chwd
+      - CachyOS-Settings
+      - ananicy-rules
+      - cachy-update
+      - cachy-chroot
+      # ── Installers / managers ──────────────────────────────────────────────
+      - New-Cli-Installer
+      - kernel-manager
+      - scx-manager
+      # ── Cross-distro packages ──────────────────────────────────────────────
+      - copr-linux-cachyos
+
+  ai-agents_deving:
+    id: 133909504
+    path: openos-project/ai-agents_deving
+    repos:
+      # ── CLA / contributor management ───────────────────────────────────────
+      - clahub
+      # ── Developer metrics / observability ─────────────────────────────────
+      - clawmetry
+      - pylibsmeta
+      - nexa-gauge
+      # ── AI agent frameworks ────────────────────────────────────────────────
+      - accessibility-agents
+      - OmoiOS
+      - PhoneixAI
+      - netclaw
+      # ── Notification / alerting ────────────────────────────────────────────
+      - notificare
 
 # Fallback subgroup for repos not listed above
 default_subgroup: ops
