@@ -230,6 +230,19 @@ bash scripts/check-readme-render.sh path/to/README.md
 
 ---
 
+## GitLab CI variables
+
+These must be set as masked CI/CD variables in the `openos-project/fork-sync-all` GitLab project settings (not GitHub secrets):
+
+| Variable | Maps to | Used by | Notes |
+|---|---|---|---|
+| `GITLAB_TOKEN` | `GITLAB_TOKEN` GitHub secret | Most GitLab CI jobs | api + read_repository + write_repository scope |
+| `WORKFLOW_SECRET` | `SYNC_TOKEN` GitHub secret | sync-forks, notify-poller, resolve-failures, rate-limit-rerun, token-health, cleanup-branches | GitHub PAT with repo + workflow + admin:org scopes |
+| `GH_SYNC_TOKEN` | `GH_SYNC_TOKEN` GitHub secret | sync-from-gitlab | GitHub PAT with repo + workflow scopes |
+| `GITLAB_MAINTENANCE_TOKEN` | — | maintain:storage | Inherited from openos-project group variable; api scope on GitLab |
+
+---
+
 ## Headroom proxy
 
 A context compression proxy runs on port 8787 (started automatically via
