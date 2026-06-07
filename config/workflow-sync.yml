@@ -324,6 +324,40 @@ github_only:
     reason: Variant of sync-to-gitlab for specific mirror configurations — GitHub-to-GitLab push
   - workflow_file: validate-readme-render.yml
     reason: README render validation — runs on GitHub push/workflow_run, no GitLab counterpart
+  - workflow_file: enforce-agnostic-vendor.yml
+    reason: Scans vendor/ for distro-specific hardcoded defaults — GitHub push/PR trigger only
+  - workflow_file: pre-flush-prep.yml
+    reason: Pre-flight for full-chain-flush — clears queue, merges PRs, validates config, dispatches flush
+  - workflow_file: full-chain-flush.yml
+    reason: Orchestrates the full mirror + README + sync chain — GitHub Actions only
+  - workflow_file: critical-deploy.yml
+    reason: Fast-lane deploy path — aggressive queue clear + priority dispatch, GitHub Actions only
+  - workflow_file: queue-manager.yml
+    reason: Deduplicates and evicts queued runs — GitHub Actions API only
+  - workflow_file: quota-monitor.yml
+    reason: Monitors API quota and retries after reset — GitHub rate limit API only
+  - workflow_file: quota-reserve.yml
+    reason: Cancels low-priority runs when quota is low — GitHub Actions API only
+  - workflow_file: cancel-stale-runs.yml
+    reason: Cancels stale queued runs — GitHub Actions API only
+  - workflow_file: cancel-post-rotation.yml
+    reason: Cancels in-flight runs after token rotation — GitHub Actions API only
+  - workflow_file: check-osp-ci.yml
+    reason: Checks CI status of OSP-bound repos — GitHub API only
+  - workflow_file: rebase-prs.yml
+    reason: Rebases open PRs onto main — GitHub API only
+  - workflow_file: update-workflow-triggers-doc.yml
+    reason: Generates workflow triggers documentation — committed to GitHub repo
+  - workflow_file: ota-discover.yml
+    reason: Discovers OTA-enabled forks — GitHub API only
+  - workflow_file: ota-opt-in.yml
+    reason: Handles OTA opt-in from fork — GitHub API only
+  - workflow_file: ota-release.yml
+    reason: Delivers OTA updates to registered forks — GitHub API only
+  - workflow_file: ota-self-update.yml
+    reason: Self-updates fork-sync-all from upstream — GitHub API only
+  - workflow_file: docker-to-incus.yml
+    reason: Converts Docker artifacts to Incus format in GitHub repos — GitHub Contents API only
 
 # ── GitLab-only jobs ──────────────────────────────────────────────────────────
 # These GitLab CI jobs have no GitHub Actions counterpart. Intentional.

@@ -33,6 +33,8 @@ tiers:
     tier: 1
   - name: "Token Health"
     tier: 1
+  - name: "Token Health Monitor"
+    tier: 1
   - name: "Mirror Watchdog"
     tier: 1
   - name: "Rate-Limit Re-trigger"
@@ -40,6 +42,8 @@ tiers:
   - name: "Quota Monitor"
     tier: 1
   - name: "CI"
+    tier: 1
+  - name: "Pre-Flush Prep"
     tier: 1
 
   # ── Tier 2: HIGH ────────────────────────────────────────────────────────────
@@ -55,8 +59,8 @@ tiers:
     tier: 2
   - name: "Sync Forks"
     tier: 2
-  - name: "Pre-Flush Prep"
-    tier: 1
+  - name: "Sync All Forks"
+    tier: 2
   - name: "Full Chain Flush"
     tier: 2
   - name: "Sync to GitLab Variant"
@@ -64,6 +68,12 @@ tiers:
   - name: "Sync from GitLab"
     tier: 2
   - name: "Rebase PRs"
+    tier: 2
+  - name: "Import Repository"
+    tier: 2
+  - name: "Add Mirror Repo"
+    tier: 2
+  - name: "Merge Repos into Monorepo"
     tier: 2
 
   # ── Tier 3: MEDIUM ──────────────────────────────────────────────────────────
@@ -91,6 +101,8 @@ tiers:
     tier: 3
   - name: "Cleanup Pollution"
     tier: 3
+  - name: "Cleanup Template Pollution"
+    tier: 3
   - name: "Rebuild LTS Branch (penguins-eggs)"
     tier: 3
   - name: "Setup OSP Mirror Workflows"
@@ -98,6 +110,28 @@ tiers:
   - name: "Sync Registry Sources"
     tier: 3
   - name: "Sync to GitLab"
+    tier: 3
+  - name: "Enforce Agnostic Vendor"
+    tier: 3
+  - name: "PR Automation"
+    tier: 3
+  - name: "Sync Template"
+    tier: 3
+  - name: "Sync Upstream Sources"
+    tier: 3
+  - name: "OTA Discover"
+    tier: 3
+  - name: "OTA Opt-In"
+    tier: 3
+  - name: "OTA Release"
+    tier: 3
+  - name: "OTA Self-Update"
+    tier: 3
+  - name: "Clone Org"
+    tier: 3
+  - name: "Fork KDE Neon Repos"
+    tier: 3
+  - name: "Docker → Incus Migration"
     tier: 3
 
   # ── Tier 4: LOW ─────────────────────────────────────────────────────────────
@@ -109,9 +143,13 @@ tiers:
     tier: 4
   - name: "Generate Dependency Graph"
     tier: 4
+  - name: "Generate OSP Dependency Graph"
+    tier: 4
   - name: "Upstream Workflow Proposal"
     tier: 4
   - name: "Update Infra Dependencies"
+    tier: 4
+  - name: "Update Infrastructure Dependencies"
     tier: 4
   - name: "Update Workflow Triggers Doc"
     tier: 4
@@ -120,6 +158,8 @@ tiers:
   - name: "Mirror Artifacts"
     tier: 4
   - name: "Mirror Releases"
+    tier: 4
+  - name: "Mirror Orgs"
     tier: 4
   - name: "Upstream PRs from OSP + OOC"
     tier: 4
@@ -134,6 +174,22 @@ tiers:
   - name: "Mirror Orgs Full"
     tier: 4
   - name: "Resolve Failures"
+    tier: 4
+  - name: "README Wizard"
+    tier: 4
+  - name: "Setup GitLab CI Schedules"
+    tier: 4
+  - name: "GitLab Storage Scan"
+    tier: 4
+  - name: "List Chromium GitLab Repos"
+    tier: 4
+  - name: "Shallow Reclone Large GitLab Mirrors"
+    tier: 4
+  - name: "Trigger Artifact Mirror"
+    tier: 4
+  - name: "Sync penguins-eggs docs to penguins-eggs-book"
+    tier: 4
+  - name: "Rate Limit Status"
     tier: 4
 
 # Default tier for workflows not listed above.

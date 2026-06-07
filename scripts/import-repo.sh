@@ -379,22 +379,21 @@ print(json.dumps(data, indent=2))
     new_b64=$(echo "$new_content" | base64 -w0)
 
     # Commit back to fork-sync-all
+    _put_data=""
     if [ -n "$file_sha" ]; then
-      curl -sf -X PUT \
-        -H "Authorization: token ${GH_TOKEN}" \
-        -H "Accept: application/vnd.github+json" \
-        -H "Content-Type: application/json" \
-        "${GH_API}/repos/${GITHUB_OWNER}/fork-sync-all/contents/${IMPORTS_FILE}" \
-        -d "{\"message\":\"register ${target_name} for ongoing sync (${platform})\",\"content\":\"${new_b64}\",\"sha\":\"${file_sha}\"}" \
-        > /dev/null && info "  Registered." || warn "  Failed to update registered-imports.json"
+      _put_data="{\"message\":\"register ${target_name} for ongoing sync (${platform})\",\"content\":\"${new_b64}\",\"sha\":\"${file_sha}\"}"
     else
-      curl -sf -X PUT \
+      _put_data="{\"message\":\"register ${target_name} for ongoing sync (${platform})\",\"content\":\"${new_b64}\"}"
+    fi
+    if curl -sf -X PUT \
         -H "Authorization: token ${GH_TOKEN}" \
         -H "Accept: application/vnd.github+json" \
         -H "Content-Type: application/json" \
         "${GH_API}/repos/${GITHUB_OWNER}/fork-sync-all/contents/${IMPORTS_FILE}" \
-        -d "{\"message\":\"register ${target_name} for ongoing sync (${platform})\",\"content\":\"${new_b64}\"}" \
-        > /dev/null && info "  Registered." || warn "  Failed to update registered-imports.json"
+        -d "$_put_data" > /dev/null; then
+      info "  Registered."
+    else
+      warn "  Failed to update registered-imports.json"
     fi
 
     # Trigger an immediate first sync rather than waiting up to 6h for the

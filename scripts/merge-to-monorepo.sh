@@ -69,6 +69,7 @@ GH_API="https://api.github.com"
 
 
 # ── Budget guard ─────────────────────────────────────────────────────────────
+# shellcheck source=includes/budget.sh
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
 budget_init
 
