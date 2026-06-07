@@ -326,6 +326,8 @@ github_only:
     reason: README render validation — runs on GitHub push/workflow_run, no GitLab counterpart
   - workflow_file: enforce-agnostic-vendor.yml
     reason: Scans vendor/ for distro-specific hardcoded defaults — GitHub push/PR trigger only
+  - workflow_file: deploy-book.yml
+    reason: Builds mdBook site from DOCS/ and deploys to GitHub Pages — GitHub Pages only
   - workflow_file: pre-flush-prep.yml
     reason: Pre-flight for full-chain-flush — clears queue, merges PRs, validates config, dispatches flush
   - workflow_file: full-chain-flush.yml
