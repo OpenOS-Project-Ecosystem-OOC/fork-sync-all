@@ -115,6 +115,8 @@ tiers:
     tier: 3
   - name: "Deploy Book"
     tier: 3
+  - name: "Setup Dashboard Variables"
+    tier: 3
   - name: "PR Automation"
     tier: 3
   - name: "Sync Template"
