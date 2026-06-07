@@ -10,7 +10,8 @@ In the repo that hosts this dashboard, go to **Settings → Secrets and variable
 
 | Variable | Required | Description | Example |
 |---|---|---|---|
-| `VITE_APP_NAME` | No | Display name shown in the browser tab | `My Infra Dashboard` |
+| `VITE_APP_NAME` | No | Display name in browser tab and PWA install banner | `My Infra Dashboard` |
+| `VITE_APP_DESCRIPTION` | No | PWA manifest description | `Infrastructure dashboard — ...` |
 | `VITE_ENDPOINT_URL` | Yes | Base URL of the running API backend (no trailing slash) | `https://api.example.org/api` |
 | `VITE_MIRRORLIST_OWNER` | Yes | GitHub org/user that owns the mirrorlist repo | `my-org` |
 | `VITE_MIRRORLIST_REPO` | Yes | Repo name containing the mirrorlist file | `my-infra` |
@@ -66,7 +67,8 @@ All `VITE_*` variables are baked in at build time. See `.env.example` for the fu
 
 | Variable | Default | Notes |
 |---|---|---|
-| `VITE_APP_NAME` | `Infra Dashboard` | Browser tab title |
+| `VITE_APP_NAME` | `Infra Dashboard` | Browser tab title and PWA install name |
+| `VITE_APP_DESCRIPTION` | _(generic fallback)_ | PWA manifest description |
 | `VITE_APP_VERSION` | `dev` | Injected into `<meta>`; CI sets this to the commit SHA |
 | `VITE_ENDPOINT_URL` | `http://localhost:5862/api` | API backend base URL |
 | `VITE_MIRRORLIST_OWNER` | _(empty)_ | Must be set for mirror health to work |

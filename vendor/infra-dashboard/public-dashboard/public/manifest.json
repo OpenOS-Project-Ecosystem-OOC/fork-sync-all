@@ -1,7 +1,7 @@
 {
-  "name": "OpenOS Infra Dashboard",
-  "short_name": "OSP Dashboard",
-  "description": "OpenOS Project infrastructure dashboard — mirror status, package search, build health.",
+  "name": "Infra Dashboard",
+  "short_name": "Infra",
+  "description": "Infrastructure dashboard — mirror status, package search, build health.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#09090b",
