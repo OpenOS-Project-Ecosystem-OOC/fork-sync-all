@@ -62,6 +62,8 @@ USE_GIT_LFS="${USE_GIT_LFS:-false}"
 NPARENT="${NPARENT:-false}"
 BRANCH_MAP="${BRANCH_MAP:-{}}"
 SOURCE_TOKEN="${SOURCE_TOKEN:-}"
+# When true, registers the monorepo in OSP mirror chain via add-mirror-repo.yml
+MIRROR_MONOREPO="${MIRROR_MONOREPO:-false}"
 
 GH_API="https://api.github.com"
 
@@ -503,5 +505,25 @@ git -C "$mono_dir" push "$local_mono_url" \
 
 echo ""
 info "Complete — merged: ${merged} | failed: ${failed}"
+
+# ── Optionally register monorepo in OSP mirror chain ─────────────────────────
+if [[ "$MIRROR_MONOREPO" == "true" && "$failed" -eq 0 ]]; then
+  info "Dispatching add-mirror-repo for ${MONOREPO_NAME}..."
+  _mono_url="https://github.com/${MONOREPO_OWNER}/${MONOREPO_NAME}"
+  _dispatch_body=$(printf '{"ref":"main","inputs":{"repo_url":"%s"}}' "$_mono_url")
+  _dispatch_http=$(curl -sf -w "%{http_code}" -o /dev/null \
+    -X POST \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    -H "Content-Type: application/json" \
+    "${GH_API}/repos/${MONOREPO_OWNER}/fork-sync-all/actions/workflows/add-mirror-repo.yml/dispatches" \
+    -d "$_dispatch_body" || echo "000")
+  if [[ "$_dispatch_http" == "204" ]]; then
+    info "  add-mirror-repo dispatched — monorepo will enter OSP mirror chain."
+  else
+    warn "  Could not dispatch add-mirror-repo (HTTP ${_dispatch_http}) — register manually."
+  fi
+fi
+
 budget_report
 [[ "$failed" -eq 0 ]] || exit 1

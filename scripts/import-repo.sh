@@ -364,6 +364,7 @@ if [ "$ONGOING_SYNC" = "true" ]; then
 
   # Check if already registered (by source_url)
   already=$(echo "$current_content" | grep -o "\"source_url\":\"${clean_url}\"" || echo "")
+  _sync_dispatched=false
   if [ -n "$already" ]; then
     info "  Already registered — skipping."
   else
@@ -395,6 +396,24 @@ print(json.dumps(data, indent=2))
         -d "{\"message\":\"register ${target_name} for ongoing sync (${platform})\",\"content\":\"${new_b64}\"}" \
         > /dev/null && info "  Registered." || warn "  Failed to update registered-imports.json"
     fi
+
+    # Trigger an immediate first sync rather than waiting up to 6h for the
+    # scheduled sync-registered-imports run to pick up the new entry.
+    info "  Dispatching sync-registered-imports for ${target_name}..."
+    dispatch_body=$(printf '{"ref":"main","inputs":{"repo_filter":"%s","force_sync":"true"}}' "$target_name")
+    dispatch_http=$(curl -sf -w "%{http_code}" -o /dev/null \
+      -X POST \
+      -H "Authorization: token ${GH_TOKEN}" \
+      -H "Accept: application/vnd.github+json" \
+      -H "Content-Type: application/json" \
+      "${GH_API}/repos/${GITHUB_OWNER}/fork-sync-all/actions/workflows/sync-registered-imports.yml/dispatches" \
+      -d "$dispatch_body" || echo "000")
+    if [ "$dispatch_http" = "204" ]; then
+      info "  Immediate sync dispatched."
+      _sync_dispatched=true
+    else
+      warn "  Could not dispatch sync (HTTP ${dispatch_http}) — will sync on next scheduled run."
+    fi
   fi
   echo ""
 fi
@@ -411,6 +430,10 @@ echo "  OSP     : github.com/${OSP_ORG}/${target_name}"
 echo "  OOC     : github.com/${OOC_ORG}/${target_name} (pending next mirror run)"
 fi
 if [ "$ONGOING_SYNC" = "true" ]; then
-echo "  Sync    : registered in registered-imports.json (hourly)"
+if [ "${_sync_dispatched:-false}" = "true" ]; then
+echo "  Sync    : registered + immediate sync dispatched"
+else
+echo "  Sync    : registered in registered-imports.json (next scheduled run)"
+fi
 fi
 echo "========================================================"

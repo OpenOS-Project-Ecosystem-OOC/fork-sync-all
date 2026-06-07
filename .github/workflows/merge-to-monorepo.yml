@@ -59,6 +59,11 @@ on:
         required: false
         type: string
         default: '{}'
+      mirror_monorepo:
+        description: 'Register the monorepo in the OSP mirror chain via add-mirror-repo after merge'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -98,6 +103,7 @@ jobs:
           NPARENT: ${{ inputs.nparent }}
           BRANCH_MAP: ${{ inputs.branch_map }}
           BUDGET_MINUTES: "350"
+          MIRROR_MONOREPO: ${{ inputs.mirror_monorepo }}
         run: bash scripts/merge-to-monorepo.sh
       - name: Write summary
         if: always()
