@@ -206,6 +206,79 @@ Applied in: `btrfs-dwarfs-framework/.github/workflows/ci.yaml`
 
 ---
 
+## Template sync profiles
+
+`config/template-consumers.yml` controls which repos receive automatic file
+updates from `sync-template.yml`. Each consumer has a `profile` that determines
+what gets injected.
+
+### Profile assignments
+
+| Profile | What it injects | Who should use it |
+|---|---|---|
+| `full` | Everything — all workflows, scripts, config | `fork-sync-all` only |
+| `mirror` | Mirror/sync workflows + infra tooling | **Nobody** — deprecated, do not assign |
+| `infra-core` | PR automation, token rotation, token health, README render validation | Consumer repos that are targets of the mirror chain |
+| `standalone` | PR automation + token rotation only | External project forks (KDE Invent, etc.) |
+| `upstream-sync` | Upstream sync workflows | Repos that track upstream projects |
+
+### Critical rule
+
+**Never assign `mirror` profile to consumer repos.** The `mirror` profile injects
+the full fork-sync-all mirror/sync suite (60+ workflow files, 100+ scripts) into
+repos that are *targets* of the mirror chain, not operators of it. This causes
+template pollution — files that have no purpose in the target repo and clutter
+its `.github/workflows/` and `scripts/` directories.
+
+### Template pollution cleanup
+
+If a repo has been polluted by the `mirror` profile:
+
+1. Check which files don't belong:
+```bash
+for f in .github/workflows/*.yml; do
+  grep -q "SYNC_TOKEN\|openos-project\|mirror-to-osp\|registered-imports" "$f" \
+    && echo "POLLUTION: $(basename $f)" \
+    || echo "native:    $(basename $f)"
+done
+```
+
+2. Remove them with `git rm --cached` and commit:
+```bash
+git rm --cached .github/workflows/add-mirror-repo.yml  # etc.
+git commit -m "chore: remove fork-sync-all template pollution"
+```
+
+3. Delete the untracked files from disk:
+```bash
+git status --short | grep "^??" | awk '{print $2}' | xargs rm -f
+```
+
+4. Trigger `cleanup-pollution.yml` (workflow_dispatch) to clean remaining
+   consumer repos automatically.
+
+### Repos cleaned of mirror pollution (2026-06-06)
+
+- `KPort` — 74 files removed
+- `btrfs-dwarfs-framework` — 133 files removed
+- All other `infra-core` consumers — cleaned via `cleanup-pollution.yml`
+
+### Queue pile-up pattern
+
+Workflows that trigger on `.github/workflows/**` (e.g. `validate-config`,
+`update-workflow-triggers-doc`) must have `concurrency: cancel-in-progress: true`
+to prevent stacking. Without it, rapid pushes create a queue of identical runs
+that consume quota on every reset, causing a deadlock where the queue can't
+drain because quota is always 0.
+
+```yaml
+concurrency:
+  group: workflow-name-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+---
+
 ## OSP-bound repo list
 
 The canonical list of ~49 repos that are mirrored to GitLab lives in
