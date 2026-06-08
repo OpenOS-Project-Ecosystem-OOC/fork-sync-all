@@ -113,13 +113,38 @@ add_row() {
 # ── 1. Fetch all secrets and their last-updated timestamps ────────────────────
 
 info "Fetching secrets from ${REPO}..."
-secrets_json=$(curl -sf \
-  -H "Authorization: token ${GH_TOKEN}" \
-  -H "Accept: application/vnd.github+json" \
-  "${GH_API}/repos/${REPO}/actions/secrets") || {
-  fail "Could not fetch secrets list — check SYNC_TOKEN scopes (needs: repo) or GitHub API quota"
-  # Write the issues file before exiting so the workflow can embed the error
-  issues+=("Could not fetch secrets list from GitHub API. Check SYNC_TOKEN scopes and API quota.")
+secrets_json=""
+_http_status=""
+for _attempt in 1 2 3; do
+  # Single curl call: write headers to temp file, body to stdout, status to variable
+  _hdr_file=$(mktemp)
+  _body=$(curl -sS \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    -D "$_hdr_file" \
+    -w "" \
+    "${GH_API}/repos/${REPO}/actions/secrets" 2>/dev/null)
+  _http_status=$(head -1 "$_hdr_file" | grep -oE '[0-9]{3}' | head -1)
+  if [[ "$_http_status" == "200" ]]; then
+    secrets_json="$_body"
+    rm -f "$_hdr_file"
+    break
+  elif [[ "$_http_status" == "403" || "$_http_status" == "429" ]]; then
+    _retry_after=$(grep -i "^retry-after:" "$_hdr_file" | awk '{print $2}' | tr -d '\r')
+    _sleep="${_retry_after:-30}"
+    warn "HTTP ${_http_status} on attempt ${_attempt} — sleeping ${_sleep}s (Retry-After: ${_retry_after:-not set})"
+    rm -f "$_hdr_file"
+    sleep "$_sleep"
+  else
+    warn "HTTP ${_http_status} on attempt ${_attempt} — retrying in 5s"
+    rm -f "$_hdr_file"
+    sleep 5
+  fi
+done
+
+if [[ -z "$secrets_json" ]]; then
+  fail "Could not fetch secrets list after 3 attempts (last HTTP ${_http_status:-unknown}). Check SYNC_TOKEN scopes (needs: repo) and API quota."
+  issues+=("Could not fetch secrets list from GitHub API (HTTP ${_http_status:-unknown} after 3 attempts). Check SYNC_TOKEN scopes and API quota.")
   needs_attention=true
   {
     echo "### ⚠️ Tokens needing attention"
@@ -129,7 +154,7 @@ secrets_json=$(curl -sf \
     done
   } > "${ISSUES_FILE:-/tmp/token-monitor-issues.md}"
   exit 1
-}
+fi
 
 # Known secrets and which platform token they hold
 declare -A SECRET_PLATFORM=(
