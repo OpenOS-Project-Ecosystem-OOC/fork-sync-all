@@ -117,7 +117,17 @@ secrets_json=$(curl -sf \
   -H "Authorization: token ${GH_TOKEN}" \
   -H "Accept: application/vnd.github+json" \
   "${GH_API}/repos/${REPO}/actions/secrets") || {
-  fail "Could not fetch secrets list — check SYNC_TOKEN scopes (needs: repo)"
+  fail "Could not fetch secrets list — check SYNC_TOKEN scopes (needs: repo) or GitHub API quota"
+  # Write the issues file before exiting so the workflow can embed the error
+  issues+=("Could not fetch secrets list from GitHub API. Check SYNC_TOKEN scopes and API quota.")
+  needs_attention=true
+  {
+    echo "### ⚠️ Tokens needing attention"
+    echo ""
+    for issue in "${issues[@]}"; do
+      echo "- ${issue}"
+    done
+  } > "${ISSUES_FILE:-/tmp/token-monitor-issues.md}"
   exit 1
 }
 
