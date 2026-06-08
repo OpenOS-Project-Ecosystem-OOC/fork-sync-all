@@ -245,6 +245,11 @@ concurrency:
 Each workflow should have at most **one** `workflow_run` upstream trigger.
 Multiple triggers cause fan-out: N completions × M downstream workflows = queue explosion.
 
+Every name in `workflow_run.workflows:` must exactly match the `name:` field of a
+workflow file that actually exists in `.github/workflows/`. A phantom name causes the
+trigger to fire on every push but the job fails immediately — GitHub cannot resolve
+the upstream workflow. `validate-workflow-guards.py` (Check 5) catches this automatically.
+
 ### Quota pre-flight
 
 All hourly/daily/frequent workflows include a quota pre-flight step before doing

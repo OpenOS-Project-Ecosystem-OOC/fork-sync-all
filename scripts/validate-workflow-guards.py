@@ -31,6 +31,7 @@ Check 4 — workflow-quota-costs.yml name consistency
   `name:` field of an actual workflow file in .github/workflows/. Catches
   stale entries left behind after a workflow is renamed or removed.
 
+
 Exit codes:
   0 — all checks passed
   1 — one or more checks failed (errors printed to stdout)
@@ -342,6 +343,56 @@ else:
     )
 
 
+# ── Check 5: workflow_run trigger name validity ───────────────────────────────
+#
+# Build the set of actual workflow names, then flag any workflow_run.workflows
+# entry that references a name not present in that set.
+# Uses PyYAML (already imported via the sync-manifest section above) to parse
+# each workflow file rather than regex, so nested structures are handled correctly.
+
+try:
+    import yaml as _yaml
+
+    # Collect all actual workflow names
+    wf_names_for_check5 = set()
+    for _wf_path in sorted(glob.glob(os.path.join(WORKFLOWS_DIR, "*.yml")) +
+                           glob.glob(os.path.join(WORKFLOWS_DIR, "*.yaml"))):
+        try:
+            _data = _yaml.safe_load(open(_wf_path))
+            if isinstance(_data, dict) and "name" in _data:
+                wf_names_for_check5.add(_data["name"])
+        except Exception:
+            pass
+
+    # Check each workflow's workflow_run triggers
+    for _wf_path in sorted(glob.glob(os.path.join(WORKFLOWS_DIR, "*.yml")) +
+                           glob.glob(os.path.join(WORKFLOWS_DIR, "*.yaml"))):
+        _wf_name = os.path.basename(_wf_path)
+        try:
+            _data = _yaml.safe_load(open(_wf_path))
+            if not isinstance(_data, dict):
+                continue
+            # PyYAML parses the bare key `on` as Python True
+            _on = _data.get("on") or _data.get(True) or {}
+            if not isinstance(_on, dict):
+                continue
+            _wr = _on.get("workflow_run")
+            if not isinstance(_wr, dict):
+                continue
+            for _ref in _wr.get("workflows", []):
+                if _ref not in wf_names_for_check5:
+                    errors.append(
+                        f"[workflow-run] {_wf_name}: references workflow_run trigger "
+                        f"'{_ref}' which does not match any workflow name in "
+                        f".github/workflows/ — rename or remove it"
+                    )
+        except Exception:
+            pass
+
+except ImportError:
+    warnings.append("PyYAML not available — skipping workflow_run name check")
+
+
 # ── Report ────────────────────────────────────────────────────────────────────
 
 if warnings:
@@ -358,7 +409,13 @@ else:
                    glob.glob(os.path.join(WORKFLOWS_DIR, "*.yaml")))
     manifest_note = f", {len(paired)} paired jobs verified" if os.path.exists(SYNC_MANIFEST) else ""
     costs_note = f", {len(costs_names)} quota-cost entries verified" if os.path.exists(QUOTA_COSTS) else ""
+    wr_count = sum(
+        1 for _wf_path in glob.glob(os.path.join(WORKFLOWS_DIR, "*.yml")) +
+                          glob.glob(os.path.join(WORKFLOWS_DIR, "*.yaml"))
+        if "workflow_run" in open(_wf_path).read()
+    )
+    wr_note = f", {wr_count} workflow_run triggers verified"
     print(
         f"validate-workflow-guards: all checks passed "
-        f"({wf_count} workflows, .gitlab-ci.yml script refs verified{manifest_note}{costs_note})"
+        f"({wf_count} workflows, .gitlab-ci.yml script refs verified{manifest_note}{costs_note}{wr_note})"
     )

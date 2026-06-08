@@ -14,7 +14,6 @@ name: Rebase PRs
 on:
   workflow_run:
     workflows:
-      - "CI"
       - "Validate Config"
     branches: [main]
     types: [completed]
