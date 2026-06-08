@@ -83,20 +83,18 @@ jobs:
           } > /tmp/issue-body.md
 
           if [[ -n "$existing" ]]; then
-            {
-              printf '**Updated %s:** Token health re-run.\n\n' "$(date -u +%Y-%m-%d)"
-              printf '%s\n\n' "$issues_detail"
-              printf 'See [run summary](%s) for the full status table.' "$RUN_URL"
-            } > /tmp/comment-body.md
+            comment_body="$(printf '**Updated %s:** Token health re-run.\n\n%s\n\nSee [run summary](%s) for the full status table.' \
+              "$(date -u +%Y-%m-%d)" "$issues_detail" "$RUN_URL")"
             gh issue comment "$existing" \
               --repo "$REPO" \
-              --body-file /tmp/comment-body.md
+              --body "$comment_body"
             echo "Updated existing issue #${existing}"
           else
+            issue_body="$(cat /tmp/issue-body.md)"
             gh issue create \
               --repo "$REPO" \
               --title "Token Monitor: action required" \
-              --body-file /tmp/issue-body.md \
+              --body "$issue_body" \
               --label "token-monitor"
             echo "Created new alert issue"
           fi
