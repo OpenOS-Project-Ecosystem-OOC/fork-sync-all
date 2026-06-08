@@ -10,6 +10,16 @@ name: Update Quota Cost Registry
 #
 # Schedule: weekly on Monday at 08:00 UTC — low-frequency, low-priority.
 # Also available via workflow_dispatch for manual refresh.
+#
+# Log fetch cost: ~1 REST call per job × 30 runs × 5 workflows = ~150 calls/run.
+# This is acceptable for a weekly tier-4 job with a 200-call pre-flight gate.
+#
+# Revisit if:
+#   - This workflow starts failing with HTTP 429 on log fetches (would indicate
+#     GitHub has introduced a separate rate limit on the logs endpoint)
+#   - GitHub announces a dedicated quota for the /actions/jobs/{id}/logs endpoint
+# At that point, consider switching to repo-based storage (write instrument
+# records to a file per run) to eliminate log fetches entirely.
 
 on:
   schedule:
