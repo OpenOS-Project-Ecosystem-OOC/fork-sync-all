@@ -157,6 +157,8 @@ tiers:
     tier: 4
   - name: "Update Workflow Triggers Doc"
     tier: 4
+  - name: "Update Quota Cost Registry"
+    tier: 4
   - name: "Notification Poller"
     tier: 4
   - name: "Mirror Artifacts"

@@ -318,6 +318,8 @@ github_only:
     reason: Manually triggers mirror-artifacts workflow — GitHub Actions dispatch only
   - workflow_file: upstream-workflow-proposal.yml
     reason: Scans OSP-bound repos for new workflows and proposes them as template skeletons
+  - workflow_file: update-quota-costs.yml
+    reason: Reads GitHub Actions step summaries to compute observed quota costs — GitHub API only
   - workflow_file: sync-registry-sources.yml
     reason: Registry-driven upstream sync — GitHub API only, no GitLab counterpart
   - workflow_file: sync-to-gitlab-variant.yml

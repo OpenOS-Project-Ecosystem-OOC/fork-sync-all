@@ -72,9 +72,12 @@ jobs:
           BUDGET_MINUTES: "25"
           MIN_QUOTA: "500"
         run: |
+          source scripts/includes/quota-instrument.sh
+          qi_begin
           bash scripts/check-osp-ci.sh > /tmp/osp-ci-results.json
           bash scripts/check-osp-ci-summary.sh /tmp/osp-ci-results.json
           echo "failing_count=$(bash scripts/check-osp-ci-summary.sh /tmp/osp-ci-results.json --count)" >> "$GITHUB_OUTPUT"
+          qi_end
 
       - name: Trigger resolver for failing repos
         if: steps.quota.outputs.skip == 'false' && steps.check.outputs.failing_count != '0' && inputs.dry_run != 'true'

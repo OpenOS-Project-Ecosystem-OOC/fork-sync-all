@@ -113,7 +113,10 @@ jobs:
             echo "SYNC_TOKEN not configured — skipping."
             exit 0
           fi
+          source scripts/includes/quota-instrument.sh
+          qi_begin
           bash scripts/inject-badges.sh
+          qi_end
 
       - name: Write summary
         if: always()

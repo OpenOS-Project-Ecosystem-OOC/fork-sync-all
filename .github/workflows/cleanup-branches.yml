@@ -60,7 +60,11 @@ jobs:
           KEEP_PATTERNS: ${{ inputs.keep_patterns || 'lts gh-pages main master' }}
           BUDGET_MINUTES: "55"
           OSP_REPOS_CONFIG: config/gitlab-subgroups.yml
-        run: bash scripts/cleanup-branches.sh
+        run: |
+          source scripts/includes/quota-instrument.sh
+          qi_begin
+          bash scripts/cleanup-branches.sh
+          qi_end
 
       - name: Write summary
         if: always()

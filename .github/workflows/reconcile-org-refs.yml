@@ -88,4 +88,8 @@ jobs:
           OSP_ORG: OpenOS-Project-OSP
           OOC_ORG: OpenOS-Project-Ecosystem-OOC
           BUDGET_MINUTES: "55"
-        run: bash scripts/reconcile-org-refs.sh
+        run: |
+          source scripts/includes/quota-instrument.sh
+          qi_begin
+          bash scripts/reconcile-org-refs.sh
+          qi_end
