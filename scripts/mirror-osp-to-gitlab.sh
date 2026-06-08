@@ -266,14 +266,50 @@ for b in json.load(sys.stdin):
 }
 
 get_osp_repos() {
-  # Use gh CLI (respects GH_TOKEN env and handles auth more robustly than
-  # raw curl with a PAT that may lack read:org scope).
-  # Filter output to valid repo names only (alphanumeric, hyphens, dots, underscores).
-  GH_TOKEN="${GH_TOKEN}" gh api \
-    "orgs/${OSP_ORG}/repos?type=all&per_page=100" \
-    --paginate \
-    --jq '.[].name' 2>/dev/null \
-    | grep -E '^[A-Za-z0-9._-]+$'
+  # Single GraphQL call regardless of repo count — replaces paginated REST.
+  # Falls back to paginated REST if GraphQL fails.
+  local cursor="" has_next=true names=""
+
+  while [[ "$has_next" == "true" ]]; do
+    local after_arg=""
+    [[ -n "$cursor" ]] && after_arg=", after: \\\"${cursor}\\\""
+    local result
+    result=$(curl -sf \
+      -H "Authorization: token ${GH_TOKEN}" \
+      -H "Content-Type: application/json" \
+      "${GH_API}/graphql" \
+      -d "{\"query\":\"{ organization(login: \\\"${OSP_ORG}\\\") { repositories(first: 100${after_arg}) { nodes { name } pageInfo { hasNextPage endCursor } } } }\"}" \
+      2>/dev/null || echo "{}")
+
+    local page_names
+    page_names=$(echo "$result" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+repos = d.get('data', {}).get('organization', {}).get('repositories', {})
+for n in repos.get('nodes', []):
+    print(n['name'])
+" 2>/dev/null || echo "")
+
+    names+="${page_names}"$'\n'
+
+    has_next=$(echo "$result" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+pi = d.get('data', {}).get('organization', {}).get('repositories', {}).get('pageInfo', {})
+print('true' if pi.get('hasNextPage') else 'false')
+" 2>/dev/null || echo "false")
+
+    cursor=$(echo "$result" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+pi = d.get('data', {}).get('organization', {}).get('repositories', {}).get('pageInfo', {})
+print(pi.get('endCursor', ''))
+" 2>/dev/null || echo "")
+
+    [[ "$has_next" != "true" ]] && break
+  done
+
+  echo "$names" | grep -E '^[A-Za-z0-9._-]+$'
 }
 
 mirror_repo() {

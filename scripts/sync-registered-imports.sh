@@ -118,52 +118,81 @@ git_push_retry() {
 }
 
 # ---------------------------------------------------------------------------
+# prefetch_repo_metadata <target_name> [<target_name> ...]
+# Fetches pushedAt + existence for all target repos in a single GraphQL call.
+# Populates _REPO_PUSHED_AT and _REPO_EXISTS associative arrays.
+# Falls back gracefully — missing entries treated as "needs sync / not exists".
+# ---------------------------------------------------------------------------
+declare -A _REPO_PUSHED_AT=()
+declare -A _REPO_EXISTS=()
+
+prefetch_repo_metadata() {
+  local names=("$@")
+  [[ ${#names[@]} -eq 0 ]] && return 0
+
+  # Build GraphQL aliases: one per repo name
+  local aliases="" i=0
+  for name in "${names[@]}"; do
+    local safe
+    safe=$(echo "$name" | tr '-' '_' | tr '.' '_' | sed 's/^[0-9]/_&/')
+    aliases+="r${i}: repository(owner: \\\"${GITHUB_OWNER}\\\", name: \\\"${name}\\\") { name pushedAt } "
+    (( i++ )) || true
+  done
+
+  local result
+  result=$(curl -sf \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Content-Type: application/json" \
+    "https://api.github.com/graphql" \
+    -d "{\"query\":\"{ ${aliases} }\"}" 2>/dev/null || echo "{}")
+
+  # Parse into associative arrays
+  while IFS='|' read -r name pushed_at exists; do
+    [[ -z "$name" ]] && continue
+    _REPO_PUSHED_AT["$name"]="$pushed_at"
+    _REPO_EXISTS["$name"]="$exists"
+  done < <(echo "$result" | python3 -c "
+import json, sys
+from datetime import datetime, timezone
+data = json.load(sys.stdin).get('data', {})
+for key, val in data.items():
+    if not val:
+        print('||false')
+        continue
+    name = val.get('name', '')
+    pushed = val.get('pushedAt') or ''
+    epoch = ''
+    if pushed:
+        try:
+            epoch = str(int(datetime.fromisoformat(pushed.replace('Z','+00:00')).timestamp()))
+        except Exception:
+            pass
+    print(f'{name}|{epoch}|true')
+" 2>/dev/null)
+}
+
+# ---------------------------------------------------------------------------
 # target_pushed_since  <target_name> <cutoff_epoch>
-# Returns 0 (true) if the GitHub target repo was pushed to at or after
-# cutoff_epoch — meaning the last sync already landed and the source is
-# unlikely to have changed. Returns 1 (false) if the repo hasn't been
-# touched, so a fresh sync is warranted.
-# Falls back to true (0) on any API error so we never silently skip.
+# Uses pre-fetched metadata — no REST call.
 # ---------------------------------------------------------------------------
 target_pushed_since() {
   local target_name="$1" cutoff="$2"
-  local pushed_at
-  pushed_at=$(curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/${GITHUB_OWNER}/${target_name}" \
-    2>/dev/null \
-    | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    pushed = d.get('pushed_at') or d.get('updated_at') or ''
-    if not pushed:
-        sys.exit(0)
-    from datetime import datetime, timezone
-    epoch = int(datetime.fromisoformat(pushed.replace('Z','+00:00')).timestamp())
-    print(epoch)
-except Exception:
-    sys.exit(0)
-" 2>/dev/null) || return 0  # API/parse error — assume needs sync
-  [[ -z "$pushed_at" ]] && return 0
+  local pushed_at="${_REPO_PUSHED_AT[$target_name]:-}"
+  [[ -z "$pushed_at" ]] && return 1  # not found — needs sync
   [[ "$pushed_at" -ge "$cutoff" ]]
 }
 
 # ensure_gh_repo <target_name>
 # Creates the GitHub repo under GITHUB_OWNER if it does not already exist.
-# No-ops silently if the repo is already there.
+# Uses pre-fetched metadata for the existence check — only calls REST to create.
 ensure_gh_repo() {
   local target_name="$1"
-  local check_rc=0
-  curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/${GITHUB_OWNER}/${target_name}" \
-    > /dev/null 2>&1 || check_rc=$?
-  if [[ $check_rc -eq 0 ]]; then
-    return 0  # already exists
+  local exists="${_REPO_EXISTS[$target_name]:-false}"
+
+  if [[ "$exists" == "true" ]]; then
+    return 0  # already exists — no REST call needed
   fi
+
   if [[ "$DRY_RUN" == "true" ]]; then
     info "  [DRY_RUN] would create ${GITHUB_OWNER}/${target_name}"
     return 0
@@ -181,6 +210,8 @@ ensure_gh_repo() {
     warn "  Failed to create ${GITHUB_OWNER}/${target_name}: ${create_out:0:200}"
     return 1
   fi
+  # Mark as existing so subsequent calls in this run don't re-create
+  _REPO_EXISTS["$target_name"]="true"
   info "  Created ${GITHUB_OWNER}/${target_name}."
 }
 
@@ -267,6 +298,19 @@ skipped=0
 # syncing on any API error. FORCE_SYNC=true bypasses the gate entirely.
 SYNC_CUTOFF=$(( $(date +%s) - 4500 ))  # 75 minutes
 [[ "$FORCE_SYNC" == "true" ]] && SYNC_CUTOFF=0
+
+# Pre-fetch pushed_at + existence for all target repos in one GraphQL call.
+# Replaces O(N) per-repo REST calls with a single batched request.
+info "Pre-fetching repo metadata via GraphQL (1 call for all ${entry_count} repos)..."
+mapfile -t _all_targets < <(python3 -c "
+import json, sys
+data = json.load(open(sys.argv[1]))
+for e in data:
+    print(e['target_name'])
+" "$IMPORTS_FILE" 2>/dev/null)
+prefetch_repo_metadata "${_all_targets[@]}"
+info "Metadata pre-fetch complete."
+echo ""
 
 # Iterate entries via python3 to handle JSON safely
 while IFS='|' read -r source_url target_name platform; do
