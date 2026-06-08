@@ -46,6 +46,9 @@ Mirror OSP → GitLab  (mirror-osp-to-gitlab.yml)
   dispatch
 
 Mirror to OpenOS-Project-Ecosystem-OOC  (mirror-osp-to-ooc.yaml)
+  Bare-clones every repo in OpenOS-Project-OSP and git push --mirror into
+  OpenOS-Project-Ecosystem-OOC, completing the second hop of the three-org
+  mirror chain.
   schedule   Every 6h at :15  (15 */6 * * *)
   dispatch
 

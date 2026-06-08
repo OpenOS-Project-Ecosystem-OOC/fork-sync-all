@@ -680,3 +680,10 @@ workflows:
   cost_high: 20
   basis: code-audit
   synopsis: Builds the mdBook documentation site from DOCS/ and deploys it to GitHub Pages at interested-deving-1896.github.io/fork-sync-all/.
+- name: Mirror to OpenOS-Project-Ecosystem-OOC
+  min_quota: 300
+  cost_low: 20
+  cost_mid: 80
+  cost_high: 200
+  basis: code-audit
+  synopsis: Bare-clones every repo in OpenOS-Project-OSP and git push --mirror into OpenOS-Project-Ecosystem-OOC, completing the second hop of the three-org mirror chain.

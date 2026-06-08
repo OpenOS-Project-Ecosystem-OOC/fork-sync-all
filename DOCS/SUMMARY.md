@@ -4,6 +4,7 @@
      If DOCS/ is ever moved, update all cross-references in this file and the chapters. -->
 
 [Introduction](../README.md)
+[Agent Conventions](../AGENTS.md)
 
 ---
 
@@ -11,6 +12,7 @@
 
 - [Architecture](architecture.md)
 - [Workflow Reference](workflow-reference.md)
+- [Workflow Triggers](../docs/workflow-triggers.md)
 - [OTA System](ota-system.md)
 
 # Operations
