@@ -479,6 +479,25 @@ OTA Discover  (ota-discover.yml)
   schedule   Daily 06:38  (38 6 * * *)
   dispatch
 
+OTA Opt-In  (ota-opt-in.yml)
+  Propagated to opted-in forks. Fork owners run this once to create
+  .ota/config.yml and open a registration PR against fork-sync-all's OTA
+  registry.
+  dispatch
+
+OTA Release  (ota-release.yml)
+  Triggered on semver tag push. Assembles and delivers OTA updates to all
+  opted-in repos in config/ota-registry.yml, then updates CHANGELOG.md with
+  release notes.
+  push       (any)
+  dispatch
+
+OTA Self-Update  (ota-self-update.yml)
+  Propagated to opted-in forks. Pulls the latest OTA release from fork-sync-
+  all and applies it to the fork's workflow files.
+  schedule   Weekly Mon 05:15  (15 5 * * 1)
+  dispatch
+
 Queue Manager  (queue-manager.yml)
   Deduplicates queued workflow runs (keeps newest per workflow) and evicts
   runs queued longer than STALE_QUEUE_MIN (default 25 min) to prevent quota
@@ -560,6 +579,7 @@ Weekly Mon 06:11               Update Infrastructure Dependencies
 Every 6h at :13                Mirror Interested-Deving-1896 → OSP
 Every 6h at :15                Mirror to OpenOS-Project-Ecosystem-OOC
 Daily 03:15                    Update READMEs
+Weekly Mon 05:15               OTA Self-Update
 Daily 08:15                    Inject Built-with-Ona Badges
 Daily 02:17                    Mirror Orgs
 Monthly 1st 05:17              Full Chain Flush
