@@ -521,7 +521,6 @@ Rebase PRs  (rebase-prs.yml)
   Rebases open PRs in Interested-Deving-1896 onto their base branch when they
   fall behind, keeping PRs mergeable without manual intervention.
   schedule   Daily 05:10  (10 5 * * *)
-  workflow_run  CI
   workflow_run  Validate Config
   dispatch
 
