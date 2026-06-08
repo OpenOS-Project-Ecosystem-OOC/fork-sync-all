@@ -95,6 +95,55 @@ gh_delete() {
   done
 }
 
+# Cache: _REPO_DEFAULT_BRANCH["org/repo"] = branch name
+# Cache: _REPO_BRANCHES["org/repo"] = space-separated branch names
+declare -A _REPO_DEFAULT_BRANCH=()
+declare -A _REPO_BRANCHES=()
+
+# list_org_repos_graphql <org>
+# Returns repo names via GraphQL (1 call). Falls back to paginated REST.
+list_org_repos_graphql() {
+  local org="$1" entity="organization"
+  local result
+  result=$(curl -sf \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Content-Type: application/json" \
+    "${GH_API}/graphql" \
+    -d "{\"query\":\"{ ${entity}(login: \\\"${org}\\\") { repositories(first: 100, orderBy: {field: NAME, direction: ASC}) { nodes { name defaultBranchRef { name } refs(refPrefix: \\\"refs/heads/\\\", first: 100) { nodes { name } } } pageInfo { hasNextPage endCursor } } } }\"}" \
+    2>/dev/null || echo "{}")
+
+  local count
+  count=$(echo "$result" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+nodes=d.get('data',{}).get('${entity}',{}).get('repositories',{}).get('nodes',[])
+print(len(nodes))
+" 2>/dev/null || echo 0)
+
+  if [[ "$count" -gt 0 ]]; then
+    while IFS='|' read -r name default_branch branches; do
+      [[ -z "$name" ]] && continue
+      _REPO_DEFAULT_BRANCH["${org}/${name}"]="$default_branch"
+      _REPO_BRANCHES["${org}/${name}"]="$branches"
+      echo "$name"
+    done < <(echo "$result" | python3 -c "
+import json, sys
+entity = '${entity}'
+d = json.load(sys.stdin)
+nodes = d.get('data',{}).get(entity,{}).get('repositories',{}).get('nodes',[])
+for n in nodes:
+    name = n.get('name','')
+    ref  = n.get('defaultBranchRef') or {}
+    default_branch = ref.get('name','main')
+    branch_nodes = n.get('refs',{}).get('nodes',[])
+    branches = ' '.join(b['name'] for b in branch_nodes)
+    print(f'{name}|{default_branch}|{branches}')
+" 2>/dev/null)
+    return 0
+  fi
+  return 1
+}
+
 # Returns 0 if branch matches any keep pattern
 should_keep() {
   local branch="$1"
@@ -112,29 +161,33 @@ process_repo() {
   local org="$1" repo="$2"
   info "  ${org}/${repo}"
 
-  # Get default branch
-  local repo_info default_branch
-  repo_info=$(gh_get "${GH_API}/repos/${org}/${repo}") || {
-    warn "  Could not fetch repo info for ${org}/${repo} — skipping"
-    return
-  }
-  default_branch=$(echo "$repo_info" | jq -r '.default_branch')
+  # Use GraphQL-prefetched cache when available; fall back to REST
+  local default_branch="${_REPO_DEFAULT_BRANCH["${org}/${repo}"]:-}"
+  local all_branches="${_REPO_BRANCHES["${org}/${repo}"]:-}"
 
-  # Get all branches
-  # shellcheck disable=SC2034
-  local branches page=1 all_branches=""
-  while true; do
-    local page_data
-    page_data=$(gh_get "${GH_API}/repos/${org}/${repo}/branches?per_page=100&page=${page}") || break
-    local page_branches
-    page_branches=$(echo "$page_data" | jq -r '.[].name' 2>/dev/null) || break
-    [[ -z "$page_branches" ]] && break
-    all_branches="${all_branches} ${page_branches}"
-    local count
-    count=$(echo "$page_branches" | wc -l)
-    [[ "$count" -lt 100 ]] && break
-    (( page++ ))
-  done
+  if [[ -z "$default_branch" ]]; then
+    local repo_info
+    repo_info=$(gh_get "${GH_API}/repos/${org}/${repo}") || {
+      warn "  Could not fetch repo info for ${org}/${repo} — skipping"
+      return
+    }
+    default_branch=$(echo "$repo_info" | jq -r '.default_branch')
+  fi
+
+  if [[ -z "$all_branches" ]]; then
+    local page=1
+    while true; do
+      local page_data page_branches
+      page_data=$(gh_get "${GH_API}/repos/${org}/${repo}/branches?per_page=100&page=${page}") || break
+      page_branches=$(echo "$page_data" | jq -r '.[].name' 2>/dev/null) || break
+      [[ -z "$page_branches" ]] && break
+      all_branches="${all_branches} ${page_branches}"
+      local count
+      count=$(echo "$page_branches" | wc -l)
+      [[ "$count" -lt 100 ]] && break
+      (( page++ ))
+    done
+  fi
 
   local branch_count
   branch_count=$(echo "$all_branches" | tr ' ' '\n' | grep -c '^.' || true)
@@ -250,41 +303,82 @@ for org in $ORGS; do
   # Detect whether this is a user account or an org so we use the right endpoint.
   # /orgs/{name} returns 404 for user accounts; /users/{name} works for both but
   # only /orgs/{name}/repos returns private org repos, so we prefer org when available.
-  account_type=$(gh_get "${GH_API}/users/${org}" | jq -r '.type // "Organization"' 2>/dev/null)
+  # Detect account type to choose correct GraphQL entity field
+  account_type=$(curl -sf \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Content-Type: application/json" \
+    "${GH_API}/graphql" \
+    -d "{\"query\":\"{ repositoryOwner(login: \\\"${org}\\\") { __typename } }\"}" \
+    2>/dev/null | python3 -c "
+import json,sys
+print(json.load(sys.stdin).get('data',{}).get('repositoryOwner',{}).get('__typename','Organization'))
+" 2>/dev/null || echo "Organization")
+
   if [[ "$account_type" == "User" ]]; then
-    repo_endpoint="${GH_API}/users/${org}/repos"
-    # User accounts (e.g. Interested-Deving-1896) can have thousands of repos.
-    # Process OSP-bound repos first (from config), then remaining if budget permits.
     info "  User account detected — OSP-bound repos first, then remaining (budget permitting)"
     _CLEANUP_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     _OSP_CFG="${OSP_REPOS_CONFIG:-${_CLEANUP_SCRIPT_DIR}/../config/gitlab-subgroups.yml}"
-    # Fetch all repos for the user account, then apply OSP-priority ordering
+    # Fetch via GraphQL user query, fall back to REST
     _all_user_repos=""
-    _cu_page=1
-    while true; do
-      _batch=$(gh_get "${GH_API}/users/${org}/repos?per_page=100&page=${_cu_page}&type=all") || break
-      _count=$(echo "$_batch" | jq 'if type=="array" then length else 0 end' 2>/dev/null || echo 0)
-      [[ "$_count" -eq 0 ]] && break
-      _all_user_repos="${_all_user_repos} $(echo "$_batch" | jq -r '.[].name' | tr '\n' ' ')"
-      [[ "$_count" -lt 100 ]] && break
-      (( _cu_page++ )) || true
-    done
+    _gql_user=$(curl -sf \
+      -H "Authorization: token ${GH_TOKEN}" \
+      -H "Content-Type: application/json" \
+      "${GH_API}/graphql" \
+      -d "{\"query\":\"{ user(login: \\\"${org}\\\") { repositories(first: 100, orderBy: {field: NAME, direction: ASC}) { nodes { name defaultBranchRef { name } refs(refPrefix: \\\"refs/heads/\\\", first: 100) { nodes { name } } } } } }\"}" \
+      2>/dev/null || echo "{}")
+    while IFS='|' read -r name default_branch branches; do
+      [[ -z "$name" ]] && continue
+      _REPO_DEFAULT_BRANCH["${org}/${name}"]="$default_branch"
+      _REPO_BRANCHES["${org}/${name}"]="$branches"
+      _all_user_repos="${_all_user_repos} ${name}"
+    done < <(echo "$_gql_user" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+nodes = d.get('data',{}).get('user',{}).get('repositories',{}).get('nodes',[])
+for n in nodes:
+    name = n.get('name','')
+    ref  = n.get('defaultBranchRef') or {}
+    default_branch = ref.get('name','main')
+    branches = ' '.join(b['name'] for b in n.get('refs',{}).get('nodes',[]))
+    print(f'{name}|{default_branch}|{branches}')
+" 2>/dev/null)
+    if [[ -z "$_all_user_repos" ]]; then
+      # Fallback to REST
+      _cu_page=1
+      while true; do
+        _batch=$(gh_get "${GH_API}/users/${org}/repos?per_page=100&page=${_cu_page}&type=all") || break
+        _count=$(echo "$_batch" | jq 'if type=="array" then length else 0 end' 2>/dev/null || echo 0)
+        [[ "$_count" -eq 0 ]] && break
+        _all_user_repos="${_all_user_repos} $(echo "$_batch" | jq -r '.[].name' | tr '\n' ' ')"
+        [[ "$_count" -lt 100 ]] && break
+        (( _cu_page++ )) || true
+      done
+    fi
     local_repos=$(osp_priority_repos "$_OSP_CFG" "$_all_user_repos")
   else
-    repo_endpoint="${GH_API}/orgs/${org}/repos"
-    # Fetch all repos — paginate fully
-    local_repos="" page=1
-    while true; do
-      page_data=$(gh_get "${repo_endpoint}?per_page=100&page=${page}&type=all") || {
-        warn "Repo list failed for ${org} — skipping"
-        break
-      }
-      page_repos=$(echo "$page_data" | jq -r '.[].name' 2>/dev/null) || break
-      [[ -z "$page_repos" ]] && break
-      local_repos="${local_repos} ${page_repos}"
-      count=$(echo "$page_repos" | wc -l)
-      [[ "$count" -lt 100 ]] && break
-    done
+    # Org account — fetch via GraphQL with default branch + branches prefetched
+    local_repos=""
+    mapfile -t _gql_repos < <(list_org_repos_graphql "$org")
+    if [[ ${#_gql_repos[@]} -gt 0 ]]; then
+      local_repos="${_gql_repos[*]}"
+    else
+      # Fallback: paginated REST (no branch prefetch)
+      local page=1
+      while true; do
+        local page_data page_repos
+        page_data=$(gh_get "${GH_API}/orgs/${org}/repos?per_page=100&page=${page}&type=all") || {
+          warn "Repo list failed for ${org} — skipping"
+          break
+        }
+        page_repos=$(echo "$page_data" | jq -r '.[].name' 2>/dev/null) || break
+        [[ -z "$page_repos" ]] && break
+        local_repos="${local_repos} ${page_repos}"
+        local count
+        count=$(echo "$page_repos" | wc -l)
+        [[ "$count" -lt 100 ]] && break
+        (( page++ ))
+      done
+    fi
   fi
 
   while IFS= read -r repo; do

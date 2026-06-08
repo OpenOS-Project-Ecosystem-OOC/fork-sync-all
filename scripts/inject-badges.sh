@@ -64,15 +64,19 @@ gh_put() {
     "$@"
 }
 
+# Cache: _README_CACHE["owner/repo"] = "sha|base64content"
+declare -A _README_CACHE=()
+
 list_gh_repos() {
-  # Fetch org repo list via GraphQL (1 call) instead of paginated REST.
+  # Fetch org repo list + README sha/content via GraphQL (1 call).
+  # Populates _README_CACHE for use by get_gh_file — eliminates per-repo REST calls.
   local org="$1"
   local result
   result=$(curl -sf \
     -H "Authorization: token ${GH_TOKEN}" \
     -H "Content-Type: application/json" \
     "${GH_API}/graphql" \
-    -d "{\"query\":\"{ organization(login: \\\"${org}\\\") { repositories(first: 100, orderBy: {field: NAME, direction: ASC}) { nodes { name } } } }\"}" \
+    -d "{\"query\":\"{ organization(login: \\\"${org}\\\") { repositories(first: 100, orderBy: {field: NAME, direction: ASC}) { nodes { name object(expression: \\\"HEAD:README.md\\\") { ... on Blob { oid text } } } } } }\"}" \
     2>/dev/null || echo "{}")
 
   local count
@@ -84,26 +88,37 @@ print(len(nodes))
 " 2>/dev/null || echo 0)
 
   if [[ "$count" -gt 0 ]]; then
-    echo "$result" | python3 -c "
-import json,sys
-d=json.load(sys.stdin)
-nodes=d.get('data',{}).get('organization',{}).get('repositories',{}).get('nodes',[])
-for n in nodes: print(n['name'])
-" 2>/dev/null
+    # Populate README cache and print repo names
+    while IFS='|' read -r name oid text_b64; do
+      [[ -z "$name" ]] && continue
+      [[ -n "$oid" ]] && _README_CACHE["${org}/${name}"]="${oid}|${text_b64}"
+      echo "$name"
+    done < <(echo "$result" | python3 -c "
+import json, sys, base64
+d = json.load(sys.stdin)
+nodes = d.get('data',{}).get('organization',{}).get('repositories',{}).get('nodes',[])
+for n in nodes:
+    name = n.get('name','')
+    obj  = n.get('object') or {}
+    oid  = obj.get('oid','')
+    text = obj.get('text','') or ''
+    b64  = base64.b64encode(text.encode()).decode() if text else ''
+    print(f'{name}|{oid}|{b64}')
+" 2>/dev/null)
     return 0
   fi
 
-  # Fallback: paginated REST
+  # Fallback: paginated REST (no README cache populated)
   local page=1
   while true; do
-    local rest_result count
+    local rest_result rest_count
     rest_result=$(gh_get "${GH_API}/orgs/${org}/repos?per_page=100&page=${page}")
     if echo "$rest_result" | jq -e '.message' > /dev/null 2>&1; then
       warn "GitHub API error for ${org}: $(echo "$rest_result" | jq -r '.message')"
       break
     fi
-    count=$(echo "$rest_result" | jq 'length' 2>/dev/null || echo 0)
-    [[ "$count" == "0" ]] && break
+    rest_count=$(echo "$rest_result" | jq 'length' 2>/dev/null || echo 0)
+    [[ "$rest_count" == "0" ]] && break
     echo "$rest_result" | jq -r '.[].name'
     (( page++ ))
   done
@@ -111,6 +126,24 @@ for n in nodes: print(n['name'])
 
 get_gh_file() {
   local owner="$1" repo="$2" path="$3"
+  # Use GraphQL-prefetched README cache when available (README.md only)
+  if [[ "$path" == "README.md" ]]; then
+    local cached="${_README_CACHE["${owner}/${repo}"]:-}"
+    if [[ -n "$cached" ]]; then
+      local oid b64
+      oid="${cached%%|*}"
+      b64="${cached#*|}"
+      # Emit a /contents/-compatible JSON blob so callers need no changes
+      python3 -c "
+import json, sys
+oid, b64 = sys.argv[1], sys.argv[2]
+# Add newlines every 60 chars to match GitHub API format
+content = '\n'.join(b64[i:i+60] for i in range(0, len(b64), 60)) + '\n'
+print(json.dumps({'sha': oid, 'content': content, 'encoding': 'base64'}))
+" "$oid" "$b64" 2>/dev/null
+      return 0
+    fi
+  fi
   gh_get "${GH_API}/repos/${owner}/${repo}/contents/${path}" 2>/dev/null
 }
 

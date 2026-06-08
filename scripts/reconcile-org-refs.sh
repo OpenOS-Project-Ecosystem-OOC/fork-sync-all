@@ -322,7 +322,18 @@ repo_exists() {
     [[ "$cached" == "true" ]]
     return
   fi
-  api_get "$API/repos/$owner/$repo" > /dev/null 2>&1
+  # Cache miss — prefetch wasn't called for this owner/repo pair.
+  # Fall back to REST only in this case.
+  local result
+  result=$(api_get "$API/repos/$owner/$repo" 2>/dev/null) || return 1
+  local name
+  name=$(echo "$result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name',''))" 2>/dev/null || true)
+  if [[ -n "$name" ]]; then
+    _REPO_EXISTS_CACHE["${owner}/${repo}"]="true"
+    return 0
+  fi
+  _REPO_EXISTS_CACHE["${owner}/${repo}"]="false"
+  return 1
 }
 
 # ---------------------------------------------------------------------------
@@ -367,43 +378,44 @@ if [[ "$ORGS_FILTER" == "gitlab-only" ]]; then
 else
 
 echo ""
-echo "Fetching OSP repo list..."
+echo "Fetching OSP repo list via GraphQL..."
 OSP_REPOS=""
-_page=1
+_cursor=""
 while true; do
-  _batch=$(api_get "$API/orgs/$OSP_ORG/repos?per_page=100&page=${_page}&type=all" | \
-    python3 -c "import sys,json; repos=json.load(sys.stdin); [print(r['name']) for r in repos]; print('__COUNT__'+str(len(repos)),end='')" \
+  _after=$( [[ -n "$_cursor" ]] && echo ", after: \"${_cursor}\"" || echo "" )
+  _gql_result=$(curl -sf -H "Authorization: bearer $GH_TOKEN" \
+    -H "Content-Type: application/json" \
+    -X POST "$API/graphql" \
+    -d "{\"query\":\"{ organization(login: \\\"${OSP_ORG}\\\") { repositories(first: 100${_after}) { nodes { name } pageInfo { hasNextPage endCursor } } } }\"}" \
     2>/dev/null || true)
-  _count=$(echo "$_batch" | grep -o '__COUNT__[0-9]*' | grep -o '[0-9]*' || echo 0)
-  _names=$(echo "$_batch" | grep -v '__COUNT__')
-  OSP_REPOS="${OSP_REPOS}${_names}"$'\n'
-  [[ "$_count" -lt 100 ]] && break
-  (( _page++ ))
+  _batch_names=$(echo "$_gql_result" | python3 -c \
+    "import sys,json; d=json.load(sys.stdin); [print(n['name']) for n in d.get('data',{}).get('organization',{}).get('repositories',{}).get('nodes',[])]" \
+    2>/dev/null || true)
+  OSP_REPOS="${OSP_REPOS}${_batch_names}"$'\n'
+  _has_next=$(echo "$_gql_result" | python3 -c \
+    "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('organization',{}).get('repositories',{}).get('pageInfo',{}).get('hasNextPage',False))" \
+    2>/dev/null || echo "False")
+  [[ "$_has_next" != "True" ]] && break
+  _cursor=$(echo "$_gql_result" | python3 -c \
+    "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('organization',{}).get('repositories',{}).get('pageInfo',{}).get('endCursor',''))" \
+    2>/dev/null || true)
+  [[ -z "$_cursor" ]] && break
 done
 OSP_REPOS=$(echo "$OSP_REPOS" | grep -v '^$' || true)
 
 if [ -z "$OSP_REPOS" ]; then
-  # Fallback: GraphQL with pagination (handles user accounts too)
-  _cursor=""
+  # Fallback: paginated REST
+  echo "GraphQL returned no repos — falling back to REST..."
+  _page=1
   while true; do
-    _after=$( [[ -n "$_cursor" ]] && echo ", after: \"${_cursor}\"" || echo "" )
-    _gql_result=$(curl -sf -H "Authorization: bearer $GH_TOKEN" \
-      -H "Content-Type: application/json" \
-      -X POST "$API/graphql" \
-      -d "{\"query\":\"{ organization(login: \\\"${OSP_ORG}\\\") { repositories(first: 100${_after}) { nodes { name } pageInfo { hasNextPage endCursor } } } }\"}" \
+    _batch=$(api_get "$API/orgs/$OSP_ORG/repos?per_page=100&page=${_page}&type=all" | \
+      python3 -c "import sys,json; repos=json.load(sys.stdin); [print(r['name']) for r in repos]; print('__COUNT__'+str(len(repos)),end='')" \
       2>/dev/null || true)
-    _batch_names=$(echo "$_gql_result" | python3 -c \
-      "import sys,json; d=json.load(sys.stdin); [print(n['name']) for n in d['data']['organization']['repositories']['nodes']]" \
-      2>/dev/null || true)
-    OSP_REPOS="${OSP_REPOS}${_batch_names}"$'\n'
-    _has_next=$(echo "$_gql_result" | python3 -c \
-      "import sys,json; d=json.load(sys.stdin); print(d['data']['organization']['repositories']['pageInfo']['hasNextPage'])" \
-      2>/dev/null || echo "False")
-    [[ "$_has_next" != "True" ]] && break
-    _cursor=$(echo "$_gql_result" | python3 -c \
-      "import sys,json; d=json.load(sys.stdin); print(d['data']['organization']['repositories']['pageInfo']['endCursor'])" \
-      2>/dev/null || true)
-    [[ -z "$_cursor" ]] && break
+    _count=$(echo "$_batch" | grep -o '__COUNT__[0-9]*' | grep -o '[0-9]*' || echo 0)
+    _names=$(echo "$_batch" | grep -v '__COUNT__')
+    OSP_REPOS="${OSP_REPOS}${_names}"$'\n'
+    [[ "$_count" -lt 100 ]] && break
+    (( _page++ ))
   done
   OSP_REPOS=$(echo "$OSP_REPOS" | grep -v '^$' || true)
 fi

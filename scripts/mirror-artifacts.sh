@@ -74,15 +74,65 @@ is_excluded() {
 }
 
 get_org_repos() {
-  local org="$1" page=1
-  while true; do
-    local result count
-    result=$(api_get "${API}/orgs/${org}/repos?type=all&per_page=100&page=${page}")
-    count=$(echo "$result" | jq 'length' 2>/dev/null || echo 0)
-    [[ "$count" == "0" || "$count" == "null" ]] && break
-    echo "$result" | jq -r '.[].name'
-    (( page++ ))
+  # Single GraphQL call regardless of repo count — replaces paginated REST.
+  local org="$1"
+  local cursor="" has_next=true
+  while [[ "$has_next" == "true" ]]; do
+    local after_arg=""
+    [[ -n "$cursor" ]] && after_arg=", after: \\\"${cursor}\\\""
+    local result
+    result=$(curl -sf \
+      -H "Authorization: token ${GH_TOKEN}" \
+      -H "Content-Type: application/json" \
+      "${API}/graphql" \
+      -d "{\"query\":\"{ organization(login: \\\"${org}\\\") { repositories(first: 100${after_arg}) { nodes { name } pageInfo { hasNextPage endCursor } } } }\"}" \
+      2>/dev/null || echo "{}")
+    echo "$result" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+for n in d.get('data',{}).get('organization',{}).get('repositories',{}).get('nodes',[]):
+    print(n['name'])
+" 2>/dev/null
+    has_next=$(echo "$result" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('true' if d.get('data',{}).get('organization',{}).get('repositories',{}).get('pageInfo',{}).get('hasNextPage') else 'false')
+" 2>/dev/null || echo "false")
+    cursor=$(echo "$result" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print(d.get('data',{}).get('organization',{}).get('repositories',{}).get('pageInfo',{}).get('endCursor',''))
+" 2>/dev/null || echo "")
+    [[ "$has_next" != "true" ]] && break
   done
+}
+
+# Prefetch upstream existence for all repos in one GraphQL call.
+declare -A _UPSTREAM_EXISTS=()
+prefetch_upstream_existence() {
+  local repos=("$@")
+  [[ ${#repos[@]} -eq 0 ]] && return 0
+  local aliases="" i=0
+  for name in "${repos[@]}"; do
+    local safe
+    safe=$(echo "$name" | tr '-' '_' | tr '.' '_' | sed 's/^[0-9]/_&/')
+    aliases+="r${i}: repository(owner: \\\"${UPSTREAM_OWNER}\\\", name: \\\"${name}\\\") { name } "
+    (( i++ )) || true
+  done
+  local result
+  result=$(curl -sf \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Content-Type: application/json" \
+    "${API}/graphql" \
+    -d "{\"query\":\"{ ${aliases} }\"}" 2>/dev/null || echo "{}")
+  while IFS= read -r name; do
+    [[ -n "$name" ]] && _UPSTREAM_EXISTS["$name"]="true"
+  done < <(echo "$result" | python3 -c "
+import json,sys
+for v in json.load(sys.stdin).get('data',{}).values():
+    if v and v.get('name'):
+        print(v['name'])
+" 2>/dev/null)
 }
 
 has_workflow() {
@@ -166,12 +216,15 @@ echo "========================================"
 
 # Build the repo list from OSP (canonical mirror org); OOC is handled by mirror-releases.sh
 if [[ -n "$UPSTREAM_REPO" ]]; then
-  repos="$UPSTREAM_REPO"
+  _all_repos=("$UPSTREAM_REPO")
 else
-  repos=$(get_org_repos "$OSP_ORG")
+  mapfile -t _all_repos < <(get_org_repos "$OSP_ORG")
 fi
 
-while IFS= read -r repo; do
+# Pre-fetch upstream existence for all repos in one GraphQL call
+prefetch_upstream_existence "${_all_repos[@]}"
+
+for repo in "${_all_repos[@]}"; do
     budget_check "$repo" || break
   [[ -z "$repo" ]] && continue
   is_excluded "$repo" && continue
@@ -181,8 +234,8 @@ while IFS= read -r repo; do
     continue
   fi
 
-  upstream_name=$(api_get "${API}/repos/${UPSTREAM_OWNER}/${repo}" | jq -r '.name // empty')
-  [[ -z "$upstream_name" ]] && continue
+  # Only process repos that exist on upstream (from prefetch — no REST call)
+  [[ -z "${_UPSTREAM_EXISTS[$repo]:-}" ]] && continue
 
   echo "  --- ${repo} ---"
 
@@ -196,7 +249,7 @@ while IFS= read -r repo; do
   done
 
   echo ""
-done <<< "$repos"
+done
 
 echo "========================================"
 echo "Artifact mirror complete."
