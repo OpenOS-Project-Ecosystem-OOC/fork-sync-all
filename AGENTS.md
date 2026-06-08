@@ -86,14 +86,61 @@ This applies to `gitlab-subgroups.yml` parsing in all scripts.
 
 ### `includes/` scripts
 
-`scripts/includes/budget.sh` and `scripts/includes/gh-api.sh` are sourced by many
-scripts. Changes there have broad impact.
+`scripts/includes/budget.sh`, `scripts/includes/gh-api.sh`, and
+`scripts/includes/quota-instrument.sh` are sourced by many scripts and workflows.
+Changes there have broad impact.
 
-- `budget.sh` — provides `budget_init`, `budget_check`, `budget_report`, and
-  `osp_priority_repos`. The latter parses `gitlab-subgroups.yml` with `yaml.safe_load`.
+- `budget.sh` — provides `budget_init`, `budget_check`, `budget_report`,
+  `osp_priority_repos`, and `workflow_min_quota`. The latter reads per-workflow
+  `min_quota` from `config/workflow-quota-costs.yml`.
 - `gh-api.sh` — provides `gh_api`, `gh_api_graphql`, `merge_upstream`,
   `get_default_sha`. All status messages use `>&2`. Guard against double-sourcing
   is in place (`_GH_API_LOADED`).
+- `quota-instrument.sh` — provides `qi_begin` / `qi_end` for measuring REST quota
+  consumption per workflow run. Wire into the main job step of any workflow you want
+  to instrument. Writes a structured HTML comment to `GITHUB_STEP_SUMMARY` that
+  `update-quota-costs.yml` parses weekly to compute observed p50/p95 values.
+
+### REST → GraphQL conversion
+
+Prefer GraphQL over paginated REST for any loop that fetches the same data for
+multiple repos. GraphQL counts as **1 REST call** regardless of how many repos
+are queried.
+
+**Standard pattern for org repo lists:**
+```bash
+result=$(curl -sf \
+  -H "Authorization: token ${GH_TOKEN}" \
+  -H "Content-Type: application/json" \
+  "${GH_API}/graphql" \
+  -d "{\"query\":\"{ organization(login: \\\"${ORG}\\\") { repositories(first: 100) { nodes { name } pageInfo { hasNextPage endCursor } } } }\"}" \
+  2>/dev/null || echo "{}")
+echo "$result" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+for n in d.get('data',{}).get('organization',{}).get('repositories',{}).get('nodes',[]):
+    print(n['name'])
+" 2>/dev/null
+```
+
+**Prefetch pattern for per-repo metadata (existence, pushedAt, README):**
+Batch all repos into a single GraphQL call using aliases, populate an associative
+array, then read from the cache in the loop — zero REST calls per repo:
+```bash
+declare -A _REPO_EXISTS=()
+# ... build aliases, fire one GraphQL call, populate _REPO_EXISTS ...
+# In the loop:
+[[ -z "${_REPO_EXISTS[$repo]:-}" ]] && continue  # skip non-existent repos
+```
+
+See `sync-registered-imports.sh` (`prefetch_repo_metadata`),
+`mirror-releases.sh` (`prefetch_upstream_existence`), and
+`inject-badges.sh` (`list_gh_repos` + `_README_CACHE`) for reference implementations.
+
+**What cannot be converted to GraphQL:**
+- `check-runs` and `statuses` endpoints — not exposed in GraphQL
+- `actions/workflows` and `actions/secrets` — not in GraphQL
+- Write operations (create repo, push file, cancel run) — REST only
 
 ### Tree fetches
 
@@ -118,8 +165,8 @@ Three workflows protect the system from quota exhaustion cascades and runner sta
 
 | Workflow | Schedule | Purpose |
 |---|---|---|
-| `queue-manager.yml` | Every 15 min + after `rate-limit-rerun` | Deduplicates queued runs (keeps newest per workflow) and evicts runs queued > 25 min |
-| `quota-reserve.yml` | Every 10 min + after `rate-limit-rerun` | Cancels low-priority queued runs when quota drops below 1000 |
+| `queue-manager.yml` | Every 30 min + after `rate-limit-rerun` | Deduplicates queued runs (keeps newest per workflow) and evicts runs queued > 25 min |
+| `quota-reserve.yml` | Every 30 min + after `rate-limit-rerun` | Cancels low-priority queued runs when quota drops below 1000. Uses per-workflow `min_quota` from `config/workflow-quota-costs.yml` for cost-aware cancellation. |
 | `critical-deploy.yml` | Manual only | Fast-lane: commit + push → aggressive queue clear → priority dispatch |
 
 **Priority tiers** — single source of truth in `config/workflow-priority-tiers.yml`:
@@ -162,6 +209,31 @@ Multiple triggers cause fan-out: N completions × M downstream workflows = queue
 All hourly/daily/frequent workflows include a quota pre-flight step before doing
 any API work. The step sets `skip=true` when remaining < `MIN_QUOTA` and subsequent
 steps check `if: steps.quota.outputs.skip == 'false'`.
+
+### Quota cost registry
+
+`config/workflow-quota-costs.yml` is the single source of truth for per-workflow
+REST call cost estimates. It drives:
+- `quota-reserve.sh` — cost-aware cancellation (`min_quota` per workflow)
+- `budget.sh` `workflow_min_quota()` — pre-flight helper for self-skipping
+- `DOCS/quota-costs.md` — rendered documentation in mdBook
+
+**Phase 1** values are code-audit estimates (`basis: code-audit`).
+**Phase 2** (`update-quota-costs.yml`, weekly) replaces them with observed p50/p95
+values (`basis: observed`) once ≥5 run samples exist per workflow.
+
+When adding a new workflow that makes significant REST calls, add it to
+`config/workflow-quota-costs.yml` with estimated `min_quota`, `cost_low`,
+`cost_mid`, `cost_high`, and `basis: code-audit`. Wire `qi_begin`/`qi_end`
+from `scripts/includes/quota-instrument.sh` into its main job step so Phase 2
+can measure it automatically.
+
+**Instrumented workflows** (Phase 2 active):
+- Sync All Forks
+- Inject Built-with-Ona Badges
+- Reconcile Org References
+- Cleanup Stale Branches
+- Check OSP-Bound CI Status
 
 ### Path filters + required status checks (gate job pattern)
 
