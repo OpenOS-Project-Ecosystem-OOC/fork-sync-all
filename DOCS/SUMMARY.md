@@ -17,6 +17,7 @@
 
 - [Pre-Flush Checklist](pre-flush-checklist.md)
 - [Runbooks](runbooks.md)
+- [Quota Cost Registry](quota-costs.md)
 - [GitHub Actions Limits](OPERATIONS.md)
 
 # Development

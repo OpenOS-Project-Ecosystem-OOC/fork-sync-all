@@ -46,6 +46,7 @@ API="https://api.github.com"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TIERS_FILE="${SCRIPT_DIR}/../config/workflow-priority-tiers.yml"
+COSTS_FILE="${SCRIPT_DIR}/../config/workflow-quota-costs.yml"
 
 info() { echo "[quota-reserve] $*" >&2; }
 ok()   { echo "[quota-reserve] ✓ $*" >&2; }
@@ -211,7 +212,8 @@ while IFS='|' read -r run_id name tier age; do
     fi
   fi
 done < <(THIS_RUN_ID="$THIS_RUN_ID" GRACE_MIN="$GRACE_MIN" \
-  QJSON_FILE="$_qjson_tmp" TIERS_FILE="$TIERS_FILE" \
+  QJSON_FILE="$_qjson_tmp" TIERS_FILE="$TIERS_FILE" COSTS_FILE="$COSTS_FILE" \
+  REMAINING="$remaining" RESERVE_FLOOR="$RESERVE_FLOOR" \
   python3 - <<'PYEOF'
 import json, os, sys, yaml
 from datetime import datetime, timezone, timedelta
@@ -225,10 +227,22 @@ with open(os.environ["TIERS_FILE"]) as f:
 default_tier = tiers_cfg.get("default_tier", 3)
 tier_map = {e["name"]: e["tier"] for e in tiers_cfg.get("tiers", [])}
 
-this_run  = int(os.environ.get("THIS_RUN_ID", "0"))
-grace_min = int(os.environ.get("GRACE_MIN", "5"))
-now       = datetime.now(timezone.utc)
-grace_cut = now - timedelta(minutes=grace_min)
+# Load per-workflow min_quota from costs config
+costs_file = os.environ.get("COSTS_FILE", "")
+min_quota_map = {}
+if costs_file and os.path.exists(costs_file):
+    with open(costs_file) as f:
+        costs_cfg = yaml.safe_load(f) or {}
+    for wf in (costs_cfg.get("workflows") or []):
+        if wf.get("name") and wf.get("min_quota"):
+            min_quota_map[wf["name"]] = wf["min_quota"]
+
+remaining     = int(os.environ.get("REMAINING", "0"))
+reserve_floor = int(os.environ.get("RESERVE_FLOOR", "1000"))
+this_run      = int(os.environ.get("THIS_RUN_ID", "0"))
+grace_min     = int(os.environ.get("GRACE_MIN", "5"))
+now           = datetime.now(timezone.utc)
+grace_cut     = now - timedelta(minutes=grace_min)
 
 candidates = []
 for run in runs:
@@ -236,18 +250,26 @@ for run in runs:
     name    = run["name"]
     created = datetime.fromisoformat(run["created_at"].replace("Z", "+00:00"))
     tier    = tier_map.get(name, default_tier)
+
     if rid == this_run or tier == 1 or created > grace_cut:
         continue
+
+    # Cost-aware cancellation: also cancel if remaining < this workflow's min_quota
+    # even if it would otherwise survive on tier alone.
+    wf_min_quota = min_quota_map.get(name, 0)
+    cost_blocked = remaining < wf_min_quota
+
     age_min = int((now - created).total_seconds() // 60)
-    candidates.append((tier, created, rid, name, age_min))
+    reason  = f"tier{tier}" + (f",needs≥{wf_min_quota}" if cost_blocked else "")
+    candidates.append((tier, created, rid, name, age_min, reason))
 
 if not candidates:
     print("[quota-reserve] No cancellable runs — all critical or within grace period.", file=sys.stderr)
 
 # Sort: highest tier (lowest priority) first, then oldest first
 candidates.sort(key=lambda r: (-r[0], r[1]))
-for tier, created, rid, name, age_min in candidates:
-    print(f"{rid}|{name}|tier{tier}|{age_min}min old")
+for tier, created, rid, name, age_min, reason in candidates:
+    print(f"{rid}|{name}|{reason}|{age_min}min old")
 PYEOF
 )
 

@@ -88,6 +88,36 @@ budget_exceeded() {
   _budget_log "Budget exhausted at ${elapsed}s/${budget_secs}s — skipping '${label}' and remaining ${_BUDGET_LABEL}. Will resume on next run."
 }
 
+# ── Per-workflow quota cost lookup ───────────────────────────────────────────
+# workflow_min_quota <workflow_name>
+# Returns the min_quota for a workflow from config/workflow-quota-costs.yml.
+# Falls back to 300 if the workflow is not listed or the config is missing.
+#
+# Usage (in a workflow pre-flight step):
+#   source scripts/includes/budget.sh
+#   min=$(workflow_min_quota "Mirror OSP → GitLab")
+#   if [[ "$remaining" -lt "$min" ]]; then echo "skip=true"; fi
+_BUDGET_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+workflow_min_quota() {
+  local name="$1"
+  local config_path="${BUDGET_QUOTA_COSTS_CONFIG:-${_BUDGET_SCRIPT_DIR}/../../config/workflow-quota-costs.yml}"
+  if [[ -f "$config_path" ]]; then
+    python3 - "$name" "$config_path" <<'PYEOF' 2>/dev/null || echo "300"
+import sys, yaml
+name = sys.argv[1]
+with open(sys.argv[2]) as f:
+    data = yaml.safe_load(f)
+for wf in (data.get('workflows') or []):
+    if wf.get('name') == name:
+        print(wf.get('min_quota', 300))
+        sys.exit(0)
+print(300)
+PYEOF
+  else
+    echo "300"
+  fi
+}
+
 # ── OSP-priority repo ordering ────────────────────────────────────────────────
 # osp_priority_repos CONFIG_PATH ALL_REPOS_VAR
 #

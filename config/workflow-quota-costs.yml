@@ -1,0 +1,403 @@
+# config/workflow-quota-costs.yml
+#
+# Per-workflow REST API quota cost estimates.
+#
+# Used by:
+#   scripts/includes/budget.sh  — min_quota gate before each workflow run
+#   scripts/quota-reserve.sh    — smarter cancellation (cost-aware deficit calc)
+#   DOCS/quota-costs.md         — rendered as documentation in mdBook
+#
+# Fields per entry:
+#   name        — must match the workflow `name:` field exactly (same as
+#                 workflow-priority-tiers.yml)
+#   min_quota   — minimum REST calls required before this workflow should start.
+#                 quota-reserve cancels queued runs when remaining < min_quota.
+#   cost_low    — REST calls consumed on a fast/cached/small-repo run
+#   cost_mid    — REST calls consumed on a typical run (p50 estimate)
+#   cost_high   — REST calls consumed on a large/uncached/full run (p95 estimate)
+#   basis       — how the estimate was derived:
+#                   "code-audit"   — counted from source (this file's initial values)
+#                   "observed"     — updated from actual run measurements
+#   notes       — optional explanation of what drives the cost range
+#
+# Updating:
+#   Phase 1 (now): estimates derived from the REST→GraphQL code audit.
+#   Phase 2 (planned): update-quota-costs.yml workflow measures actual runs
+#     and updates cost_low/cost_mid/cost_high + changes basis to "observed".
+#
+# Workflows not listed here fall back to the tier default in quota-reserve.sh:
+#   Tier 1: min_quota=50   (critical — always allowed)
+#   Tier 2: min_quota=500  (high)
+#   Tier 3: min_quota=300  (medium)
+#   Tier 4: min_quota=100  (low — cancelled first anyway)
+
+workflows:
+
+  # ── Tier 1: CRITICAL ────────────────────────────────────────────────────────
+  # These are never cancelled. min_quota is a safety floor only.
+
+  - name: "Rotate Secret Token"
+    min_quota: 50
+    cost_low: 5
+    cost_mid: 10
+    cost_high: 20
+    basis: code-audit
+    notes: Token validation + secret update calls only
+
+  - name: "Queue Manager"
+    min_quota: 50
+    cost_low: 5
+    cost_mid: 15
+    cost_high: 30
+    basis: code-audit
+    notes: Lists queued runs (1-2 pages) + cancel calls per duplicate
+
+  - name: "Quota Reserve"
+    min_quota: 10
+    cost_low: 1
+    cost_mid: 5
+    cost_high: 15
+    basis: code-audit
+    notes: rate_limit check (exempt) + cancel calls when deficit found
+
+  - name: "Rate-Limit Re-trigger"
+    min_quota: 50
+    cost_low: 5
+    cost_mid: 20
+    cost_high: 50
+    basis: code-audit
+    notes: Scans recent failed runs + dispatch calls per re-trigger
+
+  - name: "Token Health Monitor"
+    min_quota: 50
+    cost_low: 5
+    cost_mid: 10
+    cost_high: 20
+    basis: code-audit
+    notes: Token validation calls only
+
+  - name: "CI"
+    min_quota: 50
+    cost_low: 2
+    cost_mid: 5
+    cost_high: 10
+    basis: code-audit
+    notes: ShellCheck + lint only, minimal API usage
+
+  - name: "Pre-Flush Prep"
+    min_quota: 100
+    cost_low: 10
+    cost_mid: 30
+    cost_high: 60
+    basis: code-audit
+    notes: PR list + check-run queries per open PR
+
+  # ── Tier 2: HIGH ────────────────────────────────────────────────────────────
+
+  - name: "Mirror Interested-Deving-1896 → OSP"
+    min_quota: 500
+    cost_low: 20
+    cost_mid: 80
+    cost_high: 200
+    basis: code-audit
+    notes: >
+      1 GraphQL for OSP repo list + 1 GraphQL for upstream metadata.
+      Per-repo: 1 REST check-runs call (only for repos passing PR gate).
+      High end assumes all ~100 repos pass the gate.
+
+  - name: "Mirror OSP → GitLab"
+    min_quota: 300
+    cost_low: 5
+    cost_mid: 20
+    cost_high: 50
+    basis: code-audit
+    notes: >
+      1 GraphQL for OSP repo list (converted from REST).
+      GitLab API calls don't count against GitHub quota.
+      Remaining GitHub calls: token validation only.
+
+  - name: "Sync Registered Imports"
+    min_quota: 200
+    cost_low: 5
+    cost_mid: 15
+    cost_high: 30
+    basis: code-audit
+    notes: >
+      1 GraphQL prefetch for all ~50 target repos (existence + pushedAt).
+      Per-repo: 0 REST calls if recently synced (idempotency gate).
+      Only creates repos via REST when target doesn't exist yet.
+
+  - name: "Sync All Forks"
+    min_quota: 500
+    cost_low: 50
+    cost_mid: 200
+    cost_high: 500
+    basis: code-audit
+    notes: >
+      1 GraphQL for fork list. Per-fork: 1 REST merge-upstream call.
+      With ~200+ forks, high end approaches 500 calls.
+      Quota check every 50 repos provides early exit.
+
+  - name: "Full Chain Flush"
+    min_quota: 1000
+    cost_low: 100
+    cost_mid: 400
+    cost_high: 1000
+    basis: code-audit
+    notes: Orchestrates multiple workflows — cost is additive across chain
+
+  - name: "Add Mirror Repo"
+    min_quota: 200
+    cost_low: 10
+    cost_mid: 30
+    cost_high: 60
+    basis: code-audit
+    notes: Repo creation + webhook setup + workflow dispatch calls
+
+  # ── Tier 3: MEDIUM ──────────────────────────────────────────────────────────
+
+  - name: "Update READMEs"
+    min_quota: 300
+    cost_low: 50
+    cost_mid: 150
+    cost_high: 300
+    basis: code-audit
+    notes: >
+      Per-repo: tree fetch (1 REST) + file reads + file write.
+      ~49 OSP repos × 3-6 calls each at high end.
+
+  - name: "Create Missing READMEs"
+    min_quota: 200
+    cost_low: 20
+    cost_mid: 80
+    cost_high: 200
+    basis: code-audit
+    notes: Similar to Update READMEs but only for repos missing README
+
+  - name: "Inject Built-with-Ona Badges"
+    min_quota: 200
+    cost_low: 5
+    cost_mid: 30
+    cost_high: 80
+    basis: code-audit
+    notes: >
+      1 GraphQL for repo list + README content (converted from REST).
+      Per-repo: 1 REST PUT only when badge is missing.
+      Low end: most repos already have badge.
+
+  - name: "Reconcile Org References"
+    min_quota: 300
+    cost_low: 10
+    cost_mid: 60
+    cost_high: 150
+    basis: code-audit
+    notes: >
+      1 GraphQL for OSP repo list (converted from REST).
+      Per-repo: pushedAt from prefetch cache (0 REST).
+      File reads/writes only for repos pushed since last run.
+
+  - name: "Check OSP-Bound CI Status"
+    min_quota: 300
+    cost_low: 50
+    cost_mid: 150
+    cost_high: 300
+    basis: code-audit
+    notes: >
+      Per-repo: repo info + branch + check-runs + statuses (4 REST calls).
+      check-runs/statuses not convertible to GraphQL.
+      ~49 repos × 4 = ~196 calls at high end.
+
+  - name: "Rebase PRs"
+    min_quota: 100
+    cost_low: 5
+    cost_mid: 20
+    cost_high: 50
+    basis: code-audit
+    notes: PR list + rebase trigger per open PR
+
+  - name: "Sync btrfs-devel Branches"
+    min_quota: 100
+    cost_low: 5
+    cost_mid: 20
+    cost_high: 50
+    basis: code-audit
+    notes: Branch sync calls per tracked branch
+
+  - name: "Sync pieroproietti Forks"
+    min_quota: 100
+    cost_low: 10
+    cost_mid: 40
+    cost_high: 100
+    basis: code-audit
+    notes: merge-upstream per fork branch
+
+  - name: "Setup OSP Mirror Workflows"
+    min_quota: 200
+    cost_low: 20
+    cost_mid: 80
+    cost_high: 200
+    basis: code-audit
+    notes: >
+      1 GraphQL for OSP repo list.
+      Per-repo: workflow list + secrets check (2 REST — not in GraphQL).
+
+  - name: "Upstream PRs from OSP + OOC"
+    min_quota: 200
+    cost_low: 20
+    cost_mid: 80
+    cost_high: 200
+    basis: code-audit
+    notes: PR creation/update calls per repo with diverged commits
+
+  - name: "Upstream Direct Commits from OSP + OOC"
+    min_quota: 200
+    cost_low: 20
+    cost_mid: 80
+    cost_high: 200
+    basis: code-audit
+    notes: Commit comparison + PR creation per repo
+
+  - name: "Sync to GitLab"
+    min_quota: 100
+    cost_low: 5
+    cost_mid: 20
+    cost_high: 50
+    basis: code-audit
+    notes: GitHub reads only; GitLab writes don't count against quota
+
+  - name: "Sync to GitLab Variant"
+    min_quota: 100
+    cost_low: 5
+    cost_mid: 20
+    cost_high: 50
+    basis: code-audit
+    notes: Same as Sync to GitLab
+
+  - name: "Sync from GitLab"
+    min_quota: 100
+    cost_low: 5
+    cost_mid: 20
+    cost_high: 50
+    basis: code-audit
+    notes: GitLab reads + GitHub writes per changed file
+
+  - name: "Notification Poller"
+    min_quota: 50
+    cost_low: 1
+    cost_mid: 5
+    cost_high: 15
+    basis: code-audit
+    notes: Single notifications API call + optional workflow dispatch
+
+  # ── Tier 4: LOW ─────────────────────────────────────────────────────────────
+
+  - name: "Translate READMEs"
+    min_quota: 100
+    cost_low: 10
+    cost_mid: 40
+    cost_high: 100
+    basis: code-audit
+    notes: File read + write per README needing translation
+
+  - name: "LTS README Standardisation"
+    min_quota: 100
+    cost_low: 10
+    cost_mid: 40
+    cost_high: 100
+    basis: code-audit
+    notes: File read + write per LTS repo
+
+  - name: "Generate OSP Dependency Graph"
+    min_quota: 100
+    cost_low: 20
+    cost_mid: 60
+    cost_high: 150
+    basis: code-audit
+    notes: README + package.json reads per repo
+
+  - name: "Upstream Workflow Proposal"
+    min_quota: 50
+    cost_low: 5
+    cost_mid: 20
+    cost_high: 50
+    basis: code-audit
+    notes: Workflow file reads + PR creation
+
+  - name: "Update Infrastructure Dependencies"
+    min_quota: 50
+    cost_low: 5
+    cost_mid: 15
+    cost_high: 30
+    basis: code-audit
+    notes: Dependabot config reads + PR creation
+
+  - name: "Mirror Artifacts"
+    min_quota: 200
+    cost_low: 10
+    cost_mid: 50
+    cost_high: 150
+    basis: code-audit
+    notes: >
+      1 GraphQL for OSP repo list + 1 GraphQL upstream existence prefetch.
+      Per-repo: release asset downloads (no REST quota cost).
+
+  - name: "Mirror Releases"
+    min_quota: 200
+    cost_low: 10
+    cost_mid: 50
+    cost_high: 150
+    basis: code-audit
+    notes: >
+      1 GraphQL for OSP repo list + 1 GraphQL upstream existence prefetch.
+      Per-repo: 1 REST releases list (existing tags check).
+
+  - name: "Cleanup Stale Branches"
+    min_quota: 200
+    cost_low: 10
+    cost_mid: 60
+    cost_high: 200
+    basis: code-audit
+    notes: >
+      1 GraphQL for repo list + default branch + branch names.
+      Per-branch: 1 REST compare call (unavoidable — write decision).
+      High end: many repos with many branches.
+
+  - name: "OTA Discover"
+    min_quota: 100
+    cost_low: 10
+    cost_mid: 40
+    cost_high: 100
+    basis: code-audit
+    notes: Fork list + config file reads per fork
+
+  - name: "OTA Self-Update"
+    min_quota: 50
+    cost_low: 5
+    cost_mid: 15
+    cost_high: 30
+    basis: code-audit
+    notes: Config read + PR creation
+
+  - name: "Mirror Orgs"
+    min_quota: 100
+    cost_low: 20
+    cost_mid: 60
+    cost_high: 150
+    basis: code-audit
+    notes: Repo list per org + description reads
+
+  - name: "Resolve CI Failures"
+    min_quota: 100
+    cost_low: 10
+    cost_mid: 40
+    cost_high: 100
+    basis: code-audit
+    notes: Failed run list + job details + file reads/writes per fix
+
+  - name: "Reconcile Org References (GitLab)"
+    min_quota: 50
+    cost_low: 5
+    cost_mid: 15
+    cost_high: 30
+    basis: code-audit
+    notes: GitLab API calls only — minimal GitHub quota impact
