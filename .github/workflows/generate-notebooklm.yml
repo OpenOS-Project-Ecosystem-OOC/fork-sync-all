@@ -1,0 +1,138 @@
+name: Generate NotebookLM Content
+
+on:
+  workflow_dispatch:
+    inputs:
+      notebook_id:
+        description: 'NotebookLM notebook ID'
+        required: true
+        type: string
+      content_types:
+        description: 'Comma-separated content types to generate'
+        required: false
+        default: 'audio,video,slide-deck,infographic,quiz,flashcards,report'
+        type: string
+      release_tag:
+        description: 'GitHub Release tag to upload to (notebooklm-YYYY-MM-DD)'
+        required: true
+        type: string
+      audio_format:
+        description: 'Audio overview format'
+        required: false
+        default: 'deep-dive'
+        type: choice
+        options:
+          - deep-dive
+          - brief
+          - critique
+          - debate
+      video_format:
+        description: 'Video overview format'
+        required: false
+        default: 'explainer'
+        type: choice
+        options:
+          - explainer
+          - brief
+          - cinematic
+      report_format:
+        description: 'Report format'
+        required: false
+        default: 'briefing-doc'
+        type: choice
+        options:
+          - briefing-doc
+          - study-guide
+          - blog-post
+      skip_upload:
+        description: 'Generate and download only — skip GitHub Release upload'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Print commands without executing (no generation, no upload)'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: generate-notebooklm
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate NotebookLM Content
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install notebooklm-py
+        run: |
+          pip install --quiet "notebooklm-py[browser]"
+          playwright install chromium --with-deps
+          notebooklm --version
+
+      - name: Restore auth state
+        env:
+          NOTEBOOKLM_STATE_B64: ${{ secrets.NOTEBOOKLM_STATE_B64 }}
+        run: |
+          if [[ -z "${NOTEBOOKLM_STATE_B64:-}" ]]; then
+            echo "::error::Secret NOTEBOOKLM_STATE_B64 is not set." \
+              "Base64-encode your storage_state.json and add it as a repo secret."
+            exit 1
+          fi
+          mkdir -p ~/.config/notebooklm
+          echo "$NOTEBOOKLM_STATE_B64" | base64 -d > ~/.config/notebooklm/storage_state.json
+          echo "Auth state restored."
+
+      - name: Verify auth
+        run: notebooklm auth check --test
+
+      - name: Generate and download artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          UPLOAD_FLAG=""
+          [[ "${{ inputs.skip_upload }}" == "true" ]] && UPLOAD_FLAG="--skip-upload"
+
+          DRY_FLAG=""
+          [[ "${{ inputs.dry_run }}" == "true" ]] && DRY_FLAG="--dry-run"
+
+          RELEASE_ARG=""
+          [[ "${{ inputs.skip_upload }}" != "true" ]] && RELEASE_ARG="--release-tag ${{ inputs.release_tag }}"
+
+          bash scripts/generate-notebooklm.sh \
+            --notebook-id "${{ inputs.notebook_id }}" \
+            --types "${{ inputs.content_types }}" \
+            --audio-format "${{ inputs.audio_format }}" \
+            --video-format "${{ inputs.video_format }}" \
+            --report-format "${{ inputs.report_format }}" \
+            --output-dir /tmp/notebooklm-output \
+            ${RELEASE_ARG} \
+            ${UPLOAD_FLAG} \
+            ${DRY_FLAG}
+
+      - name: Upload artifacts to Actions (backup)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: notebooklm-${{ inputs.release_tag }}-${{ github.run_number }}
+          path: /tmp/notebooklm-output/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh

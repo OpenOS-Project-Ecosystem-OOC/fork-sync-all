@@ -715,3 +715,11 @@ workflows:
   basis: code-audit
   notes: Runs all three integrity checks (id-1896-to-osp, osp-to-ooc, osp-to-gitlab) plus CI check on ~49 repos plus queue/quota queries. High end assumes all checks run fully.
   synopsis: End-to-end health check after full-chain-flush — mirror integrity across all three pairs, CI status on I-D-1896 OSP-bound repos, quota health, and workflow queue health.
+- name: Generate NotebookLM Content
+  min_quota: 50
+  cost_low: 5
+  cost_mid: 15
+  cost_high: 30
+  basis: code-audit
+  notes: 1 release view + 1 release create (if new) + N upload calls (1 per artifact, up to ~10). Generation itself uses Google APIs — no GitHub quota. High end assumes new release + 10 artifacts.
+  synopsis: Generates NotebookLM content artifacts (audio, video, slides, infographic, quiz, flashcards, report) for a given notebook and uploads them to a GitHub Release.
