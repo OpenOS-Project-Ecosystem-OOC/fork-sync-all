@@ -11,6 +11,7 @@ build-dir = "book"
 create-missing = false
 
 [output.html]
+site-url = "/fork-sync-all/"
 git-repository-url = "https://github.com/Interested-Deving-1896/fork-sync-all"
 git-repository-icon = "fa-github"
 edit-url-template = "https://github.com/Interested-Deving-1896/fork-sync-all/edit/main/{path}"
