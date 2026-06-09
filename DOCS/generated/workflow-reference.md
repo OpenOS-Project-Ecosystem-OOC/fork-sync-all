@@ -3,7 +3,7 @@
 All workflows in `.github/workflows/`, grouped by priority tier.
 For trigger details and schedules see [Workflow Triggers](workflow-triggers.md).
 
-> Auto-generated on 2026-06-08 from `config/workflow-quota-costs.yml`
+> Auto-generated on 2026-06-09 from `config/workflow-quota-costs.yml`
 > and `config/workflow-priority-tiers.yml`.
 
 **Quota cost columns:** Low = fast/cached run · Mid = typical (p50) · High = large/uncached (p95)
@@ -69,7 +69,6 @@ For trigger details and schedules see [Workflow Triggers](workflow-triggers.md).
 | [PR Automation](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/pr-automation.yml) | Applies size labels, path-based labels, reviewer auto-assignment, risky pattern detection, and auto-merge for low-risk PRs on every PR open or update. | On push | 50 | 5 | 15 | 30 |
 | [Rebuild LTS Branch (penguins-eggs)](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/rebase-lts.yml) | Rebases the all-features branch onto the upstream master after each pieroproietti sync, then force-pushes the result to the lts branch. | Manual | 50 | 5 | 15 | 30 |
 | [Reconcile Org References](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/reconcile-org-refs.yml) | Rewrites org/repo references in OSP and OOC mirrors to point at the correct org, fixing stale Interested-Deving-1896 references left by the mirror process. | Daily 05:50 UTC | 300 | 10 | 60 | 150 |
-| Reconcile Org References (GitLab) | Rewrites org/repo references in GitLab mirror projects to point at the correct GitLab group, fixing stale GitHub references. |  | 50 | 5 | 15 | 30 |
 | [Resolve CI Failures](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/resolve-failures.yml) | Analyses CI failure patterns across OSP-bound repos and applies automated fixes (dependency updates, config corrections, workflow patches) where possible. | Daily 07:43 UTC | 100 | 10 | 40 | 100 |
 | [Setup Dashboard Variables](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/setup-dashboard-vars.yml) | Sets all VITE_* repository variables required by the infra-dashboard public-dashboard build. Safe to re-run — blank inputs leave existing variables unchanged. | Manual | 50 | 5 | 15 | 30 |
 | [Setup OSP Mirror Workflows](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/setup-osp-mirrors.yml) | Ensures all repos in OpenOS-Project-OSP have the correct mirror workflow files and secrets configured for the OSP→OOC mirror chain. | Every 6h at :45 | 200 | 20 | 80 | 200 |
