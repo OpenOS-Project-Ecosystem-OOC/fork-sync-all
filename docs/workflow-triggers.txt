@@ -1,7 +1,7 @@
 FORK-SYNC-ALL — WORKFLOW TRIGGERS
 ===================================
 Generated from .github/workflows/ and config/workflow-quota-costs.yml
-Last updated: 2026-06-08
+Last updated: 2026-06-09
 
 Legend
 ------
@@ -434,6 +434,7 @@ Deploy Book  (deploy-book.yml)
   push       DOCS/**
   push       book.toml
   push       README.md
+  push       AGENTS.md
   push       docs/workflow-triggers.md
   push       .github/workflows/deploy-book.yml
   dispatch
@@ -458,6 +459,17 @@ Fork KDE Neon Repos  (fork-neon-repos.yml)
   One-shot workflow that clones the 6 KDE Invent neon repos into Interested-
   Deving-1896 and pushes them through the OSP mirror chain. Ongoing re-sync
   handled by sync-registered-imports.
+  dispatch
+
+Generate Book Pages  (generate-book-pages.yml)
+  Regenerates DOCS/generated/ pages from config sources (workflow-quota-
+  costs.yml, priority-tiers.yml, gitlab-subgroups.yml, registered-
+  imports.json) and commits the result.
+  push       config/workflow-quota-costs.yml
+  push       config/workflow-priority-tiers.yml
+  push       config/gitlab-subgroups.yml
+  push       registered-imports.json
+  push       scripts/generate-book-pages.py
   dispatch
 
 GitLab Storage Scan  (gl-storage-scan.yml)
