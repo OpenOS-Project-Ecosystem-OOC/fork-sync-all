@@ -35,6 +35,8 @@ concurrency:
 
 permissions:
   contents: write
+  pull-requests: read
+  issues: read
 
 jobs:
   create:
