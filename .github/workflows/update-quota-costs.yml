@@ -302,3 +302,9 @@ jobs:
             fi
             [[ "$DRY_RUN" == "true" ]] && echo "" && echo "_Dry run — no changes committed._"
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh

@@ -98,3 +98,9 @@ jobs:
       - name: All green
         if: steps.quota.outputs.skip == 'false' && steps.check.outputs.failing_count == '0'
         run: echo "All OSP-bound repos are green on their default branch."
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh

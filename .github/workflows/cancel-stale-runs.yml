@@ -221,3 +221,9 @@ jobs:
                       f.write(f"- **Fix cutoff**: {fix_cutoff.strftime('%Y-%m-%d %H:%M UTC')}\n")
                   f.write(f"- **Age cutoff**: >{max_age_min} min ({age_cutoff.strftime('%Y-%m-%d %H:%M UTC')})\n")
           PYEOF
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh

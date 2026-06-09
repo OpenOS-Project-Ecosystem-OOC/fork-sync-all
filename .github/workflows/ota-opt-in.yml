@@ -105,3 +105,9 @@ jobs:
             "https://api.github.com/repos/Interested-Deving-1896/fork-sync-all/issues" \
             -d "$PAYLOAD" \
             | python3 -c "import sys,json; d=json.load(sys.stdin); print('Registration issue opened:', d.get('html_url','unknown'))"
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh

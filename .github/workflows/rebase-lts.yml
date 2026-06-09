@@ -48,3 +48,9 @@ jobs:
           LTS_BRANCH: ${{ inputs.lts_branch || 'lts' }}
           BUDGET_MINUTES: "55"
         run: bash scripts/rebase-lts.sh
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh

@@ -153,3 +153,9 @@ jobs:
           NEW_REPO: ${{ steps.repos.outputs.new_repo || '' }}
           REPO_FILTER: ${{ inputs.repos != '' && '' || '' }}
         run: bash scripts/update-readmes.sh
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh

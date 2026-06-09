@@ -16,3 +16,9 @@ jobs:
       - uses: actions/checkout@v6
       - name: List all Chromium_Browser_OS_Deving projects
         run: python3 scripts/list-chromium-gl-repos.py
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh

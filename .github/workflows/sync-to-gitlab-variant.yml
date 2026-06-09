@@ -89,3 +89,9 @@ jobs:
             --gitlab-url    "$GITLAB_URL" \
             --direction     "$DIRECTION" \
             $([[ "$DRY_RUN" == "true" ]] && echo "--dry-run" || true)
+      - name: Write summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh
