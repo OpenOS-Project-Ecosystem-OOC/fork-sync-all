@@ -85,6 +85,7 @@ API="https://api.github.com"
 
 # ── Budget guard ─────────────────────────────────────────────────────────────
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"
 budget_init
 
 info()  { echo "[sync-template] $*" >&2; }
@@ -283,13 +284,6 @@ is_excluded_path() {
 }
 
 # ── GitHub API helpers ────────────────────────────────────────────────────────
-
-gh_get() {
-  curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "$@"
-}
 
 gh_post() {
   local url="$1"; shift

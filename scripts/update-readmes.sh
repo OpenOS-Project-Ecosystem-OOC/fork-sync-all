@@ -23,6 +23,8 @@
 
 set -uo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"
+
 : "${GH_TOKEN:?GH_TOKEN is required}"
 : "${GITHUB_OWNER:=Interested-Deving-1896}"
 
@@ -85,13 +87,6 @@ llm_ask() {
 }
 
 # ── GitHub helpers ────────────────────────────────────────────────────────────
-
-gh_get() {
-  curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "$@"
-}
 
 # ── GraphQL repo metadata prefetch cache ─────────────────────────────────────
 #

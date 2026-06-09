@@ -19,6 +19,8 @@
 
 set -uo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"
+
 : "${GH_TOKEN:?GH_TOKEN is required}"
 : "${REPO:?REPO is required}"
 
@@ -31,13 +33,6 @@ QUOTA_WAIT_MIN="${QUOTA_WAIT_MIN:-60}"
 info() { echo "[pre-flush-prep] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
 dry()  { echo "[dry-run] $*" >&2; }
-
-gh_get() {
-  curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "$1"
-}
 
 gh_post() {
   local url="$1" data="${2:-{}}"

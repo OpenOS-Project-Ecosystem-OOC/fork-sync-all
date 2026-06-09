@@ -34,6 +34,7 @@ ok()   { echo "[check-osp-ci] ✓ $*" >&2; }
 
 # ── Budget guard ──────────────────────────────────────────────────────────────
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"
 budget_init
 
 # ── Quota pre-flight ──────────────────────────────────────────────────────────
@@ -58,43 +59,6 @@ fi
 info "Quota: ${_quota_remaining} remaining"
 
 # ── GitHub API helper ─────────────────────────────────────────────────────────
-_header_file=$(mktemp)
-trap 'rm -f "$_header_file"' EXIT
-
-gh_get() {
-  local url="$1"
-  local response http_code body attempt=0 max_retries=3
-
-  while true; do
-    response=$(curl -s -w "\n%{http_code}" \
-      -H "Authorization: token ${GH_TOKEN}" \
-      -H "Accept: application/vnd.github+json" \
-      -D "$_header_file" \
-      "$url" 2>/dev/null) || true
-
-    http_code=$(echo "$response" | tail -1)
-    body=$(echo "$response" | sed '$d')
-
-    if [[ "$http_code" == "403" || "$http_code" == "429" ]]; then
-      (( attempt++ ))
-      if (( attempt > max_retries )); then
-        warn "Rate limited after ${max_retries} retries on ${url}"
-        echo "{}"
-        return 1
-      fi
-      reset=$(grep -i "x-ratelimit-reset:" "$_header_file" 2>/dev/null \
-        | tr -d '\r' | awk '{print $2}')
-      now=$(date +%s)
-      sleep_sec=$(( reset > now ? reset - now + 5 : 60 ))
-      info "Rate limited — sleeping ${sleep_sec}s (attempt ${attempt}/${max_retries})"
-      sleep "$sleep_sec"
-      continue
-    fi
-
-    echo "$body"
-    return 0
-  done
-}
 
 # ── Load OSP-bound repo list ──────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -40,6 +40,7 @@ MARKER_CLOSE=" -->"
 
 # ── Budget guard ─────────────────────────────────────────────────────────────
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"
 budget_init
 
 info() { echo "[create-readmes] $*" >&2; }
@@ -77,13 +78,6 @@ llm_ask() {
 }
 
 # ── GitHub helpers ────────────────────────────────────────────────────────────
-
-gh_get() {
-  curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "$@"
-}
 
 gh_patch() {
   local url="$1"; shift

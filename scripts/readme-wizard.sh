@@ -23,6 +23,8 @@
 
 set -uo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"
+
 : "${GH_TOKEN:?GH_TOKEN is required}"
 : "${TARGET_REPO:?TARGET_REPO is required}"
 
@@ -43,13 +45,6 @@ info() { echo "[readme-wizard] $*" >&2; }
 warn() { echo "[warn] $*" >&2; }
 
 # ── GitHub API helpers ────────────────────────────────────────────────────────
-
-gh_get() {
-  curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "$@"
-}
 
 get_file_content() {
   local owner="$1" repo="$2" path="$3"

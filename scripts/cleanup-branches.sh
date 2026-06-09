@@ -35,6 +35,7 @@ KEEP_PATTERNS="${KEEP_PATTERNS:-lts gh-pages main master}"
 
 # ── Budget guard ─────────────────────────────────────────────────────────────
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"
 budget_init
 
 info()  { echo "[cleanup-branches] $*" >&2; }
@@ -44,35 +45,6 @@ ok()    { echo "[cleanup-branches] ✅ $*"; }
 deleted_total=0
 skipped_total=0
 repos_processed=0
-
-gh_get() {
-  local url="$1"
-  local attempt=0
-  while true; do
-    local out http_code
-    out=$(curl -s -w "\n%{http_code}" \
-      -H "Authorization: token ${GH_TOKEN}" \
-      -H "Accept: application/vnd.github+json" \
-      "$url")
-    http_code=$(tail -1 <<< "$out")
-    body=$(head -n -1 <<< "$out")
-    if [[ "$http_code" == "200" ]]; then
-      echo "$body"; return 0
-    elif [[ "$http_code" == "403" || "$http_code" == "429" ]]; then
-      (( attempt++ )) || true
-      if (( attempt >= 3 )); then echo "$body"; return 1; fi
-      local reset now sleep_sec
-      reset=$(curl -sI -H "Authorization: token ${GH_TOKEN}" "$url" \
-        | grep -i x-ratelimit-reset | awk '{print $2}' | tr -d '\r')
-      now=$(date +%s)
-      sleep_sec=$(( reset > now ? reset - now + 2 : 30 ))
-      echo "Rate limited — sleeping ${sleep_sec}s" >&2
-      sleep "$sleep_sec"
-    else
-      echo "$body"; return 1
-    fi
-  done
-}
 
 gh_delete() {
   local url="$1"

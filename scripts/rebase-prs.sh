@@ -36,6 +36,7 @@ MIN_QUOTA="${MIN_QUOTA:-500}"
 # ── Budget guard ──────────────────────────────────────────────────────────────
 _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${_SCRIPT_DIR}/includes/budget.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"
 budget_init
 
 info()  { echo "[rebase-prs] $*" >&2; }
@@ -45,13 +46,6 @@ fail()  { echo "[rebase-prs] ❌ $*"; }
 dry()   { echo "[rebase-prs] [dry-run] $*" >&2; }
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-gh_get() {
-  curl -sf \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "$1"
-}
-
 gh_post() {
   curl -sf -X POST \
     -H "Authorization: token ${GH_TOKEN}" \

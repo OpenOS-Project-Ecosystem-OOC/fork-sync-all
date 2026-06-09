@@ -27,6 +27,8 @@
 
 set -uo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"
+
 : "${GH_TOKEN:?GH_TOKEN is required}"
 
 OWNER="${GITHUB_OWNER:-Interested-Deving-1896}"
@@ -42,13 +44,6 @@ warn()  { echo "[rerun-rl] ⚠️  $*" >&2; }
 
 summary_append() {
   [[ -n "$SUMMARY_FILE" ]] && echo "$1" >> "$SUMMARY_FILE"
-}
-
-gh_get() {
-  curl -s \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "$1"
 }
 
 gh_post() {
@@ -98,7 +93,7 @@ summary_append "|---|---|---|---|---|"
 get_workflow_input_defaults() {
   local wf_path="$1"
 
-  gh_get "${GH_API}/repos/${OWNER}/${REPO}/contents/${wf_path}" \
+  (gh_get "${GH_API}/repos/${OWNER}/${REPO}/contents/${wf_path}" || echo '{}') \
     | python3 -c "
 import sys, json, base64, re
 
@@ -157,7 +152,7 @@ print(json.dumps(defaults))
 # Verify GitHub core rate limit has recovered
 check_rate_limit_recovered() {
   local remaining
-  remaining=$(gh_get "${GH_API}/rate_limit" \
+  remaining=$((gh_get "${GH_API}/rate_limit" || echo '{}') \
     | python3 -c "
 import sys, json
 d = json.load(sys.stdin)

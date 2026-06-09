@@ -44,6 +44,7 @@ GH_API="https://api.github.com"
 
 # ── Budget guard ─────────────────────────────────────────────────────────────
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"
 budget_init
 
 info()  { echo "[scan-rl] $*" >&2; }
@@ -69,14 +70,6 @@ if (( _quota_remaining < MIN_QUOTA )); then
   exit 0
 fi
 info "Quota: ${_quota_remaining} remaining (min: ${MIN_QUOTA})"
-
-gh_get() {
-  local url="$1"
-  curl -s \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "$url"
-}
 
 # ── Rate-limit signal patterns ────────────────────────────────────────────────
 # These are the exact strings our scripts emit when they hit a rate limit and
@@ -266,7 +259,8 @@ info "Scanning failed runs since ${CUTOFF} (lookback: ${LOOKBACK_HOURS}h, max: $
 
 # Fetch recent failed runs
 RUNS_JSON=$(gh_get \
-  "${GH_API}/repos/${OWNER}/${REPO}/actions/runs?conclusion=failure&per_page=${MAX_RUNS}")
+  "${GH_API}/repos/${OWNER}/${REPO}/actions/runs?conclusion=failure&per_page=${MAX_RUNS}" \
+  || echo '{"workflow_runs":[]}')
 
 TOTAL=$(echo "$RUNS_JSON" | python3 -c "
 import sys, json
