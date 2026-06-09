@@ -3,8 +3,8 @@
 <!-- Paths starting with ../ are relative to DOCS/ (src = "DOCS" in book.toml).
      If DOCS/ is ever moved, update all cross-references in this file and the chapters. -->
 
-[Introduction](../README.md)
-[Agent Conventions](../AGENTS.md)
+[Introduction](README.md)
+[Agent Conventions](AGENTS.md)
 
 ---
 
@@ -12,7 +12,7 @@
 
 - [Architecture](architecture.md)
 - [Workflow Reference](generated/workflow-reference.md)
-- [Workflow Triggers](../docs/workflow-triggers.md)
+- [Workflow Triggers](workflow-triggers.md)
 - [OTA System](ota-system.md)
 
 # Config Maps

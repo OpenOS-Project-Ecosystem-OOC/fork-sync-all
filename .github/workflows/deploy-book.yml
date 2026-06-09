@@ -18,6 +18,7 @@ on:
       - 'DOCS/**'
       - 'book.toml'
       - 'README.md'
+      - 'AGENTS.md'
       - 'docs/workflow-triggers.md'
       - '.github/workflows/deploy-book.yml'
   workflow_dispatch:
@@ -58,6 +59,12 @@ jobs:
           else
             echo "mdbook $MDBOOK_VERSION already cached"
           fi
+
+      - name: Stage root docs into DOCS/
+        run: |
+          cp README.md DOCS/README.md
+          cp AGENTS.md DOCS/AGENTS.md
+          cp docs/workflow-triggers.md DOCS/workflow-triggers.md
 
       - name: Build
         run: mdbook build
