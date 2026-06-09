@@ -676,6 +676,14 @@ workflows:
   cost_high: 200
   basis: code-audit
   synopsis: Bare-clones every repo in OpenOS-Project-OSP and git push --mirror into OpenOS-Project-Ecosystem-OOC, completing the second hop of the three-org mirror chain.
+- name: Pipeline Telemetry
+  min_quota: 200
+  cost_low: 5
+  cost_mid: 15
+  cost_high: 30
+  basis: code-audit
+  notes: 1 run fetch + 1 jobs fetch + 1 logs download (no quota) + 1 issues list + 1 issue upsert. Log download uses raw GitHub URL (no quota). High end includes paginated recent-runs fetch for rolling issue.
+  synopsis: Post-run observability workflow. Fetches completed run data, builds a span tree (workflow→jobs→steps), computes Thoth-equivalent metrics, parses log severity, writes a step summary and trace artifact, and upserts a rolling metrics issue.
 - name: Pre-Mirror CI Gate
   min_quota: 800
   cost_low: 50
