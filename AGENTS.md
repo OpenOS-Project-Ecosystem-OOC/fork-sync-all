@@ -99,25 +99,19 @@ Changes there have broad impact.
   `gh_api` with full retry and reset-aware backoff — the canonical implementation
   that individual scripts should migrate to (see consolidation note below).
 
-### `gh_get` / `gh_api` consolidation (in progress)
+### `gh_get` / `gh_api` consolidation (complete)
 
-Many scripts carry a local `gh_get()` definition instead of sourcing `gh-api.sh`.
-They fall into three tiers:
+All scripts now source `includes/gh-api.sh` for `gh_get`. The three tiers
+that existed during migration have been fully consolidated:
 
-| Tier | Scripts | Behaviour |
+| Tier | Scripts | Status |
 |---|---|---|
-| Full retry (canonical) | `check-osp-ci.sh`, `cleanup-branches.sh` | Reset-aware backoff, 3 retries |
-| No retry, fail-fast | `create-readmes.sh`, `inject-badges.sh`, `pre-flush-prep.sh`, `readme-wizard.sh`, `rebase-prs.sh`, `sync-template.sh`, `update-readmes.sh` | `curl -sf`, exits on any error |
-| No retry, silent fail | `rerun-after-rate-limit.sh`, `scan-rate-limit-failures.sh` | `curl -s`, swallows errors |
+| Full retry (canonical) | `check-osp-ci.sh`, `cleanup-branches.sh` | ✅ migrated |
+| No retry, fail-fast | `create-readmes.sh`, `inject-badges.sh`, `pre-flush-prep.sh`, `readme-wizard.sh`, `rebase-prs.sh`, `sync-template.sh`, `update-readmes.sh` | ✅ migrated |
+| No retry, silent fail | `rerun-after-rate-limit.sh`, `scan-rate-limit-failures.sh` | ✅ migrated (added `\|\| echo '{}'` fallbacks on capture sites) |
 
-**Migration path** (script-by-script, lowest-risk first):
-1. Add `source "$(dirname "${BASH_SOURCE[0]}")/includes/gh-api.sh"` near the top.
-2. Remove the local `gh_get()` / `gh_api()` definition.
-3. Check error handling — the canonical `gh_get` returns `1` on unrecoverable error;
-   bare `curl -sf` exits the subshell. Callers may need `|| true` or `|| continue`.
-4. Run `bash -n script.sh` and a dry-run before committing.
-
-Do **not** bulk-replace across all scripts at once — each has subtle differences.
+All new scripts should source `includes/gh-api.sh` and use `gh_get` directly.
+Do **not** define a local `gh_get()` in any new script.
 - `quota-instrument.sh` — provides `qi_begin` / `qi_end` for measuring REST quota
   consumption per workflow run. Wire into the main job step of any workflow you want
   to instrument. Writes a structured HTML comment to `GITHUB_STEP_SUMMARY` that
