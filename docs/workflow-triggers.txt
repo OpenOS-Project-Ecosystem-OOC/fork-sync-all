@@ -512,6 +512,18 @@ OTA Self-Update  (ota-self-update.yml)
   schedule   Weekly Mon 05:15  (15 5 * * 1)
   dispatch
 
+Post-Flush Verification  (post-flush-prep.yml)
+  End-to-end health check after full-chain-flush — mirror integrity across all
+  three pairs, CI status on I-D-1896 OSP-bound repos, quota health, and
+  workflow queue health.
+  dispatch
+
+Pre-Mirror CI Gate  (pre-mirror-ci-gate.yml)
+  Checks CI status on all OSP-bound repos in Interested-Deving-1896 before
+  mirroring. Dispatches resolve-failures for red repos, waits, then re-checks.
+  Blocks the mirror if repos are still failing.
+  dispatch
+
 Queue Manager  (queue-manager.yml)
   Deduplicates queued workflow runs (keeps newest per workflow) and evicts
   runs queued longer than STALE_QUEUE_MIN (default 25 min) to prevent quota
@@ -576,6 +588,12 @@ Update Quota Cost Registry  (update-quota-costs.yml)
   costs per workflow, and commits updated values to workflow-quota-costs.yml
   weekly.
   schedule   Weekly Mon 08:00  (0 8 * * 1)
+  dispatch
+
+Verify Mirror Integrity  (verify-mirror-integrity.yml)
+  Compares default-branch HEAD SHAs between source and destination for all
+  OSP-bound repos after a mirror stage. Reports mismatches as warnings;
+  configurable hard-fail mode.
   dispatch
 
 
