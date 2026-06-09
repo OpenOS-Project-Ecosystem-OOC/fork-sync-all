@@ -184,7 +184,7 @@ jobs:
       # ── Stage 4: Reconcile I-D-1896 before mirroring out ─────────────────
       - name: "Stage 4: Reconcile org refs (I-D-1896 pre-mirror)"
         run: |
-          bash scripts/dispatch-and-wait.sh reconcile-org-refs.yml 60 '{"dry_run":"false","orgs":"id-1896-only","repo_filter":"","force_reconcile":"false"}'
+          bash scripts/dispatch-and-wait.sh reconcile-org-refs.yml 55 '{"dry_run":"false","orgs":"id-1896-only","repo_filter":"","force_reconcile":"false"}'
           rc=$?; [[ $rc -eq 2 ]] && echo "Stage cancelled by queue-manager — continuing." || exit $rc
 
       - name: "ActivitySmith: stage 4 done"
@@ -226,7 +226,7 @@ jobs:
       # ── Stage 6: Reconcile OSP after mirror ──────────────────────────────
       - name: "Stage 6: Reconcile org refs (OSP)"
         run: |
-          bash scripts/dispatch-and-wait.sh reconcile-org-refs.yml 60 '{"dry_run":"false","orgs":"osp-only","repo_filter":"","force_reconcile":"false"}'
+          bash scripts/dispatch-and-wait.sh reconcile-org-refs.yml 55 '{"dry_run":"false","orgs":"osp-only","repo_filter":"","force_reconcile":"false"}'
           rc=$?; [[ $rc -eq 2 ]] && echo "Stage cancelled by queue-manager — continuing." || exit $rc
 
       - name: "ActivitySmith: stage 6 done"
@@ -268,7 +268,7 @@ jobs:
       # ── Stage 8: Reconcile OOC after mirror ──────────────────────────────
       - name: "Stage 8: Reconcile org refs (OOC)"
         run: |
-          bash scripts/dispatch-and-wait.sh reconcile-org-refs.yml 60 '{"dry_run":"false","orgs":"ooc-only","repo_filter":"","force_reconcile":"false"}'
+          bash scripts/dispatch-and-wait.sh reconcile-org-refs.yml 55 '{"dry_run":"false","orgs":"ooc-only","repo_filter":"","force_reconcile":"false"}'
           rc=$?; [[ $rc -eq 2 ]] && echo "Stage cancelled by queue-manager — continuing." || exit $rc
 
       - name: "ActivitySmith: stage 8 done"
@@ -334,7 +334,7 @@ jobs:
       # ── Stage 11: Reconcile GitLab after mirror ───────────────────────────
       - name: "Stage 11: Reconcile org refs (GitLab)"
         run: |
-          bash scripts/dispatch-and-wait.sh reconcile-org-refs.yml 60 '{"dry_run":"false","orgs":"gitlab-only","repo_filter":"","force_reconcile":"false"}'
+          bash scripts/dispatch-and-wait.sh reconcile-org-refs.yml 55 '{"dry_run":"false","orgs":"gitlab-only","repo_filter":"","force_reconcile":"false"}'
           rc=$?; [[ $rc -eq 2 ]] && echo "Stage cancelled by queue-manager — continuing." || exit $rc
 
       - name: "ActivitySmith: stage 11 done"
@@ -376,7 +376,7 @@ jobs:
       # ── Stage 13: Final reconcile I-D-1896 after GitLab sync ─────────────
       - name: "Stage 13: Reconcile org refs (I-D-1896 post-GitLab sync)"
         run: |
-          bash scripts/dispatch-and-wait.sh reconcile-org-refs.yml 60 '{"dry_run":"false","orgs":"id-1896-only","repo_filter":"","force_reconcile":"false"}'
+          bash scripts/dispatch-and-wait.sh reconcile-org-refs.yml 55 '{"dry_run":"false","orgs":"id-1896-only","repo_filter":"","force_reconcile":"false"}'
           rc=$?; [[ $rc -eq 2 ]] && echo "Stage cancelled by queue-manager — continuing." || exit $rc
 
       - name: "ActivitySmith: stage 13 done"
@@ -445,29 +445,9 @@ jobs:
                 type: "open_url"
                 url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-      - name: Summary
+      - name: Write summary
         if: always()
-        run: |
-          echo "## Full Chain Flush" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Completed at $(date -u '+%Y-%m-%d %H:%M UTC')" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Stage | Workflow |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 1   | Sync all forks |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 2   | Sync registered imports |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 3a  | Create missing READMEs |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 3b  | Update READMEs |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 3c  | Validate README render |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 3d  | Inject badges |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 3e  | LTS README standardisation (OSP repos) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 4   | Reconcile org refs (I-D-1896 pre-mirror) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 5   | Mirror I-D-1896 -> OSP |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 6   | Reconcile org refs (OSP) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 7   | Mirror OSP -> OOC |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 8   | Reconcile org refs (OOC) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 9   | Check OSP-bound CI + resolver |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 10  | Mirror OSP -> GitLab |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 11  | Reconcile org refs (GitLab) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 12  | Sync GitLab -> I-D-1896 |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 13  | Reconcile org refs (I-D-1896 post-GitLab sync) |" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: bash scripts/write-summary.sh

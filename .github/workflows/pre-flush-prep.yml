@@ -172,6 +172,9 @@ jobs:
       # ── Step 6: Resolve CI failures ─────────────────────────────────────────
       - name: "Step 6: Resolve CI failures"
         if: ${{ steps.quota_preflight.outputs.skip == 'false' && env.SKIP_RESOLVE_FAILURES == 'false' }}
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
           if [[ "${DRY_RUN}" == "true" ]]; then
             echo "[dry-run] Would dispatch resolve-failures.yml"
