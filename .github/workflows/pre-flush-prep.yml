@@ -23,21 +23,27 @@ name: Pre-Flush Prep
 #             Remove stray template files from consumer repos before
 #             the README pass in Stage 5 of the flush.
 #
-#   Step 6 — Quota gate
+#   Step 6 — Resolve CI failures
+#             Run resolve-failures.yml across all three orgs so the
+#             flush starts with a healthy CI baseline. Skippable via
+#             skip_resolve_failures when quota is tight.
+#
+#   Step 7 — Quota gate
 #             Abort (or wait up to QUOTA_WAIT_MIN) if remaining quota
 #             is below QUOTA_FLOOR. The flush needs headroom to run all
-#             7 stages without hitting the hard limit mid-run.
+#             13 stages without hitting the hard limit mid-run.
 #
-#   Step 7 — Dispatch full-chain-flush
+#   Step 8 — Dispatch full-chain-flush
 #             Trigger the flush with a clean system state.
 #
 # Inputs:
-#   dry_run         — report what would happen without making changes
-#   skip_merge_prs  — skip step 2 (useful if PRs need manual review)
-#   skip_cleanup    — skip steps 4+5 (faster run, less thorough)
-#   quota_floor     — minimum quota required before dispatching flush
-#   stale_min       — cancel runs queued/running longer than this (minutes)
-#   quota_wait_min  — how long to wait for quota to recover (0 = abort immediately)
+#   dry_run              — report what would happen without making changes
+#   skip_merge_prs       — skip step 2 (useful if PRs need manual review)
+#   skip_cleanup         — skip steps 4+5 (faster run, less thorough)
+#   skip_resolve_failures — skip step 6 (useful when quota is tight)
+#   quota_floor          — minimum quota required before dispatching flush
+#   stale_min            — cancel runs queued/running longer than this (minutes)
+#   quota_wait_min       — how long to wait for quota to recover (0 = abort immediately)
 
 on:
   workflow_dispatch:
@@ -54,6 +60,11 @@ on:
         type: boolean
       skip_cleanup:
         description: "Skip steps 4+5 — branch cleanup and pollution cleanup"
+        required: false
+        default: false
+        type: boolean
+      skip_resolve_failures:
+        description: "Skip step 6 — resolve CI failures before flush"
         required: false
         default: false
         type: boolean
@@ -93,6 +104,7 @@ jobs:
       DRY_RUN: ${{ inputs.dry_run || 'false' }}
       SKIP_MERGE_PRS: ${{ inputs.skip_merge_prs || 'false' }}
       SKIP_CLEANUP: ${{ inputs.skip_cleanup || 'false' }}
+      SKIP_RESOLVE_FAILURES: ${{ inputs.skip_resolve_failures || 'false' }}
       QUOTA_FLOOR: ${{ inputs.quota_floor || '3000' }}
       STALE_MIN: ${{ inputs.stale_min || '10' }}
       QUOTA_WAIT_MIN: ${{ inputs.quota_wait_min || '60' }}
@@ -157,14 +169,25 @@ jobs:
           SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: bash scripts/cleanup-pollution.sh
 
-      # ── Step 6: Quota gate ──────────────────────────────────────────────────
-      - name: "Step 6: Quota gate — wait for headroom"
+      # ── Step 6: Resolve CI failures ─────────────────────────────────────────
+      - name: "Step 6: Resolve CI failures"
+        if: ${{ steps.quota_preflight.outputs.skip == 'false' && env.SKIP_RESOLVE_FAILURES == 'false' }}
+        run: |
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            echo "[dry-run] Would dispatch resolve-failures.yml"
+          else
+            bash scripts/dispatch-and-wait.sh resolve-failures.yml 120 '{"dry_run":"false","repo_filter":"","scan_owners":"","watchdog_repo":""}'
+            rc=$?; [[ $rc -eq 2 ]] && echo "resolve-failures cancelled by queue-manager — continuing." || exit $rc
+          fi
+
+      # ── Step 7: Quota gate ──────────────────────────────────────────────────
+      - name: "Step 7: Quota gate — wait for headroom"
         if: ${{ steps.quota_preflight.outputs.skip == 'false' }}
         id: quota_gate
         run: bash scripts/pre-flush-prep.sh quota_gate
 
-      # ── Step 7: Dispatch full-chain-flush ───────────────────────────────────
-      - name: "Step 7: Dispatch full-chain-flush"
+      # ── Step 8: Dispatch full-chain-flush ───────────────────────────────────
+      - name: "Step 8: Dispatch full-chain-flush"
         if: ${{ steps.quota_preflight.outputs.skip == 'false' && steps.quota_gate.outputs.ready == 'true' }}
         run: |
           if [[ "${DRY_RUN}" == "true" ]]; then
