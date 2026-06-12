@@ -166,6 +166,7 @@ profiles:
       - .github/workflows/verify-fork-integrity.yml
       # ── README management (scoped to this repo in autonomous mode) ────────
       - .github/workflows/create-readmes.yml
+      - .github/workflows/lts-readmes.yml
       - .github/workflows/readme-wizard.yml
       - .github/workflows/update-readmes.yml
       - .github/workflows/translate-readmes.yml
@@ -254,6 +255,7 @@ profiles:
       - .github/workflows/ota-self-update.yml
       - .github/workflows/verify-fork-integrity.yml
       - .github/workflows/create-readmes.yml
+      - .github/workflows/lts-readmes.yml
       - .github/workflows/readme-wizard.yml
       - .github/workflows/update-readmes.yml
       - .github/workflows/translate-readmes.yml
