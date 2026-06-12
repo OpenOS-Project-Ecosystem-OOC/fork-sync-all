@@ -467,6 +467,7 @@ Generate Book Pages  (generate-book-pages.yml)
   push       config/workflow-priority-tiers.yml
   push       config/gitlab-subgroups.yml
   push       registered-imports.json
+  push       dep-graph/origins.md
   push       scripts/generate-book-pages.py
   dispatch
 
