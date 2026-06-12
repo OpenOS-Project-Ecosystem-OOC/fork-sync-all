@@ -2,7 +2,6 @@
 
 [![Built with Ona](https://ona.com/build-with-ona.svg)](https://app.ona.com/#https://github.com/OpenOS-Project-OSP/fork-sync-all)
 
-<!-- AI:start:what-it-does -->
 Sync and mirror infrastructure for the three-org chain:
 
 ```
@@ -14,6 +13,9 @@ Interested-Deving-1896  ──►  OpenOS-Project-OSP  ──►  OpenOS-Project
                          GitLab openos-project
                     (11 subgroups, ~150 repos mirrored)
 ```
+
+<!-- AI:start:what-it-does -->
+_What it does pending._
 <!-- AI:end:what-it-does -->
 
 ---
@@ -278,7 +280,6 @@ Subgroup IDs and repo assignments are in `config/gitlab-subgroups.yml`.
 
 ## Mirror chain timing
 
-<!-- AI:start:mirror-chain -->
 ```
 :00  mirror-to-osp.yml          Interested-Deving-1896 → OSP
 :05  sync-pieroproietti          pieroproietti forks fast-path
@@ -292,6 +293,9 @@ Subgroup IDs and repo assignments are in `config/gitlab-subgroups.yml`.
 
 Full chain (validate-config → full-chain-flush) runs on every push to main.
 ```
+
+<!-- AI:start:mirror-chain -->
+_Mirror chain pending._
 <!-- AI:end:mirror-chain -->
 
 ---

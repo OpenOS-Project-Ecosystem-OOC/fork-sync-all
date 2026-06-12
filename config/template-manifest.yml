@@ -165,6 +165,7 @@ profiles:
       - .github/workflows/ota-self-update.yml
       - .github/workflows/verify-fork-integrity.yml
       # ── README management (scoped to this repo in autonomous mode) ────────
+      - .github/workflows/create-readmes.yml
       - .github/workflows/readme-wizard.yml
       - .github/workflows/update-readmes.yml
       - .github/workflows/translate-readmes.yml
@@ -182,6 +183,7 @@ profiles:
       - scripts/cleanup-branches.sh
       - scripts/rebase-prs.sh
       - scripts/update-infra-deps.sh
+      - scripts/create-readmes.sh
       - scripts/update-readmes.sh
       - scripts/translate-readmes.sh
       - scripts/verify-fork-integrity.sh
@@ -251,6 +253,7 @@ profiles:
       - .github/workflows/ota-opt-in.yml
       - .github/workflows/ota-self-update.yml
       - .github/workflows/verify-fork-integrity.yml
+      - .github/workflows/create-readmes.yml
       - .github/workflows/readme-wizard.yml
       - .github/workflows/update-readmes.yml
       - .github/workflows/translate-readmes.yml
@@ -266,6 +269,7 @@ profiles:
       - scripts/cleanup-branches.sh
       - scripts/rebase-prs.sh
       - scripts/update-infra-deps.sh
+      - scripts/create-readmes.sh
       - scripts/update-readmes.sh
       - scripts/translate-readmes.sh
       - scripts/verify-fork-integrity.sh

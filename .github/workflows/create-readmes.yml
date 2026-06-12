@@ -65,11 +65,29 @@ jobs:
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
+      - name: Check FSA mode
+        id: fsa
+        if: steps.quota.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          FSA_MANAGED: ${{ vars.FSA_MANAGED }}
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          source scripts/includes/fsa-mode.sh
+          if fsa_is_managed; then
+            echo "managed=true"  >> "$GITHUB_OUTPUT"
+            echo "github_owner=Interested-Deving-1896" >> "$GITHUB_OUTPUT"
+          else
+            echo "managed=false" >> "$GITHUB_OUTPUT"
+            # Autonomous: scan this repo's owner org only.
+            echo "github_owner=${{ github.repository_owner }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create missing READMEs
         if: steps.quota.outputs.skip == 'false'
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
-          GITHUB_OWNER: Interested-Deving-1896
+          GITHUB_OWNER: ${{ steps.fsa.outputs.github_owner }}
           BUDGET_MINUTES: "55"
         run: bash scripts/create-readmes.sh
       - name: Write summary
