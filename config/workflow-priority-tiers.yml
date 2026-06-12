@@ -87,6 +87,8 @@ tiers:
     tier: 3
   - name: "Validate README Render"
     tier: 3
+  - name: "GitLab Critical Deploy"
+    tier: 1
   - name: "Check Accessibility"
     tier: 3
   - name: "Inject Built-with-Ona Badges"

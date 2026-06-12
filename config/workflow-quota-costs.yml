@@ -755,6 +755,14 @@ workflows:
   basis: code-audit
   notes: 1 secret read (implicit via env) + 1 secret write (gh secret set). Cookie refresh itself uses Google APIs — no GitHub quota.
   synopsis: Rotates the short-lived __Secure-1PSIDTS cookie in NOTEBOOKLM_AUTH_JSON weekly and writes the updated state back to the repo secret.
+- name: GitLab Critical Deploy
+  min_quota: 50
+  cost_low: 3
+  cost_mid: 8
+  cost_high: 15
+  basis: code-audit
+  notes: 1 checkout + 1 GitLab API token verify + up to 3 GitLab API calls (pipeline list, cancel, trigger). Git push itself uses no GitHub quota. High end assumes pipeline clear with many pipelines.
+  synopsis: Fast-lane GitLab mirror recovery. Pushes current HEAD directly to GitLab via HTTPS, cancels pending pipelines, pauses/resumes schedules, and optionally triggers a fresh pipeline. Works even when GitHub quota is near 0.
 - name: Check Accessibility
   min_quota: 500
   cost_low: 5

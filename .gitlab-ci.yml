@@ -44,6 +44,7 @@ workflow:
     - when: always
 
 stages:
+  - critical
   - secret-scan
   - sync
   - mirror
@@ -245,6 +246,33 @@ sync-pieroproietti-gl-forks:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $CADENCE == "daily"'
     - when: never
+
+critical-deploy-gitlab:
+  stage: critical
+  image: alpine:3.19
+  before_script:
+    - apk add --no-cache git curl bash python3
+  script:
+    - bash scripts/critical-deploy-gitlab.sh
+  variables:
+    GITLAB_TOKEN: $GITLAB_MAINTENANCE_TOKEN
+    GL_PROJECT_ID: "81413316"
+    GL_PROJECT_PATH: "openos-project/ops/fork-sync-all"
+    GL_BRANCH: "main"
+    PUSH_TO_GITLAB: ${PUSH_TO_GITLAB:-false}
+    CLEAR_PIPELINES: ${CLEAR_PIPELINES:-false}
+    PAUSE_SCHEDULES: ${PAUSE_SCHEDULES:-false}
+    RESUME_SCHEDULES: ${RESUME_SCHEDULES:-false}
+    TRIGGER_PIPELINE: ${TRIGGER_PIPELINE:-false}
+    TRIGGER_CADENCE: ${TRIGGER_CADENCE:-daily}
+    TRIGGER_VARS: ${TRIGGER_VARS:-}
+    DRY_RUN: ${DRY_RUN:-false}
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "trigger" && $CRITICAL_DEPLOY_GITLAB == "true"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  allow_failure: false
 
 secret-scan:
   stage: secret-scan
