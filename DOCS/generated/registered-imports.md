@@ -1,10 +1,10 @@
 # Registered Imports
 
-All 70 upstream repositories tracked in `registered-imports.json`. These are synced to `Interested-Deving-1896` by `sync-registered-imports.yml` every 6 hours.
+All 79 upstream repositories tracked in `registered-imports.json`. These are synced to `Interested-Deving-1896` by `sync-registered-imports.yml` every 6 hours.
 
 > Auto-generated on 2026-06-12 from `registered-imports.json`.
 
-## GitHub (70)
+## GitHub (79)
 
 | Target repo | Source URL | Added |
 |---|---|---|
@@ -14,11 +14,13 @@ All 70 upstream repositories tracked in `registered-imports.json`. These are syn
 | [New-Cli-Installer](https://github.com/Interested-Deving-1896/New-Cli-Installer) | [https://github.com/CachyOS/New-Cli-Installer](https://github.com/CachyOS/New-Cli-Installer) | 2026-06-06 |
 | [OmoiOS](https://github.com/Interested-Deving-1896/OmoiOS) | [https://github.com/kivo360/OmoiOS](https://github.com/kivo360/OmoiOS) | 2026-06-05 |
 | [PhoneixAI](https://github.com/Interested-Deving-1896/PhoneixAI) | [https://github.com/rajshah9305/PhoneixAI](https://github.com/rajshah9305/PhoneixAI) | 2026-06-05 |
+| [README](https://github.com/Interested-Deving-1896/README) | [https://github.com/canalplus/README](https://github.com/canalplus/README) | 2026-06-12 |
 | [accessibility-agents](https://github.com/Interested-Deving-1896/accessibility-agents) | [https://github.com/Community-Access/accessibility-agents](https://github.com/Community-Access/accessibility-agents) | 2026-06-05 |
 | [actions-orchestrator](https://github.com/Interested-Deving-1896/actions-orchestrator) | [https://github.com/fjaeckel/actions-orchestrator](https://github.com/fjaeckel/actions-orchestrator) | 2026-05-25 |
 | [activitysmith-github-action](https://github.com/Interested-Deving-1896/activitysmith-github-action) | [https://github.com/ActivitySmithHQ/activitysmith-github-action](https://github.com/ActivitySmithHQ/activitysmith-github-action) | 2026-06-05 |
 | [agentshield](https://github.com/Interested-Deving-1896/agentshield) | [https://github.com/affaan-m/agentshield](https://github.com/affaan-m/agentshield) | 2026-06-05 |
 | [ananicy-rules](https://github.com/Interested-Deving-1896/ananicy-rules) | [https://github.com/CachyOS/ananicy-rules](https://github.com/CachyOS/ananicy-rules) | 2026-06-06 |
+| [axe-core](https://github.com/Interested-Deving-1896/axe-core) | [https://github.com/dequelabs/axe-core](https://github.com/dequelabs/axe-core) | 2026-06-12 |
 | [blueprint](https://github.com/Interested-Deving-1896/blueprint) | [https://github.com/Narven/blueprint](https://github.com/Narven/blueprint) | 2026-06-05 |
 | [build-server](https://github.com/Interested-Deving-1896/build-server) | [https://github.com/jakwuh/build-server](https://github.com/jakwuh/build-server) | 2026-05-25 |
 | [cachy-chroot](https://github.com/Interested-Deving-1896/cachy-chroot) | [https://github.com/CachyOS/cachy-chroot](https://github.com/CachyOS/cachy-chroot) | 2026-06-06 |
@@ -34,6 +36,7 @@ All 70 upstream repositories tracked in `registered-imports.json`. These are syn
 | [directory-model](https://github.com/Interested-Deving-1896/directory-model) | [https://github.com/Interested-Deving-1896/directory-model](https://github.com/Interested-Deving-1896/directory-model) | 2026-06-05 |
 | [dirstructx](https://github.com/Interested-Deving-1896/dirstructx) | [https://github.com/Interested-Deving-1896/dirstructx](https://github.com/Interested-Deving-1896/dirstructx) | 2026-06-05 |
 | [dotdrop](https://github.com/Interested-Deving-1896/dotdrop) | [https://github.com/deadc0de6/dotdrop](https://github.com/deadc0de6/dotdrop) | 2026-06-05 |
+| [espeak-ng](https://github.com/Interested-Deving-1896/espeak-ng) | [https://github.com/espeak-ng/espeak-ng](https://github.com/espeak-ng/espeak-ng) | 2026-06-12 |
 | [fluent-github-actions](https://github.com/Interested-Deving-1896/fluent-github-actions) | [https://github.com/tsirysndr/fluent-github-actions](https://github.com/tsirysndr/fluent-github-actions) | 2026-06-05 |
 | [gavi](https://github.com/Interested-Deving-1896/gavi) | [https://github.com/homoluctus/gavi](https://github.com/homoluctus/gavi) | 2026-06-05 |
 | [git-queue](https://github.com/Interested-Deving-1896/git-queue) | [https://github.com/nautilus-cyberneering/git-queue](https://github.com/nautilus-cyberneering/git-queue) | 2026-06-08 |
@@ -49,6 +52,7 @@ All 70 upstream repositories tracked in `registered-imports.json`. These are syn
 | [kde-builder](https://github.com/Interested-Deving-1896/kde-builder) | [https://github.com/KDE/kde-builder](https://github.com/KDE/kde-builder) | 2026-06-03 |
 | [kernel-manager](https://github.com/Interested-Deving-1896/kernel-manager) | [https://github.com/CachyOS/kernel-manager](https://github.com/CachyOS/kernel-manager) | 2026-06-06 |
 | [kernel-patches](https://github.com/Interested-Deving-1896/kernel-patches) | [https://github.com/CachyOS/kernel-patches](https://github.com/CachyOS/kernel-patches) | 2026-06-06 |
+| [liblouis](https://github.com/Interested-Deving-1896/liblouis) | [https://github.com/liblouis/liblouis](https://github.com/liblouis/liblouis) | 2026-06-12 |
 | [linux-cachyos](https://github.com/Interested-Deving-1896/linux-cachyos) | [https://github.com/CachyOS/linux-cachyos](https://github.com/CachyOS/linux-cachyos) | 2026-06-06 |
 | [llm-docs-generator](https://github.com/Interested-Deving-1896/llm-docs-generator) | [https://github.com/Interested-Deving-1896/llm-docs-generator](https://github.com/Interested-Deving-1896/llm-docs-generator) | 2026-06-05 |
 | [lowlighter-metrics](https://github.com/Interested-Deving-1896/lowlighter-metrics) | [https://github.com/lowlighter/metrics](https://github.com/lowlighter/metrics) | 2026-06-07 |
@@ -60,6 +64,9 @@ All 70 upstream repositories tracked in `registered-imports.json`. These are syn
 | [nexa-gauge](https://github.com/Interested-Deving-1896/nexa-gauge) | [https://github.com/harnexa/nexa-gauge](https://github.com/harnexa/nexa-gauge) | 2026-06-05 |
 | [niko-claude-skills](https://github.com/Interested-Deving-1896/niko-claude-skills) | [https://github.com/nikotsy/niko-claude-skills](https://github.com/nikotsy/niko-claude-skills) | 2026-05-25 |
 | [notificare](https://github.com/Interested-Deving-1896/notificare) | [https://github.com/joaoGabriel55/notificare](https://github.com/joaoGabriel55/notificare) | 2026-06-05 |
+| [nvda](https://github.com/Interested-Deving-1896/nvda) | [https://github.com/nvaccess/nvda](https://github.com/nvaccess/nvda) | 2026-06-12 |
+| [osara](https://github.com/Interested-Deving-1896/osara) | [https://github.com/jcsteh/osara](https://github.com/jcsteh/osara) | 2026-06-12 |
+| [pa11y](https://github.com/Interested-Deving-1896/pa11y) | [https://github.com/pa11y/pa11y](https://github.com/pa11y/pa11y) | 2026-06-12 |
 | [packer-plugin-incuschroot](https://github.com/Interested-Deving-1896/packer-plugin-incuschroot) | [https://github.com/dontlaugh/packer-plugin-incuschroot](https://github.com/dontlaugh/packer-plugin-incuschroot) | 2026-06-05 |
 | [pkgbuild-action](https://github.com/Interested-Deving-1896/pkgbuild-action) | [https://github.com/CachyOS/pkgbuild-action](https://github.com/CachyOS/pkgbuild-action) | 2026-06-06 |
 | [project-memory-mcp](https://github.com/Interested-Deving-1896/project-memory-mcp) | [https://github.com/Interested-Deving-1896/project-memory-mcp](https://github.com/Interested-Deving-1896/project-memory-mcp) | 2026-06-05 |
@@ -70,6 +77,7 @@ All 70 upstream repositories tracked in `registered-imports.json`. These are syn
 | [scx-manager](https://github.com/Interested-Deving-1896/scx-manager) | [https://github.com/CachyOS/scx-manager](https://github.com/CachyOS/scx-manager) | 2026-06-06 |
 | [super-yaml](https://github.com/Interested-Deving-1896/super-yaml) | [https://github.com/doriaviram/super-yaml](https://github.com/doriaviram/super-yaml) | 2026-06-05 |
 | [system-cleanup-manager](https://github.com/Interested-Deving-1896/system-cleanup-manager) | [https://github.com/Interested-Deving-1896/system-cleanup-manager](https://github.com/Interested-Deving-1896/system-cleanup-manager) | 2026-06-05 |
+| [target-size-highlighter](https://github.com/Interested-Deving-1896/target-size-highlighter) | [https://github.com/accessibility-tools/target-size-highlighter](https://github.com/accessibility-tools/target-size-highlighter) | 2026-06-12 |
 | [taubyte](https://github.com/Interested-Deving-1896/taubyte) | [https://github.com/Interested-Deving-1896/taubyte](https://github.com/Interested-Deving-1896/taubyte) | 2026-06-05 |
 | [velite](https://github.com/Interested-Deving-1896/velite) | [https://github.com/zce/velite](https://github.com/zce/velite) | 2026-06-05 |
 | [victoriametrics-metrics](https://github.com/Interested-Deving-1896/victoriametrics-metrics) | [https://github.com/VictoriaMetrics/metrics](https://github.com/VictoriaMetrics/metrics) | 2026-06-07 |
@@ -78,3 +86,4 @@ All 70 upstream repositories tracked in `registered-imports.json`. These are syn
 | [yaml-fuse](https://github.com/Interested-Deving-1896/yaml-fuse) | [https://github.com/Interested-Deving-1896/yaml-fuse](https://github.com/Interested-Deving-1896/yaml-fuse) | 2026-06-05 |
 | [yaml-sort](https://github.com/Interested-Deving-1896/yaml-sort) | [https://github.com/Interested-Deving-1896/yaml-sort](https://github.com/Interested-Deving-1896/yaml-sort) | 2026-06-05 |
 | [yamllint-ts](https://github.com/Interested-Deving-1896/yamllint-ts) | [https://github.com/Keylan/yamllint-ts](https://github.com/Keylan/yamllint-ts) | 2026-06-05 |
+| [z-index-focus-override](https://github.com/Interested-Deving-1896/z-index-focus-override) | [https://github.com/accessibility-tools/z-index-focus-override](https://github.com/accessibility-tools/z-index-focus-override) | 2026-06-12 |

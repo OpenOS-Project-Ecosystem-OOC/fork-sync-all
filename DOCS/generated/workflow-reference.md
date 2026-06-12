@@ -54,6 +54,7 @@ For trigger details and schedules see [Workflow Triggers](workflow-triggers.md).
 
 | Workflow | Synopsis | Schedule | min_quota | Low | Mid | High |
 |---|---|---|---|---|---|---|
+| [Check Accessibility](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/check-accessibility.yml) | Multi-layer accessibility audit — CODEOWNERS coverage, README screen-reader scan, WCAG 2.1 AA HTML check, audio overview (espeak-ng), and Braille output (liblouis). Commits README.audio.mp3 and README.brl artifacts. | Weekly Mon 04:17 UTC | 500 | 5 | 15 | 40 |
 | [Check OSP-Bound CI Status](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/check-osp-ci.yml) | Checks CI status across all OSP-bound repos and reports failing workflows. Triggers resolve-failures when failures are detected. | Daily 09:05 UTC | 300 | 50 | 150 | 300 |
 | [Cleanup Stale Branches](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/cleanup-branches.yml) | Deletes branches that have been merged into the default branch across all repos in Interested-Deving-1896, OSP, and OOC. | 29 4 1 * * | 200 | 10 | 60 | 200 |
 | [Cleanup Template Pollution](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/cleanup-pollution.yml) | Removes files incorrectly propagated from fork-sync-all to consumer repos via the template sync pipeline, across all three GitHub orgs and GitLab. | Manual | 200 | 20 | 80 | 200 |

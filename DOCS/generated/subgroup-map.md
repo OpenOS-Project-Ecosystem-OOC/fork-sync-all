@@ -1,6 +1,6 @@
 # GitLab Subgroup Map
 
-All 159 OSP-bound repositories mapped to their GitLab subgroup under [`openos-project`](https://gitlab.com/openos-project). This is the single source of truth used by `mirror-osp-to-gitlab.sh`.
+All 168 OSP-bound repositories mapped to their GitLab subgroup under [`openos-project`](https://gitlab.com/openos-project). This is the single source of truth used by `mirror-osp-to-gitlab.sh`.
 
 > Auto-generated on 2026-06-12 from `config/gitlab-subgroups.yml`.
 
@@ -18,6 +18,7 @@ All 159 OSP-bound repositories mapped to their GitLab subgroup under [`openos-pr
 | `cachyos_deving` | 133909503 | 12 | [https://gitlab.com/openos-project/cachyos_deving](https://gitlab.com/openos-project/cachyos_deving) |
 | `ai-agents_deving` | 133909504 | 10 | [https://gitlab.com/openos-project/ai-agents_deving](https://gitlab.com/openos-project/ai-agents_deving) |
 | `rust-systems_deving` | 133954601 | 2 | [https://gitlab.com/openos-project/rust-systems_deving](https://gitlab.com/openos-project/rust-systems_deving) |
+| `accessibility_deving` | — | 9 | [https://gitlab.com/openos-project/accessibility_deving](https://gitlab.com/openos-project/accessibility_deving) |
 
 ---
 
@@ -239,3 +240,17 @@ All 159 OSP-bound repositories mapped to their GitLab subgroup under [`openos-pr
 |---|---|---|
 | `coreutils` | [GitHub](https://github.com/OpenOS-Project-OSP/coreutils) | [GitLab](https://gitlab.com/openos-project/rust-systems_deving/coreutils) |
 | `mdBook` | [GitHub](https://github.com/OpenOS-Project-OSP/mdBook) | [GitLab](https://gitlab.com/openos-project/rust-systems_deving/mdBook) |
+
+## [accessibility_deving](https://gitlab.com/openos-project/accessibility_deving)
+
+| Repo | GitHub | GitLab |
+|---|---|---|
+| `README` | [GitHub](https://github.com/OpenOS-Project-OSP/README) | [GitLab](https://gitlab.com/openos-project/accessibility_deving/README) |
+| `axe-core` | [GitHub](https://github.com/OpenOS-Project-OSP/axe-core) | [GitLab](https://gitlab.com/openos-project/accessibility_deving/axe-core) |
+| `espeak-ng` | [GitHub](https://github.com/OpenOS-Project-OSP/espeak-ng) | [GitLab](https://gitlab.com/openos-project/accessibility_deving/espeak-ng) |
+| `liblouis` | [GitHub](https://github.com/OpenOS-Project-OSP/liblouis) | [GitLab](https://gitlab.com/openos-project/accessibility_deving/liblouis) |
+| `nvda` | [GitHub](https://github.com/OpenOS-Project-OSP/nvda) | [GitLab](https://gitlab.com/openos-project/accessibility_deving/nvda) |
+| `osara` | [GitHub](https://github.com/OpenOS-Project-OSP/osara) | [GitLab](https://gitlab.com/openos-project/accessibility_deving/osara) |
+| `pa11y` | [GitHub](https://github.com/OpenOS-Project-OSP/pa11y) | [GitLab](https://gitlab.com/openos-project/accessibility_deving/pa11y) |
+| `target-size-highlighter` | [GitHub](https://github.com/OpenOS-Project-OSP/target-size-highlighter) | [GitLab](https://gitlab.com/openos-project/accessibility_deving/target-size-highlighter) |
+| `z-index-focus-override` | [GitHub](https://github.com/OpenOS-Project-OSP/z-index-focus-override) | [GitLab](https://gitlab.com/openos-project/accessibility_deving/z-index-focus-override) |
