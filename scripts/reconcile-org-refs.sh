@@ -270,7 +270,7 @@ prefetch_repo_pushed_at() {
   for repo in "${repo_list[@]}"; do
     [[ -z "$repo" ]] && continue
     local alias
-    alias=$(echo "$repo" | tr '-.' '__')
+    alias=$(echo "$repo" | tr '.-' '__')
     query_body+="
     ${alias}: repository(owner: \"${owner}\", name: \"${repo}\") {
       pushedAt
@@ -289,7 +289,7 @@ prefetch_repo_pushed_at() {
   for repo in "${repo_list[@]}"; do
     [[ -z "$repo" ]] && continue
     local alias
-    alias=$(echo "$repo" | tr '-.' '__')
+    alias=$(echo "$repo" | tr '.-' '__')
     local pushed_iso
     pushed_iso=$(echo "$response" | python3 -c "
 import sys,json

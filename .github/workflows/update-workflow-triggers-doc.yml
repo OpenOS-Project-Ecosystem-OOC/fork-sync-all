@@ -42,7 +42,7 @@ jobs:
             echo "No changes to docs — skipping commit."
           else
             git commit -m "docs(auto): regenerate workflow triggers doc"
-            git push
+            git pull --rebase && git push
           fi
       - name: Write summary
         if: always()

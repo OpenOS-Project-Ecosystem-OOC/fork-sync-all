@@ -1,422 +1,416 @@
 [
-    {
-        "source_url": "https://github.com/nautilus-cyberneering/git-queue",
-        "target_name": "git-queue",
-        "platform": "github",
-        "added": "2026-06-08T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/rakles/matrix-lock",
-        "target_name": "matrix-lock",
-        "platform": "github",
-        "added": "2026-05-25T18:45:00Z"
-    },
-    {
-        "source_url": "https://github.com/josecelano/github-actions-virtualization-support",
-        "target_name": "github-actions-virtualization-support",
-        "platform": "github",
-        "added": "2026-05-25T18:45:00Z"
-    },
-    {
-        "source_url": "https://github.com/nikotsy/niko-claude-skills",
-        "target_name": "niko-claude-skills",
-        "platform": "github",
-        "added": "2026-05-25T18:45:00Z"
-    },
-    {
-        "source_url": "https://github.com/fjaeckel/actions-orchestrator",
-        "target_name": "actions-orchestrator",
-        "platform": "github",
-        "added": "2026-05-25T18:45:00Z"
-    },
-    {
-        "source_url": "https://github.com/jakwuh/build-server",
-        "target_name": "build-server",
-        "platform": "github",
-        "added": "2026-05-25T18:45:00Z"
-    },
-    {
-        "source_url": "https://github.com/chopratejas/headroom",
-        "target_name": "headroom",
-        "platform": "github",
-        "added": "2026-06-02T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/KDE/kde-builder",
-        "target_name": "kde-builder",
-        "platform": "github",
-        "added": "2026-06-03T22:50:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/infra-dashboard",
-        "target_name": "infra-dashboard",
-        "platform": "github",
-        "added": "2026-06-04T23:53:30Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/taubyte",
-        "target_name": "taubyte",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/deadc0de6/dotdrop",
-        "target_name": "dotdrop",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/dontlaugh/packer-plugin-incuschroot",
-        "target_name": "packer-plugin-incuschroot",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/CI-Debugger",
-        "target_name": "CI-Debugger",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/homoluctus/gavi",
-        "target_name": "gavi",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/emmanuelnk/github-actions-workflow-ts",
-        "target_name": "github-actions-workflow-ts",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/tsirysndr/fluent-github-actions",
-        "target_name": "fluent-github-actions",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/directory-model",
-        "target_name": "directory-model",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/nmicovic/katachi",
-        "target_name": "katachi",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/deardir/deardir",
-        "target_name": "deardir",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/dirstructx",
-        "target_name": "dirstructx",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/pyvert",
-        "target_name": "pyvert",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/yaml-fuse",
-        "target_name": "yaml-fuse",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/scriptfs",
-        "target_name": "scriptfs",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/denoflow",
-        "target_name": "denoflow",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/zce/velite",
-        "target_name": "velite",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/llm-docs-generator",
-        "target_name": "llm-docs-generator",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/project-memory-mcp",
-        "target_name": "project-memory-mcp",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/mnemonic",
-        "target_name": "mnemonic",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/models-generator",
-        "target_name": "models-generator",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Narven/blueprint",
-        "target_name": "blueprint",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/chevdor/confmgr",
-        "target_name": "confmgr",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/system-cleanup-manager",
-        "target_name": "system-cleanup-manager",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/yaml-sort",
-        "target_name": "yaml-sort",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Keylan/yamllint-ts",
-        "target_name": "yamllint-ts",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/doriaviram/super-yaml",
-        "target_name": "super-yaml",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/UltiRequiem/y2j",
-        "target_name": "y2j",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Interested-Deving-1896/xml-yaml-json-converter",
-        "target_name": "xml-yaml-json-converter",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/apvarun/graphize",
-        "target_name": "graphize",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/ActivitySmithHQ/activitysmith-github-action",
-        "target_name": "activitysmith-github-action",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/affaan-m/agentshield",
-        "target_name": "agentshield",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/DamageLabs/clahub",
-        "target_name": "clahub",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/vivekchand/clawmetry",
-        "target_name": "clawmetry",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/Community-Access/accessibility-agents",
-        "target_name": "accessibility-agents",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/kivo360/OmoiOS",
-        "target_name": "OmoiOS",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/rajshah9305/PhoneixAI",
-        "target_name": "PhoneixAI",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/joaoGabriel55/notificare",
-        "target_name": "notificare",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/tushkum34-cloud/pylibsmeta",
-        "target_name": "pylibsmeta",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/harnexa/nexa-gauge",
-        "target_name": "nexa-gauge",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/automateyournetwork/netclaw",
-        "target_name": "netclaw",
-        "platform": "github",
-        "added": "2026-06-05T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/linux-cachyos",
-        "target_name": "linux-cachyos",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/kernel-patches",
-        "target_name": "kernel-patches",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/CachyOS-PKGBUILDS",
-        "target_name": "CachyOS-PKGBUILDS",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/pkgbuild-action",
-        "target_name": "pkgbuild-action",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/repo-manage-util",
-        "target_name": "repo-manage-util",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/chwd",
-        "target_name": "chwd",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/New-Cli-Installer",
-        "target_name": "New-Cli-Installer",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/copr-linux-cachyos",
-        "target_name": "copr-linux-cachyos",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/CachyOS-Settings",
-        "target_name": "CachyOS-Settings",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/ananicy-rules",
-        "target_name": "ananicy-rules",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/cachy-update",
-        "target_name": "cachy-update",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/cachyos-repo-add-script",
-        "target_name": "cachyos-repo-add-script",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/scx-manager",
-        "target_name": "scx-manager",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/kernel-manager",
-        "target_name": "kernel-manager",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/CachyOS/cachy-chroot",
-        "target_name": "cachy-chroot",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/uutils/coreutils",
-        "target_name": "coreutils",
-        "platform": "github",
-        "added": "2026-06-06T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/VictoriaMetrics/metrics",
-        "target_name": "victoriametrics-metrics",
-        "platform": "github",
-        "added": "2026-06-07T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/githubexporter/github-exporter",
-        "target_name": "github-exporter",
-        "platform": "github",
-        "added": "2026-06-07T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/github/git-sizer",
-        "target_name": "git-sizer",
-        "platform": "github",
-        "added": "2026-06-07T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/lowlighter/metrics",
-        "target_name": "lowlighter-metrics",
-        "platform": "github",
-        "added": "2026-06-07T00:00:00Z"
-    },
-    {
-        "source_url": "https://github.com/rust-lang/mdBook",
-        "target_name": "mdBook",
-        "platform": "github",
-        "added": "2026-06-07T00:00:00Z"
-    }
+  {
+    "source_url": "https://github.com/nautilus-cyberneering/git-queue",
+    "target_name": "git-queue",
+    "platform": "github",
+    "added": "2026-06-08T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/rakles/matrix-lock",
+    "target_name": "matrix-lock",
+    "platform": "github",
+    "added": "2026-05-25T18:45:00Z"
+  },
+  {
+    "source_url": "https://github.com/josecelano/github-actions-virtualization-support",
+    "target_name": "github-actions-virtualization-support",
+    "platform": "github",
+    "added": "2026-05-25T18:45:00Z"
+  },
+  {
+    "source_url": "https://github.com/nikotsy/niko-claude-skills",
+    "target_name": "niko-claude-skills",
+    "platform": "github",
+    "added": "2026-05-25T18:45:00Z"
+  },
+  {
+    "source_url": "https://github.com/fjaeckel/actions-orchestrator",
+    "target_name": "actions-orchestrator",
+    "platform": "github",
+    "added": "2026-05-25T18:45:00Z"
+  },
+  {
+    "source_url": "https://github.com/jakwuh/build-server",
+    "target_name": "build-server",
+    "platform": "github",
+    "added": "2026-05-25T18:45:00Z"
+  },
+  {
+    "source_url": "https://github.com/chopratejas/headroom",
+    "target_name": "headroom",
+    "platform": "github",
+    "added": "2026-06-02T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/KDE/kde-builder",
+    "target_name": "kde-builder",
+    "platform": "github",
+    "added": "2026-06-03T22:50:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/infra-dashboard",
+    "target_name": "infra-dashboard",
+    "platform": "github",
+    "added": "2026-06-04T23:53:30Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/taubyte",
+    "target_name": "taubyte",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/deadc0de6/dotdrop",
+    "target_name": "dotdrop",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/dontlaugh/packer-plugin-incuschroot",
+    "target_name": "packer-plugin-incuschroot",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/CI-Debugger",
+    "target_name": "CI-Debugger",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/homoluctus/gavi",
+    "target_name": "gavi",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/emmanuelnk/github-actions-workflow-ts",
+    "target_name": "github-actions-workflow-ts",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/tsirysndr/fluent-github-actions",
+    "target_name": "fluent-github-actions",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/directory-model",
+    "target_name": "directory-model",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/nmicovic/katachi",
+    "target_name": "katachi",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/dirstructx",
+    "target_name": "dirstructx",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/pyvert",
+    "target_name": "pyvert",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/yaml-fuse",
+    "target_name": "yaml-fuse",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/scriptfs",
+    "target_name": "scriptfs",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/denoflow",
+    "target_name": "denoflow",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/zce/velite",
+    "target_name": "velite",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/llm-docs-generator",
+    "target_name": "llm-docs-generator",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/project-memory-mcp",
+    "target_name": "project-memory-mcp",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/mnemonic",
+    "target_name": "mnemonic",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/models-generator",
+    "target_name": "models-generator",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Narven/blueprint",
+    "target_name": "blueprint",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/chevdor/confmgr",
+    "target_name": "confmgr",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/system-cleanup-manager",
+    "target_name": "system-cleanup-manager",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/yaml-sort",
+    "target_name": "yaml-sort",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Keylan/yamllint-ts",
+    "target_name": "yamllint-ts",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/doriaviram/super-yaml",
+    "target_name": "super-yaml",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/UltiRequiem/y2j",
+    "target_name": "y2j",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Interested-Deving-1896/xml-yaml-json-converter",
+    "target_name": "xml-yaml-json-converter",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/apvarun/graphize",
+    "target_name": "graphize",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/ActivitySmithHQ/activitysmith-github-action",
+    "target_name": "activitysmith-github-action",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/affaan-m/agentshield",
+    "target_name": "agentshield",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/DamageLabs/clahub",
+    "target_name": "clahub",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/vivekchand/clawmetry",
+    "target_name": "clawmetry",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/Community-Access/accessibility-agents",
+    "target_name": "accessibility-agents",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/kivo360/OmoiOS",
+    "target_name": "OmoiOS",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/rajshah9305/PhoneixAI",
+    "target_name": "PhoneixAI",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/joaoGabriel55/notificare",
+    "target_name": "notificare",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/tushkum34-cloud/pylibsmeta",
+    "target_name": "pylibsmeta",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/harnexa/nexa-gauge",
+    "target_name": "nexa-gauge",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/automateyournetwork/netclaw",
+    "target_name": "netclaw",
+    "platform": "github",
+    "added": "2026-06-05T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/linux-cachyos",
+    "target_name": "linux-cachyos",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/kernel-patches",
+    "target_name": "kernel-patches",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/CachyOS-PKGBUILDS",
+    "target_name": "CachyOS-PKGBUILDS",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/pkgbuild-action",
+    "target_name": "pkgbuild-action",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/repo-manage-util",
+    "target_name": "repo-manage-util",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/chwd",
+    "target_name": "chwd",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/New-Cli-Installer",
+    "target_name": "New-Cli-Installer",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/copr-linux-cachyos",
+    "target_name": "copr-linux-cachyos",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/CachyOS-Settings",
+    "target_name": "CachyOS-Settings",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/ananicy-rules",
+    "target_name": "ananicy-rules",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/cachy-update",
+    "target_name": "cachy-update",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/cachyos-repo-add-script",
+    "target_name": "cachyos-repo-add-script",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/scx-manager",
+    "target_name": "scx-manager",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/kernel-manager",
+    "target_name": "kernel-manager",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/CachyOS/cachy-chroot",
+    "target_name": "cachy-chroot",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/uutils/coreutils",
+    "target_name": "coreutils",
+    "platform": "github",
+    "added": "2026-06-06T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/VictoriaMetrics/metrics",
+    "target_name": "victoriametrics-metrics",
+    "platform": "github",
+    "added": "2026-06-07T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/githubexporter/github-exporter",
+    "target_name": "github-exporter",
+    "platform": "github",
+    "added": "2026-06-07T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/github/git-sizer",
+    "target_name": "git-sizer",
+    "platform": "github",
+    "added": "2026-06-07T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/lowlighter/metrics",
+    "target_name": "lowlighter-metrics",
+    "platform": "github",
+    "added": "2026-06-07T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/rust-lang/mdBook",
+    "target_name": "mdBook",
+    "platform": "github",
+    "added": "2026-06-07T00:00:00Z"
+  }
 ]

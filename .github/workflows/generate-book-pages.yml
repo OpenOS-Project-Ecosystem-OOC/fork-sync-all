@@ -48,7 +48,7 @@ jobs:
             echo "No changes to generated pages — skipping commit."
           else
             git commit -m "docs(auto): regenerate mdBook pages [skip ci]"
-            git push
+            git pull --rebase && git push
           fi
       - name: Write summary
         if: always()

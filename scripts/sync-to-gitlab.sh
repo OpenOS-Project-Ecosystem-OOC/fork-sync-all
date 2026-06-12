@@ -107,6 +107,7 @@ git_push_with_retry() {
 
 synced=0
 failed=0
+skipped=0
 
 budget_init
 
@@ -153,14 +154,23 @@ for entry in "${REPOS[@]}"; do
   # GitLab-only branches (all-features, feat/*, lts, openos/ci, etc.) are
   # untouched because we never push a delete instruction for them.
   push_ok=true
+  storage_limit=false
   attempt=0
   max_retries=3
   while true; do
-    if push_branches_encoded "$gl_url" 2>&1 \
+    push_output=$(push_branches_encoded "$gl_url" 2>&1 \
         | sed "s/${GITLAB_TOKEN}/***TOKEN***/g" \
-        | sed "s/${GH_TOKEN}/***TOKEN***/g"; then
+        | sed "s/${GH_TOKEN}/***TOKEN***/g")
+    push_exit=${PIPESTATUS[0]}
+    echo "$push_output"
+    # Detect GitLab free-tier storage limit — retrying won't help
+    if echo "$push_output" | grep -q "free storage limit"; then
+      warn "GitLab storage limit reached for ${gh_repo} — skipping (not a code error)"
+      storage_limit=true
+      push_ok=false
       break
     fi
+    [[ $push_exit -eq 0 ]] && break
     (( attempt++ )) || true
     if (( attempt > max_retries )); then
       warn "Branch push failed after ${max_retries} attempts"
@@ -181,13 +191,16 @@ for entry in "${REPOS[@]}"; do
   if $push_ok; then
     info "✅ ${gh_repo} done"
     synced=$((synced + 1))
+  elif $storage_limit; then
+    warn "⚠ ${gh_repo} skipped — GitLab storage limit"
+    skipped=$((skipped + 1))
   else
-    warn "Push failed for ${gh_repo}"
+    warn "✗ ${gh_repo} push failed"
     failed=$((failed + 1))
   fi
 done
 
 echo ""
-info "Complete — synced: ${synced} | failed: ${failed}"
+info "Complete — synced: ${synced} | skipped: ${skipped} | failed: ${failed}"
 budget_report
 [ "$failed" -eq 0 ] || exit 1

@@ -58,6 +58,7 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
           BUDGET_MINUTES: "55"
           OSP_REPOS_CONFIG: config/gitlab-subgroups.yml
+        continue-on-error: true
         run: bash scripts/sync-upstream-sources.sh
       - name: Write summary
         if: always()

@@ -101,13 +101,13 @@ jobs:
             } > /tmp/comment-body.md
             gh issue comment "$existing" \
               --repo "$REPO" \
-              --body "$(cat /tmp/comment-body.md)"
+              --body-file /tmp/comment-body.md
             echo "Updated existing issue #${existing}"
           else
             gh issue create \
               --repo "$REPO" \
               --title "Token Monitor: action required" \
-              --body "$(cat /tmp/issue-body.md)" \
+              --body-file /tmp/issue-body.md \
               --label "token-monitor"
             echo "Created new alert issue"
           fi
