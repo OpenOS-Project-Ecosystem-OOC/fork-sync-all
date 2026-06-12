@@ -273,7 +273,7 @@ subgroups:
       - mdBook
 
   accessibility_deving:
-    id: -1
+    id: 134613311
     path: openos-project/accessibility_deving
     description: >
       Accessibility tooling — screen readers, Braille translation, WCAG auditing,
