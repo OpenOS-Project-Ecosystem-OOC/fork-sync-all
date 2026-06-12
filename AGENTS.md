@@ -404,9 +404,10 @@ successful consumer sync via `PUT /repos/{owner}/{repo}/actions/variables/FSA_MA
   if: steps.fsa.outputs.managed == 'false'
 ```
 
-For workflows without a checkout (e.g. `notify-poller.yml`), inline the
-three-tier check directly in the step's `run:` block — see `notify-poller.yml`
-for the reference implementation.
+For workflows **without a checkout** (e.g. `notify-poller.yml`), inline the
+three-tier check directly in the step's `run:` block rather than sourcing
+`fsa-mode.sh`. See `notify-poller.yml` for the canonical inline implementation.
+The inline version replicates checks B → A → C using `curl` and `python3`.
 
 ### Scope narrowing in autonomous mode
 
@@ -419,6 +420,23 @@ Workflows that are org-wide in managed mode narrow their scope in autonomous mod
 | `queue-manager.yml` | `github.repository` (already scoped) | same |
 | `quota-reserve.yml` | `github.repository` (already scoped) | same |
 | `rate-limit-rerun.yml` | `github.repository_owner/name` | same |
+
+### `resolve-failures.sh` — EXCLUDED_REPOS convention
+
+`EXCLUDED_REPOS` in `scripts/resolve-failures.sh` is intentionally empty. The
+resolver appends `[skip ci]` to every fix commit, which prevents CI re-triggers
+in all standard repos. Only add a repo to `EXCLUDED_REPOS` when `[skip ci]` is
+genuinely insufficient — for example, a repo with a push hook that ignores
+`[skip ci]` and would cause an infinite fix→trigger→fail→fix loop.
+
+### `resolve-failures.sh` — rate-limit rerun
+
+Before sending a failed run to the AI fixer, `resolve-failures.sh` calls
+`rerun_if_rate_limited()`, which checks job logs for rate-limit signal patterns
+and re-triggers via `POST /repos/{owner}/{repo}/actions/runs/{id}/rerun-failed-jobs`.
+This covers all three orgs (I-D-1896 OSP-bound, OSP, OOC). The loop guard
+checks for `"rate_limit_rerun": "true"` in the step summary — a second
+rate-limit failure is logged but not re-triggered again.
 
 ---
 
@@ -434,9 +452,9 @@ what gets injected.
 |---|---|---|
 | `full` | Everything — all workflows, scripts, config | `fork-sync-all` only |
 | `mirror` | Mirror/sync workflows + infra tooling | **Nobody** — deprecated, do not assign |
-| `infra-core` | PR automation, token rotation, token health, README render validation | Consumer repos that are targets of the mirror chain |
+| `infra-core` | PR automation, token rotation, token health, README render validation + autonomous-fallback operational workflows (rate-limit rerun, CI resolver, queue manager, quota reserve, notify-poller, branch cleanup) — dormant when fork-sync-all is present | Consumer repos that are targets of the mirror chain |
 | `standalone` | PR automation + token rotation only | External project forks (KDE Invent, etc.) |
-| `upstream-sync` | Upstream sync workflows | Repos that track upstream projects |
+| `upstream-sync` | `infra-core` contents + upstream sync workflow and script | Repos that track upstream projects via a registry file |
 
 ### Critical rule
 
