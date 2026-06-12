@@ -394,6 +394,12 @@ Validate Config  (validate-config.yml)
 FULL PIPELINE
 -------------
 
+GitLab Critical Deploy  (critical-deploy-gitlab.yml)
+  Fast-lane GitLab mirror recovery. Pushes current HEAD directly to GitLab via
+  HTTPS, cancels pending pipelines, pauses/resumes schedules, and optionally
+  triggers a fresh pipeline. Works even when GitHub quota is near 0.
+  dispatch
+
 Critical Deploy  (critical-deploy.yml)
   Fast-lane workflow for deploying critical fixes when the system is degraded
   — commits and pushes changes, clears the queue aggressively, then dispatches
