@@ -42,7 +42,7 @@ budget_init
 info()  { echo "[rebase-prs] $*" >&2; }
 warn()  { echo "[rebase-prs] ⚠  $*" >&2; }
 ok()    { echo "[rebase-prs] ✅ $*"; }
-fail()  { echo "[rebase-prs] ❌ $*"; }
+fail()  { echo "[rebase-prs] ❌ $*" >&2; }
 dry()   { echo "[rebase-prs] [dry-run] $*" >&2; }
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

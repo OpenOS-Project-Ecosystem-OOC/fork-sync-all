@@ -79,6 +79,7 @@ jobs:
         with:
           sparse-checkout: |
             scripts/queue-manager.sh
+            scripts/write-summary.sh
             config/workflow-priority-tiers.yml
           sparse-checkout-cone-mode: false
 
