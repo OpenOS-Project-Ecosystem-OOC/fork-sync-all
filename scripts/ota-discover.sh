@@ -314,7 +314,7 @@ $(for r in "${NEW_REPOS[@]}"; do echo "- \`${r}\`"; done)
 
 Merging this PR adds them to the OTA delivery registry. They will receive OTA updates on the next release."
 
-gh_api POST "${API}/repos/Interested-Deving-1896/fork-sync-all/pulls" \
+gh_api POST "${API}/repos/${SOURCE_REPO}/pulls" \
   -H "Content-Type: application/json" \
   -d "$(python3 -c "
 import json, sys

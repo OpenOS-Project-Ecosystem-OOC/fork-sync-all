@@ -307,19 +307,41 @@ def main():
 
     now = now_str()
 
-    pages = [
-        ("workflow-reference.md",  generate_workflow_reference(costs_path, tiers_path, wf_dir, now)),
-        ("registered-imports.md",  generate_registered_imports(imports_path, now)),
-        ("subgroup-map.md",        generate_subgroup_map(subgroups_path, now)),
+    # Each page is only generated when its source file(s) exist.
+    # This allows the same script to run on consumer repos that only have a
+    # subset of the config files (e.g. no registered-imports.json or
+    # gitlab-subgroups.yml).
+    candidate_pages = [
+        (
+            "workflow-reference.md",
+            [costs_path, tiers_path],
+            lambda: generate_workflow_reference(costs_path, tiers_path, wf_dir, now),
+        ),
+        (
+            "registered-imports.md",
+            [imports_path],
+            lambda: generate_registered_imports(imports_path, now),
+        ),
+        (
+            "subgroup-map.md",
+            [subgroups_path],
+            lambda: generate_subgroup_map(subgroups_path, now),
+        ),
     ]
 
-    for filename, content in pages:
+    written = 0
+    for filename, required_files, generator in candidate_pages:
+        missing = [f for f in required_files if not os.path.exists(f)]
+        if missing:
+            print(f"Skipping {filename} — source file(s) not found: {', '.join(missing)}")
+            continue
         path = os.path.join(out_dir, filename)
         with open(path, "w") as f:
-            f.write(content)
+            f.write(generator())
         print(f"Written: {path}")
+        written += 1
 
-    print(f"Generated {len(pages)} pages in {out_dir}")
+    print(f"Generated {written} page(s) in {out_dir}")
 
 
 if __name__ == "__main__":

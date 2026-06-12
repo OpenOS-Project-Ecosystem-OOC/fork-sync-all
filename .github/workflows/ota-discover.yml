@@ -35,6 +35,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          SOURCE_REPO: ${{ github.repository }}
         run: bash scripts/ota-discover.sh
       - name: Write summary
         if: always()

@@ -170,6 +170,7 @@ profiles:
       - .github/workflows/translate-readmes.yml
       # ── mdBook documentation ──────────────────────────────────────────────
       - .github/workflows/deploy-book.yml
+      - .github/workflows/generate-book-pages.yml
       - .github/workflows/translate-docs.yml
       # ── Scripts required by autonomous-fallback workflows ─────────────────
       - scripts/scan-rate-limit-failures.sh
@@ -186,6 +187,7 @@ profiles:
       - scripts/verify-fork-integrity.sh
       - scripts/readme-wizard.sh
       - scripts/check-rate-limits.sh
+      - scripts/generate-book-pages.py
       - scripts/includes/fsa-mode.sh
       - scripts/includes/budget.sh
       - scripts/includes/gh-api.sh
@@ -198,6 +200,8 @@ profiles:
       - assets/docs-scaffold/README.md:DOCS/README.md
       - assets/docs-scaffold/getting-started.md:DOCS/getting-started.md
       - assets/docs-scaffold/contributing.md:DOCS/contributing.md
+      # ── OTA stub (only injected if .ota/config.yml does not already exist) ─
+      - assets/ota-stub/config.yml:.ota/config.yml
       - .gitignore
       - LICENSE
 
@@ -251,6 +255,7 @@ profiles:
       - .github/workflows/update-readmes.yml
       - .github/workflows/translate-readmes.yml
       - .github/workflows/deploy-book.yml
+      - .github/workflows/generate-book-pages.yml
       - .github/workflows/translate-docs.yml
       - scripts/scan-rate-limit-failures.sh
       - scripts/rerun-after-rate-limit.sh
@@ -266,6 +271,7 @@ profiles:
       - scripts/verify-fork-integrity.sh
       - scripts/readme-wizard.sh
       - scripts/check-rate-limits.sh
+      - scripts/generate-book-pages.py
       - scripts/includes/fsa-mode.sh
       - scripts/includes/budget.sh
       - scripts/includes/gh-api.sh
@@ -277,6 +283,7 @@ profiles:
       - assets/docs-scaffold/README.md:DOCS/README.md
       - assets/docs-scaffold/getting-started.md:DOCS/getting-started.md
       - assets/docs-scaffold/contributing.md:DOCS/contributing.md
+      - assets/ota-stub/config.yml:.ota/config.yml
       - .gitignore
       - LICENSE
 

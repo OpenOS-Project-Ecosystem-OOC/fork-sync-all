@@ -227,6 +227,11 @@ EXCLUDED_PATHS=(
   # consumer doesn't already have one. Handled via force:false default.
   # .devcontainer/Dockerfile is btrfs-dwarfs-framework-specific — exclude globally.
   ".devcontainer/Dockerfile"
+  # Never propagate fork-sync-all-only assets to consumers — docs-scaffold
+  # entries are injected via explicit source:dest remaps in template-manifest.yml
+  # and the scaffold-only guard in collect_template_files(). Propagating the
+  # assets/ tree directly would overwrite consumer DOCS/ on every sync.
+  "assets"
   # Never propagate the fork-sync-all dev environment to consumers — each repo
   # has its own devcontainer config (or none at all).
   ".devcontainer/devcontainer.json"
@@ -707,10 +712,10 @@ sync_into_repo() {
       sha_arg="__UNSET__"                  # triggers legacy per-file probe
     fi
 
-    # Scaffold files (assets/docs-scaffold/ → DOCS/) are only written when the
-    # destination does not already exist in the target repo. This prevents
-    # overwriting a consumer's existing DOCS/ content on subsequent syncs.
-    if [[ "$src_rel" == assets/docs-scaffold/* && -n "$sha_arg" && "$sha_arg" != "__UNSET__" ]]; then
+    # Scaffold files (assets/*/ sources) are only written when the destination
+    # does not already exist in the target repo. This prevents overwriting a
+    # consumer's existing DOCS/ content or .ota/config.yml on subsequent syncs.
+    if [[ "$src_rel" == assets/*/* && -n "$sha_arg" && "$sha_arg" != "__UNSET__" ]]; then
       info "  Skipping scaffold ${dest_rel} (already exists in ${repo})"
       (( files_ok++ )) || true
       continue
