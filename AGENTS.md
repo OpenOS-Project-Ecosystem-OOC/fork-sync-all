@@ -355,6 +355,73 @@ Applied in: `btrfs-dwarfs-framework/.github/workflows/ci.yaml`
 
 ---
 
+## Autonomous-fallback mode
+
+Consumer repos that receive the `infra-core` or `upstream-sync` profile get a
+bundle of operational workflows (rate-limit rerun, CI resolver, queue manager,
+quota reserve, notify-poller, branch cleanup) as autonomous fallbacks.
+
+**Managed mode** (default): fork-sync-all is present and handles all of these
+centrally. The bundled workflows detect this and skip themselves.
+
+**Autonomous mode**: if a consumer repo is forked independently without
+fork-sync-all alongside it, the bundled workflows activate and self-manage,
+scoped to the repo's own owner.
+
+### Mode detection (`scripts/includes/fsa-mode.sh`)
+
+Three-tier hybrid check, evaluated in order:
+
+| Check | Mechanism | Cost |
+|---|---|---|
+| B | `FSA_MANAGED` repo variable (`vars.FSA_MANAGED == 'true'`) | 0 API calls |
+| A | GET `/repos/{owner}/fork-sync-all` — 200 = managed | 1 API call |
+| C | Token owner's fork-sync-all existence (tiebreaker) | 2 API calls |
+
+`sync-template.sh` sets `FSA_MANAGED=true` as a repo Actions variable on every
+successful consumer sync via `PUT /repos/{owner}/{repo}/actions/variables/FSA_MANAGED`.
+
+### Adding the guard to a workflow
+
+```bash
+- name: Check FSA mode
+  id: fsa
+  env:
+    GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+    FSA_MANAGED: ${{ vars.FSA_MANAGED }}
+    REPO_OWNER: ${{ github.repository_owner }}
+  run: |
+    source scripts/includes/fsa-mode.sh
+    if fsa_is_managed; then
+      echo "managed=true" >> "$GITHUB_OUTPUT"
+      echo "Managed by fork-sync-all — skipping."
+    else
+      echo "managed=false" >> "$GITHUB_OUTPUT"
+    fi
+
+# Then on work steps:
+- name: Do work
+  if: steps.fsa.outputs.managed == 'false'
+```
+
+For workflows without a checkout (e.g. `notify-poller.yml`), inline the
+three-tier check directly in the step's `run:` block — see `notify-poller.yml`
+for the reference implementation.
+
+### Scope narrowing in autonomous mode
+
+Workflows that are org-wide in managed mode narrow their scope in autonomous mode:
+
+| Workflow | Managed scope | Autonomous scope |
+|---|---|---|
+| `resolve-failures.yml` | I-D-1896 (OSP-bound) + OSP + OOC | `github.repository_owner` only |
+| `cleanup-branches.yml` | I-D-1896 + OSP + OOC | `github.repository_owner` only |
+| `queue-manager.yml` | `github.repository` (already scoped) | same |
+| `quota-reserve.yml` | `github.repository` (already scoped) | same |
+| `rate-limit-rerun.yml` | `github.repository_owner/name` | same |
+
+---
+
 ## Template sync profiles
 
 `config/template-consumers.yml` controls which repos receive automatic file

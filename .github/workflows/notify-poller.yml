@@ -54,8 +54,53 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Restore ETag cache
+      - name: Check FSA mode
+        id: fsa
         if: steps.quota.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          FSA_MANAGED: ${{ vars.FSA_MANAGED }}
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          # Inline mode detection (no checkout available in this workflow).
+          # Check B: repo variable
+          if [[ "${FSA_MANAGED}" == "true" ]]; then
+            echo "managed=true" >> "$GITHUB_OUTPUT"
+            echo "FSA_MANAGED=true — notification polling handled centrally, skipping."
+            exit 0
+          fi
+          # Check A: fork-sync-all exists under same owner
+          status=$(curl -sf -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO_OWNER}/fork-sync-all" 2>/dev/null || echo "000")
+          if [[ "$status" == "200" ]]; then
+            echo "managed=true" >> "$GITHUB_OUTPUT"
+            echo "${REPO_OWNER}/fork-sync-all exists — managed mode, skipping."
+            exit 0
+          fi
+          # Check C: token owner has fork-sync-all
+          token_owner=$(curl -sf \
+            -H "Authorization: token ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/user" 2>/dev/null \
+            | python3 -c "import sys,json; print(json.load(sys.stdin).get('login',''))" 2>/dev/null || echo "")
+          if [[ -n "$token_owner" && "$token_owner" != "$REPO_OWNER" ]]; then
+            status2=$(curl -sf -o /dev/null -w "%{http_code}" \
+              -H "Authorization: token ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${token_owner}/fork-sync-all" 2>/dev/null || echo "000")
+            if [[ "$status2" == "200" ]]; then
+              echo "managed=true" >> "$GITHUB_OUTPUT"
+              echo "${token_owner}/fork-sync-all exists (token owner) — managed mode, skipping."
+              exit 0
+            fi
+          fi
+          echo "managed=false" >> "$GITHUB_OUTPUT"
+          echo "No fork-sync-all found — autonomous mode."
+
+      - name: Restore ETag cache
+        if: steps.quota.outputs.skip == 'false' && steps.fsa.outputs.managed == 'false'
         uses: actions/cache@v5
         with:
           path: ~/.cache/notify-poller
@@ -63,7 +108,7 @@ jobs:
           restore-keys: notify-poller-etag-v1
 
       - name: Check for unread CI failure notifications
-        if: steps.quota.outputs.skip == 'false'
+        if: steps.quota.outputs.skip == 'false' && steps.fsa.outputs.managed == 'false'
         id: check
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
@@ -115,14 +160,14 @@ jobs:
           echo "Unread CI activity notifications: ${count}"
 
       - name: Save ETag cache
-        if: always()
+        if: steps.fsa.outputs.managed == 'false'
         uses: actions/cache/save@v5
         with:
           path: ~/.cache/notify-poller
           key: notify-poller-etag-v1
 
       - name: Trigger resolver if failures found
-        if: steps.quota.outputs.skip == 'false' && steps.check.outputs.ci_failure_count != '0'
+        if: steps.quota.outputs.skip == 'false' && steps.fsa.outputs.managed == 'false' && steps.check.outputs.ci_failure_count != '0'
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |

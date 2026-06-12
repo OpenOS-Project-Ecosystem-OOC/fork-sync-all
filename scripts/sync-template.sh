@@ -1094,6 +1094,25 @@ print(' '.join(names))
       (( ok++ )) || true
       # Write checkpoint so this repo is skipped on restart
       echo "$c_name" >> "$checkpoint_file"
+      # Set FSA_MANAGED=true repo variable so bundled autonomous-fallback
+      # workflows in the consumer repo know fork-sync-all is managing them.
+      # Uses PUT (create-or-update). Failure is non-fatal — the mode-detection
+      # helper falls back to the API existence check (Check A) if the var is absent.
+      if [[ "$DRY_RUN" != "true" ]]; then
+        local var_http
+        var_http=$(curl -sf -o /dev/null -w "%{http_code}" \
+          -X PUT \
+          -H "Authorization: token ${GH_TOKEN}" \
+          -H "Accept: application/vnd.github+json" \
+          -H "Content-Type: application/json" \
+          "${API}/repos/${GITHUB_OWNER}/${c_name}/actions/variables/FSA_MANAGED" \
+          -d '{"name":"FSA_MANAGED","value":"true"}' 2>/dev/null) || var_http="000"
+        if [[ "$var_http" == "201" || "$var_http" == "204" ]]; then
+          info "  FSA_MANAGED=true set on ${c_name}"
+        else
+          warn "  Could not set FSA_MANAGED on ${c_name} (HTTP ${var_http}) — mode detection will use API fallback"
+        fi
+      fi
     else
       (( failed++ )) || true
     fi

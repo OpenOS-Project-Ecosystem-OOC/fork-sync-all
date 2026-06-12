@@ -112,16 +112,28 @@ profiles:
       - DOCS/**
 
   # ── infra-core ──────────────────────────────────────────────────────────────
-  # Shared CI hygiene tooling only. No mirror/sync workflows. Suitable for
-  # repos that are managed under Interested-Deving-1896 but have their own
-  # purpose and don't participate in the mirror chain.
+  # Shared CI hygiene tooling with autonomous-fallback operational workflows.
+  #
+  # Managed mode (default): fork-sync-all is present and handles rate-limit
+  # reruns, CI resolution, queue management, quota reserve, and branch cleanup
+  # centrally across all orgs. The bundled workflows detect this via the
+  # FSA_MANAGED repo variable (set by sync-template.sh) and skip themselves.
+  #
+  # Autonomous mode: if a consumer repo is forked independently without
+  # fork-sync-all alongside it, the bundled workflows activate and handle
+  # everything locally, scoped to the repo's own owner.
+  #
+  # Mode detection uses a hybrid A+B+C approach (see scripts/includes/fsa-mode.sh):
+  #   B — FSA_MANAGED repo variable (cheapest, set by sync-template.sh)
+  #   A — GET /repos/{owner}/fork-sync-all existence check
+  #   C — token owner's fork-sync-all existence (tiebreaker)
   infra-core:
     description: >
-      Per-repo CI hygiene: PR automation, token rotation, token health check,
-      and README render validation. Org-wide workflows (branch cleanup, failure
-      resolution, dep updates, README translation, notify-poller) are NOT
-      propagated — they run centrally from fork-sync-all against all repos.
+      Per-repo CI hygiene plus autonomous-fallback operational workflows.
+      In managed mode (fork-sync-all present) the bundled workflows are no-ops.
+      In autonomous mode (independent fork) they activate and self-manage.
     include:
+      # ── Per-repo CI hygiene (always active) ──────────────────────────────
       - .github/workflows/pr-automation.yml
       - .github/workflows/rotate-token.yml
       - .github/workflows/token-health.yml
@@ -132,6 +144,29 @@ profiles:
       - scripts/token-monitor.sh
       - scripts/check-readme-render.sh
       - scripts/write-summary.sh
+      # ── Autonomous-fallback operational workflows ─────────────────────────
+      # These are no-ops when FSA_MANAGED=true (fork-sync-all is present).
+      # They activate when the repo is forked independently.
+      - .github/workflows/rate-limit-rerun.yml
+      - .github/workflows/resolve-failures.yml
+      - .github/workflows/queue-manager.yml
+      - .github/workflows/quota-reserve.yml
+      - .github/workflows/notify-poller.yml
+      - .github/workflows/cleanup-branches.yml
+      # ── Scripts required by autonomous-fallback workflows ─────────────────
+      - scripts/scan-rate-limit-failures.sh
+      - scripts/rerun-after-rate-limit.sh
+      - scripts/rl-manifest-to-md.py
+      - scripts/resolve-failures.sh
+      - scripts/queue-manager.sh
+      - scripts/quota-reserve.sh
+      - scripts/cleanup-branches.sh
+      - scripts/includes/fsa-mode.sh
+      - scripts/includes/budget.sh
+      - scripts/includes/gh-api.sh
+      - scripts/includes/quota-instrument.sh
+      - config/workflow-priority-tiers.yml
+      - config/workflow-quota-costs.yml
       - .gitignore
       - LICENSE
 
@@ -151,6 +186,7 @@ profiles:
       README translation, notify-poller) are NOT propagated — they run
       centrally from fork-sync-all against all repos.
     include:
+      # ── Per-repo CI hygiene (always active) ──────────────────────────────
       - .github/workflows/pr-automation.yml
       - .github/workflows/rotate-token.yml
       - .github/workflows/token-health.yml
@@ -163,7 +199,26 @@ profiles:
       - scripts/check-readme-render.sh
       - scripts/write-summary.sh
       - scripts/sync-registry-sources.sh
+      # ── Autonomous-fallback operational workflows ─────────────────────────
+      - .github/workflows/rate-limit-rerun.yml
+      - .github/workflows/resolve-failures.yml
+      - .github/workflows/queue-manager.yml
+      - .github/workflows/quota-reserve.yml
+      - .github/workflows/notify-poller.yml
+      - .github/workflows/cleanup-branches.yml
+      - scripts/scan-rate-limit-failures.sh
+      - scripts/rerun-after-rate-limit.sh
+      - scripts/rl-manifest-to-md.py
+      - scripts/resolve-failures.sh
+      - scripts/queue-manager.sh
+      - scripts/quota-reserve.sh
+      - scripts/cleanup-branches.sh
+      - scripts/includes/fsa-mode.sh
+      - scripts/includes/budget.sh
       - scripts/includes/gh-api.sh
+      - scripts/includes/quota-instrument.sh
+      - config/workflow-priority-tiers.yml
+      - config/workflow-quota-costs.yml
       - .gitignore
       - LICENSE
 

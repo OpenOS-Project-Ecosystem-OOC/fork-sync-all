@@ -79,11 +79,27 @@ jobs:
           sparse-checkout: |
             scripts/quota-reserve.sh
             scripts/write-summary.sh
+            scripts/includes/fsa-mode.sh
             config/workflow-priority-tiers.yml
           sparse-checkout-cone-mode: false
 
+      - name: Check FSA mode
+        id: fsa
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          FSA_MANAGED: ${{ vars.FSA_MANAGED }}
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          source scripts/includes/fsa-mode.sh
+          if fsa_is_managed; then
+            echo "managed=true" >> "$GITHUB_OUTPUT"
+            echo "Managed by fork-sync-all — quota reserve handled centrally, skipping."
+          else
+            echo "managed=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Enforce quota reserve
-        if: steps.quota.outputs.skip == 'false'
+        if: steps.quota.outputs.skip == 'false' && steps.fsa.outputs.managed == 'false'
         id: reserve
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}

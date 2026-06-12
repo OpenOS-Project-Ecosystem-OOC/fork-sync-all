@@ -23,19 +23,17 @@ OSP_REPOS_OVERRIDE="${OSP_REPOS_OVERRIDE:-}"
 
 API="https://api.github.com"
 
-# Repos the resolver must never commit to directly. These are repos where
-# automated commits cause mirror cascade loops or have their own CI pipelines
-# that should only be fixed manually or via their own upstream workflow.
-EXCLUDED_REPOS=(
-
 # ── Budget guard ─────────────────────────────────────────────────────────────
 source "$(dirname "${BASH_SOURCE[0]}")/includes/budget.sh"
 budget_init
 
-  "Interested-Deving-1896/incus-windows-toolkit"
-  "OpenOS-Project-OSP/incus-windows-toolkit"
-  "OpenOS-Project-Ecosystem-OOC/incus-windows-toolkit"
-)
+# Repos the resolver must never commit to directly. These are repos where
+# automated commits cause mirror cascade loops or have their own CI pipelines
+# that should only be fixed manually or via their own upstream workflow.
+# Note: the resolver already appends [skip ci] to every fix commit, which
+# prevents CI re-triggers in standard repos. Add a repo here only when
+# [skip ci] is insufficient (e.g. the repo has a push hook that ignores it).
+EXCLUDED_REPOS=()
 
 is_excluded() {
   local repo="$1"
@@ -262,6 +260,91 @@ get_workflow_file() {
     echo "$body" | jq -r '.content // empty' 2>/dev/null | base64 -d 2>/dev/null
   else
     echo ""
+  fi
+}
+
+# ── rate-limit rerun ─────────────────────────────────────────────────────────
+#
+# Detects whether a failed run was caused by quota exhaustion and, if so,
+# re-triggers it via the rerun-failed-jobs API rather than sending it to the
+# AI fixer (which can't help with transient rate limits).
+#
+# Uses the same signal patterns as scan-rate-limit-failures.sh. Returns 0 if
+# the run was identified as a rate-limit failure (caller should skip AI fix),
+# returns 1 if the failure has a different cause.
+#
+# Loop guard: runs that carry rate_limit_rerun=true in their step summary are
+# skipped — a second rate-limit failure is not re-triggered again.
+
+_RL_PATTERNS=(
+  "Rate limited — resets in"
+  "Rate limited. Backing off"
+  "rate limit exceeded"
+  "rate-limit.*resets in"
+  "\[rate-limit\] HTTP"
+  "API rate limit exceeded"
+  "secondary rate limit"
+  "You have exceeded a secondary rate limit"
+  "x-ratelimit-remaining: 0"
+  "Re-trigger this workflow after the reset"
+)
+
+total_rl_rerun=0
+
+is_rate_limit_failure() {
+  local logs="$1"
+  for pattern in "${_RL_PATTERNS[@]}"; do
+    echo "$logs" | grep -qiE "$pattern" && return 0
+  done
+  return 1
+}
+
+rerun_if_rate_limited() {
+  local repo="$1" run_id="$2" run_name="$3"
+
+  local jobs_json
+  jobs_json=$(get_run_jobs "$repo" "$run_id")
+
+  local failed_job_id
+  failed_job_id=$(echo "$jobs_json" | jq -r \
+    '[.jobs[] | select(.conclusion == "failure")][0].id // empty' 2>/dev/null)
+  [[ -z "$failed_job_id" ]] && return 1
+
+  local logs
+  logs=$(get_job_logs "$repo" "$failed_job_id")
+
+  # Loop guard: skip runs that were already a rate-limit re-trigger
+  if echo "$logs" | grep -qF '"rate_limit_rerun": "true"' || \
+     echo "$logs" | grep -qF '"rate_limit_rerun":"true"'; then
+    echo "    Skipping rate-limit rerun (already a re-trigger — loop guard)"
+    return 1
+  fi
+
+  is_rate_limit_failure "$logs" || return 1
+
+  echo "    Rate-limit failure detected — re-triggering via rerun-failed-jobs"
+
+  if [[ "$DRY_RUN" == "true" ]]; then
+    echo "    [DRY_RUN] would POST /repos/${repo}/actions/runs/${run_id}/rerun-failed-jobs"
+    total_rl_rerun=$(( total_rl_rerun + 1 ))
+    return 0
+  fi
+
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    -X POST \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "${API}/repos/${repo}/actions/runs/${run_id}/rerun-failed-jobs" 2>/dev/null)
+
+  if [[ "$http_code" == "201" ]]; then
+    echo "    Re-triggered run ${run_id} (HTTP 201)"
+    total_rl_rerun=$(( total_rl_rerun + 1 ))
+    return 0
+  else
+    echo "    Re-trigger failed (HTTP ${http_code}) — falling through to AI fixer"
+    return 1
   fi
 }
 
@@ -634,7 +717,13 @@ resolve_notifications() {
 
       total_failures=$(( total_failures + 1 ))
 
-      if analyze_and_fix "$repo_full" "$run_id" "$run_name" "$branch" "$workflow_path"; then
+      if rerun_if_rate_limited "$repo_full" "$run_id" "$run_name"; then
+        notif_fixed=$(( notif_fixed + 1 ))
+        # shellcheck disable=SC2034
+        NOTIF_HANDLED_REPOS["$repo_full"]=1
+        dismiss_notification "$thread_id"
+        echo "    Notification dismissed."
+      elif analyze_and_fix "$repo_full" "$run_id" "$run_name" "$branch" "$workflow_path"; then
         notif_fixed=$(( notif_fixed + 1 ))
         # shellcheck disable=SC2034
         NOTIF_HANDLED_REPOS["$repo_full"]=1
@@ -745,7 +834,8 @@ for owner in $SCAN_OWNERS; do
         echo "    Branch: ${run_branch}"
         echo "    Run ID: ${run_id}"
 
-        analyze_and_fix "$repo" "$run_id" "$run_name" "$run_branch" "$workflow_path" || true
+        rerun_if_rate_limited "$repo" "$run_id" "$run_name" || \
+          analyze_and_fix "$repo" "$run_id" "$run_name" "$run_branch" "$workflow_path" || true
       done
       continue
     fi
@@ -758,7 +848,8 @@ for owner in $SCAN_OWNERS; do
     echo "    Branch: ${run_branch}"
     echo "    Run ID: ${run_id}"
 
-    analyze_and_fix "$repo" "$run_id" "$run_name" "$run_branch" "$workflow_path" || true
+    rerun_if_rate_limited "$repo" "$run_id" "$run_name" || \
+      analyze_and_fix "$repo" "$run_id" "$run_name" "$run_branch" "$workflow_path" || true
   done
   echo ""
 done
@@ -768,6 +859,7 @@ echo "========================================"
 echo "  Resolver complete"
 echo "  Repos scanned:   ${total_scanned}"
 echo "  Failures found:  ${total_failures}"
+echo "  RL re-triggered: ${total_rl_rerun}"
 echo "  Auto-fixed:      ${total_fixed}"
 echo "  Need manual fix: ${total_unfixable}"
 echo "========================================"
