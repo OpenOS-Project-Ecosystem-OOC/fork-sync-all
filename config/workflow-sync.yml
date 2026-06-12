@@ -328,6 +328,8 @@ github_only:
     reason: Variant of sync-to-gitlab for specific mirror configurations — GitHub-to-GitLab push
   - workflow_file: validate-readme-render.yml
     reason: README render validation — runs on GitHub push/workflow_run, no GitLab counterpart
+  - workflow_file: check-accessibility.yml
+    reason: Multi-layer accessibility audit (CODEOWNERS, README scan, WCAG, audio, Braille) — GitHub Actions only, commits artifacts back to repo
   - workflow_file: enforce-agnostic-vendor.yml
     reason: Scans vendor/ for distro-specific hardcoded defaults — GitHub push/PR trigger only
   - workflow_file: generate-book-pages.yml

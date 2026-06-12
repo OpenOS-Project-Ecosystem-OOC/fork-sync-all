@@ -340,6 +340,14 @@ _Contributors pending._
 
 ---
 
+## Accessibility
+
+<!-- AI:start:accessibility -->
+_Accessibility audit pending — run the Check Accessibility workflow._
+<!-- AI:end:accessibility -->
+
+---
+
 ## License
 
 <!-- AI:start:license -->

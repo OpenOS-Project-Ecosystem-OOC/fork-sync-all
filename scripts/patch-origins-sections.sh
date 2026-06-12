@@ -666,6 +666,119 @@ Used across the OSP stack to audit and surface CODEOWNERS coverage per repo.
 | [jjmschofield/github-codeowners](https://github.com/jjmschofield/github-codeowners) | GitHub | ❌ |
 ' && (( patched++ )) || (( failed++ )) || true
 
+push_file "nvda" "master" "dep-graph/origins.md" \
+    "chore: add dep-graph/origins.md" \
+'# nvda Origins
+
+Forked from nvaccess/nvda — the leading open source screen reader for Windows.
+Tracked in Interested-Deving-1896 as part of the OSP accessibility system.
+
+| Origin | Host | Fork in I-D-1896 |
+|--------|------|-----------------|
+| [nvaccess/nvda](https://github.com/nvaccess/nvda) | GitHub | ✅ |
+' && (( patched++ )) || (( failed++ )) || true
+
+push_file "osara" "master" "dep-graph/origins.md" \
+    "chore: add dep-graph/origins.md" \
+'# osara Origins
+
+Forked from jcsteh/osara — REAPER accessibility plugin for blind and visually
+impaired audio producers. Tracked as part of the OSP accessibility system.
+
+| Origin | Host | Fork in I-D-1896 |
+|--------|------|-----------------|
+| [jcsteh/osara](https://github.com/jcsteh/osara) | GitHub | ✅ |
+' && (( patched++ )) || (( failed++ )) || true
+
+push_file "liblouis" "master" "dep-graph/origins.md" \
+    "chore: add dep-graph/origins.md" \
+'# liblouis Origins
+
+Forked from liblouis/liblouis — the standard open source Braille translation
+library used by NVDA, JAWS, and VoiceOver. Used in the OSP accessibility system
+to generate Grade 2 English Braille output from README files.
+
+| Origin | Host | Fork in I-D-1896 |
+|--------|------|-----------------|
+| [liblouis/liblouis](https://github.com/liblouis/liblouis) | GitHub | ✅ |
+' && (( patched++ )) || (( failed++ )) || true
+
+push_file "espeak-ng" "master" "dep-graph/origins.md" \
+    "chore: add dep-graph/origins.md" \
+'# espeak-ng Origins
+
+Forked from espeak-ng/espeak-ng — a lightweight open source text-to-speech
+engine. Used in the OSP accessibility system to generate audio overviews
+(README.audio.mp3) for visually impaired users.
+
+| Origin | Host | Fork in I-D-1896 |
+|--------|------|-----------------|
+| [espeak-ng/espeak-ng](https://github.com/espeak-ng/espeak-ng) | GitHub | ✅ |
+' && (( patched++ )) || (( failed++ )) || true
+
+push_file "axe-core" "develop" "dep-graph/origins.md" \
+    "chore: add dep-graph/origins.md" \
+'# axe-core Origins
+
+Forked from dequelabs/axe-core — the industry standard WCAG accessibility
+rules engine used by browser devtools, Lighthouse, and pa11y. Used in the
+OSP accessibility system for WCAG 2.1 AA HTML compliance scanning.
+
+| Origin | Host | Fork in I-D-1896 |
+|--------|------|-----------------|
+| [dequelabs/axe-core](https://github.com/dequelabs/axe-core) | GitHub | ✅ |
+' && (( patched++ )) || (( failed++ )) || true
+
+push_file "pa11y" "main" "dep-graph/origins.md" \
+    "chore: add dep-graph/origins.md" \
+'# pa11y Origins
+
+Forked from pa11y/pa11y — a CLI accessibility testing tool built on axe-core.
+Used in the OSP accessibility system for automated WCAG 2.1 AA scanning of
+generated HTML documentation.
+
+| Origin | Host | Fork in I-D-1896 |
+|--------|------|-----------------|
+| [pa11y/pa11y](https://github.com/pa11y/pa11y) | GitHub | ✅ |
+' && (( patched++ )) || (( failed++ )) || true
+
+push_file "target-size-highlighter" "main" "dep-graph/origins.md" \
+    "chore: add dep-graph/origins.md" \
+'# target-size-highlighter Origins
+
+Forked from accessibility-tools/target-size-highlighter — a bookmarklet that
+visualises pointer input target sizes on webpages (WCAG 2.5.5 compliance).
+
+| Origin | Host | Fork in I-D-1896 |
+|--------|------|-----------------|
+| [accessibility-tools/target-size-highlighter](https://github.com/accessibility-tools/target-size-highlighter) | GitHub | ✅ |
+' && (( patched++ )) || (( failed++ )) || true
+
+push_file "z-index-focus-override" "main" "dep-graph/origins.md" \
+    "chore: add dep-graph/origins.md" \
+'# z-index-focus-override Origins
+
+Forked from accessibility-tools/z-index-focus-override — a bookmarklet that
+ensures focus indicators are never obscured by z-index stacking (WCAG 2.4.11).
+
+| Origin | Host | Fork in I-D-1896 |
+|--------|------|-----------------|
+| [accessibility-tools/z-index-focus-override](https://github.com/accessibility-tools/z-index-focus-override) | GitHub | ✅ |
+' && (( patched++ )) || (( failed++ )) || true
+
+push_file "README" "main" "dep-graph/origins.md" \
+    "chore: add dep-graph/origins.md" \
+'# README Origins
+
+Forked from canalplus/README — an accessible HTML documentation generator
+(no-JS, pre-rendered, screen-reader friendly). Tracked as an alternative to
+mdBook for consumer repos that need simpler, maximally accessible HTML docs.
+
+| Origin | Host | Fork in I-D-1896 |
+|--------|------|-----------------|
+| [canalplus/README](https://github.com/canalplus/README) | GitHub | ✅ |
+' && (( patched++ )) || (( failed++ )) || true
+
 push_file "linux-powerwash" "main" "dep-graph/origins.md" \
     "chore: add dep-graph/origins.md" \
 '# linux-powerwash Origins

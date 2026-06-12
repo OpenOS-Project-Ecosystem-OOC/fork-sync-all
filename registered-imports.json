@@ -418,5 +418,59 @@
     "target_name": "github-codeowners",
     "platform": "github",
     "added": "2026-06-12T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/nvaccess/nvda",
+    "target_name": "nvda",
+    "platform": "github",
+    "added": "2026-06-12T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/jcsteh/osara",
+    "target_name": "osara",
+    "platform": "github",
+    "added": "2026-06-12T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/liblouis/liblouis",
+    "target_name": "liblouis",
+    "platform": "github",
+    "added": "2026-06-12T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/espeak-ng/espeak-ng",
+    "target_name": "espeak-ng",
+    "platform": "github",
+    "added": "2026-06-12T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/dequelabs/axe-core",
+    "target_name": "axe-core",
+    "platform": "github",
+    "added": "2026-06-12T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/pa11y/pa11y",
+    "target_name": "pa11y",
+    "platform": "github",
+    "added": "2026-06-12T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/accessibility-tools/target-size-highlighter",
+    "target_name": "target-size-highlighter",
+    "platform": "github",
+    "added": "2026-06-12T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/accessibility-tools/z-index-focus-override",
+    "target_name": "z-index-focus-override",
+    "platform": "github",
+    "added": "2026-06-12T00:00:00Z"
+  },
+  {
+    "source_url": "https://github.com/canalplus/README",
+    "target_name": "README",
+    "platform": "github",
+    "added": "2026-06-12T00:00:00Z"
   }
 ]

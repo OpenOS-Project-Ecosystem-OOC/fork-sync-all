@@ -11,7 +11,11 @@
 #   ## Configuration       (human-owned — placeholder text, no markers)
 #   ## CI                  <!-- AI:start:ci --> ... <!-- AI:end:ci -->
 #   ## Mirror chain        <!-- AI:start:mirror-chain --> ... <!-- AI:end:mirror-chain -->
-#   ## License             (human-owned — placeholder)
+#   ## Contributors        <!-- AI:start:contributors --> ... <!-- AI:end:contributors -->
+#   ## Origins             <!-- AI:start:origins --> ... <!-- AI:end:origins -->
+#   ## Resources           <!-- AI:start:resources --> ... <!-- AI:end:resources -->
+#   ## Accessibility       <!-- AI:start:accessibility --> ... <!-- AI:end:accessibility -->
+#   ## License             <!-- AI:start:license --> ... <!-- AI:end:license -->
 #
 # Human-owned sections get placeholder text on first creation. Remove the
 # placeholder and add your own content — the AI will never overwrite sections
@@ -271,9 +275,25 @@ $(ai_section "ci" "${ci_section:-_CI documentation pending._}")
 
 $(ai_section "mirror-chain" "${mirror_chain}")
 
+## Contributors
+
+$(ai_section "contributors" "_Contributors pending._")
+
+## Origins
+
+$(ai_section "origins" "_No dependency graph found._")
+
+## Resources
+
+$(ai_section "resources" "_No additional resources found._")
+
+## Accessibility
+
+$(ai_section "accessibility" "_Accessibility audit pending — run the Check Accessibility workflow._")
+
 ## License
 
-<!-- Add license information here. This section is yours — the AI will not modify it. -->
+$(ai_section "license" "_License not detected._")
 EOF
 }
 

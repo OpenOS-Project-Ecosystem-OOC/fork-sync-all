@@ -272,5 +272,29 @@ subgroups:
       # ── Documentation tooling ─────────────────────────────────────────────
       - mdBook
 
+  accessibility_deving:
+    id: -1
+    path: openos-project/accessibility_deving
+    description: >
+      Accessibility tooling — screen readers, Braille translation, WCAG auditing,
+      audio overviews, pointer/focus bookmarklets, and accessible documentation
+      generators. Tracked upstream forks for the OSP accessibility system.
+    repos:
+      # ── Screen readers ─────────────────────────────────────────────────────
+      - nvda
+      - osara
+      # ── Braille translation ────────────────────────────────────────────────
+      - liblouis
+      # ── Text-to-speech / audio ─────────────────────────────────────────────
+      - espeak-ng
+      # ── WCAG auditing ──────────────────────────────────────────────────────
+      - axe-core
+      - pa11y
+      # ── Pointer / focus bookmarklets ───────────────────────────────────────
+      - target-size-highlighter
+      - z-index-focus-override
+      # ── Accessible documentation ───────────────────────────────────────────
+      - README
+
 # Fallback subgroup for repos not listed above
 default_subgroup: ops

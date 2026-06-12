@@ -28,6 +28,10 @@
 - [Quota Cost Registry](quota-costs.md)
 - [GitHub Actions Limits](OPERATIONS.md)
 
+# Accessibility
+
+- [Accessibility System](accessibility.md)
+
 # Development
 
 - [Contributing](contributing.md)

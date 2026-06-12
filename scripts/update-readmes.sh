@@ -333,6 +333,80 @@ generate_license() {
   fi
 }
 
+generate_accessibility() {
+  local owner="$1" repo="$2"
+  # Reads accessibility-report.json from the repo if it exists — no LLM needed.
+  # Falls back to a static prompt linking to the check-accessibility workflow.
+  local report_meta
+  report_meta=$(curl -s \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    "${GH_API}/repos/${owner}/${repo}/contents/accessibility-report.json" 2>/dev/null) || report_meta=""
+
+  local has_audio has_braille
+  has_audio=$(curl -s -o /dev/null -w "%{http_code}" \
+    -H "Authorization: token ${GH_TOKEN}" \
+    "${GH_API}/repos/${owner}/${repo}/contents/README.audio.mp3" 2>/dev/null || echo "404")
+  has_braille=$(curl -s -o /dev/null -w "%{http_code}" \
+    -H "Authorization: token ${GH_TOKEN}" \
+    "${GH_API}/repos/${owner}/${repo}/contents/README.brl" 2>/dev/null || echo "404")
+
+  local base="https://github.com/${owner}/${repo}"
+  local audio_line="" braille_line=""
+  [[ "$has_audio"   == "200" ]] && audio_line="| 🔊 Audio overview | [README.audio.mp3](${base}/blob/main/README.audio.mp3) | Screen reader / visually impaired users |"
+  [[ "$has_braille" == "200" ]] && braille_line="| ⠃⠗⠇ Braille output | [README.brl](${base}/blob/main/README.brl) | Braille display users (Grade 2 English) |"
+
+  if echo "$report_meta" | jq -e '.content' > /dev/null 2>&1; then
+    local report_json
+    report_json=$(echo "$report_meta" | jq -r '.content' | tr -d '\n' | base64 -d 2>/dev/null)
+
+    local errors warnings passes generated
+    errors=$(echo "$report_json"   | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('summary',{}).get('errors',0))"   2>/dev/null || echo 0)
+    warnings=$(echo "$report_json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('summary',{}).get('warnings',0))" 2>/dev/null || echo 0)
+    passes=$(echo "$report_json"   | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('summary',{}).get('passes',0))"   2>/dev/null || echo 0)
+    generated=$(echo "$report_json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('generated','')[:10])"           2>/dev/null || echo "")
+
+    local status_badge="✅ Passing"
+    [[ "$warnings" -gt 0 ]] && status_badge="⚠️ ${warnings} warning(s)"
+    [[ "$errors"   -gt 0 ]] && status_badge="❌ ${errors} error(s), ${warnings} warning(s)"
+
+    cat << EOF
+This repo is audited for accessibility on every push and weekly.
+Audit covers: CODEOWNERS ownership coverage, README screen-reader compatibility,
+WCAG 2.1 AA HTML compliance, audio overview, and Braille output.
+
+**Status:** ${status_badge} · ${passes} checks passed · last run ${generated}
+
+| Format | File | Audience |
+|---|---|---|
+$([ -n "$audio_line"   ] && echo "$audio_line")
+$([ -n "$braille_line" ] && echo "$braille_line")
+| 📋 Full report | [accessibility-report.json](${base}/blob/main/accessibility-report.json) | CI / automation |
+
+Powered by [github-codeowners](https://github.com/${owner}/github-codeowners),
+[espeak-ng](https://github.com/espeak-ng/espeak-ng),
+[liblouis](https://github.com/liblouis/liblouis), and
+[pa11y](https://github.com/pa11y/pa11y).
+See [DOCS/accessibility.md](${base}/blob/main/DOCS/accessibility.md) for the full accessibility reference.
+EOF
+  else
+    # No report yet — link to the workflow
+    cat << EOF
+This repo uses automated accessibility auditing via \`check-accessibility.yml\`.
+
+Checks include: CODEOWNERS ownership coverage, README screen-reader compatibility,
+WCAG 2.1 AA HTML compliance, audio overview (espeak-ng), and Braille output (liblouis).
+
+$([ -n "$audio_line"   ] && echo "| Format | File | Audience |" && echo "|---|---|---|" && echo "$audio_line")
+$([ -n "$braille_line" ] && echo "$braille_line")
+
+Run the [Check Accessibility](${base}/actions/workflows/check-accessibility.yml)
+workflow to generate the first report and accessibility artifacts.
+See [DOCS/accessibility.md](${base}/blob/main/DOCS/accessibility.md) for the full reference.
+EOF
+  fi
+}
+
 generate_origins() {
   local owner="$1" repo="$2"
   # Read dep-graph/origins.md from the repo if it exists — no LLM needed
@@ -715,7 +789,7 @@ ${context}"
 #   fill    — README has some AI markers but is missing required sections
 #             → inject the missing ones
 
-ALL_AI_SECTIONS=("what-it-does" "architecture" "ci" "mirror-chain" "contributors" "origins" "resources" "license")
+ALL_AI_SECTIONS=("what-it-does" "architecture" "ci" "mirror-chain" "contributors" "origins" "resources" "accessibility" "license")
 ALL_HUMAN_SECTIONS=("Install" "Usage" "Configuration" "License")
 
 detect_mode() {
@@ -768,6 +842,7 @@ rewrite_readme() {
   contributors=$(generate_contributors "$owner" "$repo")
   origins=$(generate_origins "$owner" "$repo")
   resources=$(generate_resources "$owner" "$repo")
+  accessibility=$(generate_accessibility "$owner" "$repo")
   license_body=$(generate_license "$owner" "$repo")
 
   # Salvage human sections from old README
@@ -852,6 +927,12 @@ ${AI_START}resources${MARKER_CLOSE}
 ${resources:-_No additional resources found._}
 ${AI_END}resources${MARKER_CLOSE}
 
+## Accessibility
+
+${AI_START}accessibility${MARKER_CLOSE}
+${accessibility:-_Accessibility audit pending — run the Check Accessibility workflow._}
+${AI_END}accessibility${MARKER_CLOSE}
+
 ## License
 
 ${AI_START}license${MARKER_CLOSE}
@@ -883,6 +964,7 @@ fill_missing_sections() {
       contributors)  new_body=$(generate_contributors "$owner" "$repo") ;;
       origins)       new_body=$(generate_origins "$owner" "$repo") ;;
       resources)     new_body=$(generate_resources "$owner" "$repo") ;;
+      accessibility) new_body=$(generate_accessibility "$owner" "$repo") ;;
       license)       new_body=$(generate_license "$owner" "$repo") ;;
     esac
 
@@ -994,6 +1076,7 @@ process_repo() {
           contributors)  new_body=$(generate_contributors "$owner" "$repo") ;;
           origins)       new_body=$(generate_origins "$owner" "$repo") ;;
           resources)     new_body=$(generate_resources "$owner" "$repo") ;;
+          accessibility) new_body=$(generate_accessibility "$owner" "$repo") ;;
           license)       new_body=$(generate_license "$owner" "$repo") ;;
         esac
 

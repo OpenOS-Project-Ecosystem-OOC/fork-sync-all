@@ -755,3 +755,11 @@ workflows:
   basis: code-audit
   notes: 1 secret read (implicit via env) + 1 secret write (gh secret set). Cookie refresh itself uses Google APIs — no GitHub quota.
   synopsis: Rotates the short-lived __Secure-1PSIDTS cookie in NOTEBOOKLM_AUTH_JSON weekly and writes the updated state back to the repo secret.
+- name: Check Accessibility
+  min_quota: 500
+  cost_low: 5
+  cost_mid: 15
+  cost_high: 40
+  basis: code-audit
+  notes: 1 quota pre-flight + 1 FSA mode check + 2 content fetches (accessibility-report.json, README.audio.mp3 existence) + 1 commit push (if artifacts changed). High end assumes managed mode scanning multiple repos.
+  synopsis: Multi-layer accessibility audit — CODEOWNERS coverage, README screen-reader scan, WCAG 2.1 AA HTML check, audio overview (espeak-ng), and Braille output (liblouis). Commits README.audio.mp3 and README.brl artifacts.

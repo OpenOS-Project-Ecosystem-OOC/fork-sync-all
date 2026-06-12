@@ -164,6 +164,9 @@ profiles:
       - .github/workflows/ota-opt-in.yml
       - .github/workflows/ota-self-update.yml
       - .github/workflows/verify-fork-integrity.yml
+      # ── Accessibility ─────────────────────────────────────────────────────
+      - .github/workflows/check-accessibility.yml
+      - scripts/check-accessibility.sh
       # ── README management (scoped to this repo in autonomous mode) ────────
       - .github/workflows/create-readmes.yml
       - .github/workflows/lts-readmes.yml
@@ -205,6 +208,8 @@ profiles:
       - assets/docs-scaffold/contributing.md:DOCS/contributing.md
       # ── OTA stub (only injected if .ota/config.yml does not already exist) ─
       - assets/ota-stub/config.yml:.ota/config.yml
+      # ── Accessibility reference (always kept current) ─────────────────────
+      - DOCS/accessibility.md
       - .gitignore
       - LICENSE
 
@@ -254,6 +259,7 @@ profiles:
       - .github/workflows/ota-opt-in.yml
       - .github/workflows/ota-self-update.yml
       - .github/workflows/verify-fork-integrity.yml
+      - .github/workflows/check-accessibility.yml
       - .github/workflows/create-readmes.yml
       - .github/workflows/lts-readmes.yml
       - .github/workflows/readme-wizard.yml
@@ -271,6 +277,7 @@ profiles:
       - scripts/cleanup-branches.sh
       - scripts/rebase-prs.sh
       - scripts/update-infra-deps.sh
+
       - scripts/create-readmes.sh
       - scripts/update-readmes.sh
       - scripts/translate-readmes.sh
@@ -290,6 +297,7 @@ profiles:
       - assets/docs-scaffold/getting-started.md:DOCS/getting-started.md
       - assets/docs-scaffold/contributing.md:DOCS/contributing.md
       - assets/ota-stub/config.yml:.ota/config.yml
+      - DOCS/accessibility.md
       - .gitignore
       - LICENSE
 
