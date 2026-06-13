@@ -1,7 +1,7 @@
 FORK-SYNC-ALL — WORKFLOW TRIGGERS
 ===================================
 Generated from .github/workflows/ and config/workflow-quota-costs.yml
-Last updated: 2026-06-12
+Last updated: 2026-06-13
 
 Legend
 ------
@@ -45,7 +45,7 @@ Mirror OSP → GitLab  (mirror-osp-to-gitlab.yml)
   workflow_run  Add Mirror Repo
   dispatch
 
-Mirror to OpenOS-Project-Ecosystem-OOC  (mirror-osp-to-ooc.yaml)
+Mirror to OpenOS-Project-Ecosystem-OOC  (mirror-osp-to-ooc.yml)
   Bare-clones every repo in OpenOS-Project-OSP and git push --mirror into
   OpenOS-Project-Ecosystem-OOC, completing the second hop of the three-org
   mirror chain.
@@ -130,9 +130,9 @@ Sync Registered Imports  (sync-registered-imports.yml)
   dispatch
 
 Sync Registry Sources  (sync-registry-sources.yml)
-  Registry-driven upstream sync — reads a JSON registry of upstream sources
-  and syncs each repo via merge-upstream or force-reset. Agnostic
-  generalisation of sync-pieroproietti-forks.
+  Registry-driven upstream sync (central orchestrator) — reads a JSON registry
+  of upstream sources and syncs each repo via merge-upstream or force-reset.
+  Runs daily from fork-sync-all with penguins-eggs defaults.
   schedule   Daily 03:05  (5 3 * * *)
   dispatch
 
@@ -394,10 +394,31 @@ Validate Config  (validate-config.yml)
 FULL PIPELINE
 -------------
 
+Critical Deploy — All  (critical-deploy-all.yml)
+  Fast-lane critical deploy across all four platforms (Interested-Deving-1896,
+  OSP, OOC, GitLab) in sequence. Cost is approximately 4× the single-org
+  variant.
+  dispatch
+
+Critical Deploy — OOC  (critical-deploy-github-ooc.yml)
+  Fast-lane critical deploy scoped to OpenOS-Project-Ecosystem-OOC — same
+  three-phase pattern as Critical Deploy but targets the OOC mirror org only.
+  dispatch
+
+Critical Deploy — OSP  (critical-deploy-github-osp.yml)
+  Fast-lane critical deploy scoped to OpenOS-Project-OSP — same three-phase
+  pattern as Critical Deploy but targets the OSP mirror org only.
+  dispatch
+
 GitLab Critical Deploy  (critical-deploy-gitlab.yml)
   Fast-lane GitLab mirror recovery. Pushes current HEAD directly to GitLab via
   HTTPS, cancels pending pipelines, pauses/resumes schedules, and optionally
   triggers a fresh pipeline. Works even when GitHub quota is near 0.
+  dispatch
+
+Critical Deploy — Stub (TODO)  (critical-deploy-stub.yml)
+  Stub template for new platform critical deploy targets. Non-functional until
+  TODOs are filled in. Update costs when the platform is activated.
   dispatch
 
 Critical Deploy  (critical-deploy.yml)
@@ -439,6 +460,12 @@ Check Accessibility  (check-accessibility.yml)
   push       DOCS/generated/**
   dispatch
 
+Check Shell Tools CI  (check-shell-tools-ci.yml)
+  Batch-fetches CI run status for all 24 shell-tools repos via a single
+  GraphQL query. Minimal quota cost. Weekly Monday 06:30 UTC.
+  schedule   Weekly Mon 06:30  (30 6 * * 1)
+  dispatch
+
 Clone Org  (clone-org.yml)
   Clones all repositories from an org or user on any supported platform
   (GitHub, GitLab, Bitbucket, Gitea) into Interested-Deving-1896.
@@ -476,6 +503,12 @@ Fork KDE Neon Repos  (fork-neon-repos.yml)
   handled by sync-registered-imports.
   dispatch
 
+Full Audit  (full-audit.yml)
+  Weekly structural audit of workflows, scripts, config registries, assets,
+  and vendor dirs. No REST calls.
+  schedule   Weekly Mon 04:00  (0 4 * * 1)
+  dispatch
+
 Generate Book Pages  (generate-book-pages.yml)
   Regenerates DOCS/generated/ pages from config sources (workflow-quota-
   costs.yml, priority-tiers.yml, gitlab-subgroups.yml, registered-
@@ -494,9 +527,23 @@ Generate NotebookLM Content  (generate-notebooklm.yml)
   Release.
   dispatch
 
+Generate Repo Descriptions  (generate-repo-descriptions.yml)
+  AI-powered per-file description generator. Fetches file tree (1 REST call)
+  then reads each file for context (1 REST call per file) before calling
+  GitHub Models. Cost scales with MAX_FILES setting.
+  schedule   Weekly Sun 03:30  (30 3 * * 0)
+  dispatch
+
 GitLab Storage Scan  (gl-storage-scan.yml)
   Scans all projects under openos-project on GitLab and reports storage usage.
   Useful for diagnosing when the namespace approaches its 10 GiB limit.
+  dispatch
+
+Integrate Shell Tools  (integrate-shell-tools.yml)
+  Runs smoke tests and integration demos for vendored shell-tools. No GitHub
+  API calls — pure runner execution. Weekly Sunday 03:00 UTC (after sync-
+  shell-tools).
+  schedule   Weekly Sun 03:00  (0 3 * * 0)
   dispatch
 
 List Chromium GitLab Repos  (list-chromium-repos.yml)
@@ -504,9 +551,24 @@ List Chromium GitLab Repos  (list-chromium-repos.yml)
   Informational only — used to audit what has been mirrored.
   dispatch
 
+Manage Repo Settings  (manage-repo-settings.yml)
+  Declarative repo settings drift detection and enforcement. Check mode reads
+  current state (1 REST call per repo) and reports drift. Apply mode patches
+  drifted fields (1-3 REST calls per drifted repo).
+  schedule   Weekly Mon 04:30  (30 4 * * 1)
+  dispatch
+
 Merge Repos into Monorepo  (merge-to-monorepo.yml)
   Merges multiple git repositories into a single monorepo, preserving full
   commit history, tags, and Git LFS objects. Manual dispatch only.
+  dispatch
+
+Onboard Repository  (onboard-repo.yml)
+  Onboards new repos into the ecosystem — applies labels, branch protection,
+  topics, description, welcome issue, and dispatches sync-template/setup-osp-
+  mirrors/sync-registered-imports.
+  push       registered-imports.json
+  push       config/template-consumers.yml
   dispatch
 
 OTA Discover  (ota-discover.yml)
@@ -625,6 +687,29 @@ Sync penguins-eggs docs to penguins-eggs-book  (sync-eggs-docs-to-book.yml)
   repo.
   dispatch
 
+Sync Registry Backend  (sync-registry-backend.yml)
+  Agnostic registry sync backend propagated to upstream-sync consumers.
+  Dispatch-only, no schedule, no hardcoded defaults. Reads
+  vars.AF_REGISTRY_REPO / AF_REGISTRY_BRANCH / AF_REGISTRY_PATH for self-
+  configuration.
+  dispatch
+
+Sync Shell Tools Vendor  (sync-shell-tools.yml)
+  Sparse-clones each of the 24 shell-tools forks and copies entrypoint scripts
+  into vendor/shell-tools/. One clone per tool (~2 REST calls each via git
+  protocol). Weekly Sunday 02:00 UTC.
+  schedule   Weekly Sun 02:00  (0 2 * * 0)
+  dispatch
+
+Sync UAA Vendor  (sync-uaa-vendor.yml)
+  Syncs vendor/unified-agnostic-api from Interested-Deving-1896/unified-
+  agnostic-api via sparse checkout. Runs on push to vendor/unified-agnostic-
+  api/** or weekly schedule.
+  schedule   Weekly Tue 05:00  (0 5 * * 2)
+  push       vendor/unified-agnostic-api/**
+  push       .github/workflows/sync-uaa-vendor.yml
+  dispatch
+
 Translate Docs  (translate-docs.yml)
   Translates DOCS/ mdBook pages into a target language using GitHub Models
   API. Writes translated files to DOCS/<lang>/ and upserts a language section
@@ -664,6 +749,10 @@ SCHEDULE SUMMARY (UTC)
 
 Every 30 min                   Queue Manager
 Every 30 min                   Quota Reserve
+Weekly Sun 02:00               Sync Shell Tools Vendor
+Weekly Sun 03:00               Integrate Shell Tools
+Weekly Mon 04:00               Full Audit
+Weekly Tue 05:00               Sync UAA Vendor
 Weekly Mon 08:00               Update Quota Cost Registry
 Every 8h at :10                Mirror Artifacts
 Weekly Sun 03:10               Generate OSP Dependency Graph
@@ -688,6 +777,9 @@ Weekly Mon 09:24               Token Health Monitor
 Weekly Mon 06:25               Verify Fork Integrity
 Monthly 1st 04:29              Cleanup Stale Branches
 Every 6h at :03                Mirror Releases
+Weekly Sun 03:30               Generate Repo Descriptions
+Weekly Mon 04:30               Manage Repo Settings
+Weekly Mon 06:30               Check Shell Tools CI
 Every 4h at :32                Notification Poller
 Every 6h at :33                Upstream PRs from OSP + OOC
 Daily 01:37                    Sync Upstream Sources
