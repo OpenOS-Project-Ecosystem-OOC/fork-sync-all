@@ -1,7 +1,7 @@
 FORK-SYNC-ALL — WORKFLOW TRIGGERS
 ===================================
 Generated from .github/workflows/ and config/workflow-quota-costs.yml
-Last updated: 2026-06-13
+Last updated: 2026-06-14
 
 Legend
 ------
@@ -481,6 +481,13 @@ Deploy Book  (deploy-book.yml)
   push       .github/workflows/deploy-book.yml
   dispatch
 
+Devcontainer SDK  (devcontainer-sdk.yml)
+  Validates devcontainer.json, features, and automations templates. Optionally
+  builds and pushes the devcontainer image or publishes features to GHCR.
+  push       .devcontainer/**
+  push       .github/workflows/devcontainer-sdk.yml
+  dispatch
+
 Docker → Incus Migration  (docker-to-incus.yml)
   Scans repos for Docker artifacts (Dockerfile, docker-compose.yml) and
   replaces them with Incus equivalents. Runs after Add Mirror Repo and weekly.
@@ -556,6 +563,12 @@ Manage Repo Settings  (manage-repo-settings.yml)
   current state (1 REST call per repo) and reports drift. Apply mode patches
   drifted fields (1-3 REST calls per drifted repo).
   schedule   Weekly Mon 04:30  (30 4 * * 1)
+  dispatch
+
+Manage Subtrees  (manage-subtrees.yml)
+  Keeps git subtrees, submodules, and umbrella repo relationships current per
+  config/subtree-manifest.yml.
+  schedule   Weekly Sun 01:00  (0 1 * * 0)
   dispatch
 
 Merge Repos into Monorepo  (merge-to-monorepo.yml)
@@ -749,6 +762,7 @@ SCHEDULE SUMMARY (UTC)
 
 Every 30 min                   Queue Manager
 Every 30 min                   Quota Reserve
+Weekly Sun 01:00               Manage Subtrees
 Weekly Sun 02:00               Sync Shell Tools Vendor
 Weekly Sun 03:00               Integrate Shell Tools
 Weekly Mon 04:00               Full Audit
