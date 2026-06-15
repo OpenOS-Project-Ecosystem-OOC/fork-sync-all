@@ -1,10 +1,10 @@
 # Registered Imports
 
-All 150 upstream repositories tracked in `registered-imports.json`. These are synced to `Interested-Deving-1896` by `sync-registered-imports.yml` every 6 hours.
+All 152 upstream repositories tracked in `registered-imports.json`. These are synced to `Interested-Deving-1896` by `sync-registered-imports.yml` every 6 hours.
 
 > Auto-generated on 2026-06-15 from `registered-imports.json`.
 
-## GitHub (150)
+## GitHub (152)
 
 | Target repo | Source URL | Added |
 |---|---|---|
@@ -137,6 +137,8 @@ All 150 upstream repositories tracked in `registered-imports.json`. These are sy
 | [smartcd](https://github.com/Interested-Deving-1896/smartcd) | [https://github.com/CodesOfRishi/smartcd](https://github.com/CodesOfRishi/smartcd) | 2026-06-13 |
 | [super-yaml](https://github.com/Interested-Deving-1896/super-yaml) | [https://github.com/doriaviram/super-yaml](https://github.com/doriaviram/super-yaml) | 2026-06-05 |
 | [swap.sh](https://github.com/Interested-Deving-1896/swap.sh) | [https://github.com/jogor9/swap.sh](https://github.com/jogor9/swap.sh) | 2026-06-13 |
+| [sync-in-desktop](https://github.com/Interested-Deving-1896/sync-in-desktop) | [https://github.com/Sync-in/desktop](https://github.com/Sync-in/desktop) | 2026-06-15 |
+| [sync-in-server](https://github.com/Interested-Deving-1896/sync-in-server) | [https://github.com/Sync-in/server](https://github.com/Sync-in/server) | 2026-06-15 |
 | [system-cleanup-manager](https://github.com/Interested-Deving-1896/system-cleanup-manager) | [https://github.com/Interested-Deving-1896/system-cleanup-manager](https://github.com/Interested-Deving-1896/system-cleanup-manager) | 2026-06-05 |
 | [talos](https://github.com/Interested-Deving-1896/talos) | [https://github.com/siderolabs/talos](https://github.com/siderolabs/talos) | 2026-06-14 |
 | [talos-incus](https://github.com/Interested-Deving-1896/talos-incus) | [https://github.com/windsorcli/talos-incus](https://github.com/windsorcli/talos-incus) | 2026-06-14 |
