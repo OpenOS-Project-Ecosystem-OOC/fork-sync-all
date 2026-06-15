@@ -1,7 +1,7 @@
 FORK-SYNC-ALL — WORKFLOW TRIGGERS
 ===================================
 Generated from .github/workflows/ and config/workflow-quota-costs.yml
-Last updated: 2026-06-14
+Last updated: 2026-06-15
 
 Legend
 ------
@@ -112,8 +112,8 @@ Sync All Forks  (sync-forks.yml)
   dispatch
 
 Sync from GitLab  (sync-from-gitlab.yml)
-  Pulls changes from the GitLab mirror back to GitHub when GitLab CI has
-  committed changes (e.g. generated files, CI artifacts).
+  DEPRECATED. Superseded by Git Platform Sync (direction=pull). Stub kept for
+  backwards compatibility.
   schedule   Daily 04:22  (22 4 * * *)
   dispatch
 
@@ -170,8 +170,8 @@ Sync to GitLab Variant  (sync-to-gitlab-variant.yml)
   dispatch
 
 Sync to GitLab  (sync-to-gitlab.yml)
-  Pushes the Interested-Deving-1896/fork-sync-all repo to its GitLab mirror at
-  openos-project/ops/fork-sync-all.
+  DEPRECATED. Superseded by Git Platform Sync (direction=push). Stub kept for
+  backwards compatibility.
   schedule   Daily 09:17  (17 9 * * *)
   dispatch
 
@@ -443,6 +443,14 @@ Pre-Flush Prep  (pre-flush-prep.yml)
 UTILITY / ON-DEMAND
 -------------------
 
+Auto-merge PRs  (auto-merge-prs.yml)
+  Merges open PRs once required checks pass. Hybrid auto-detection per PR:
+  scope (label/bot/all), strategy (rebase/squash/merge), mechanism (native
+  auto-merge vs poll).
+  schedule   Every 2h at :55  (55 */2 * * *)
+  workflow_run  Validate Config
+  dispatch
+
 Cancel Stale Runs  (cancel-stale-runs.yml)
   Cancels queued and in-progress workflow runs older than MAX_AGE_MINUTES
   (default 90) or created before a fix commit, preventing stale runs from
@@ -574,6 +582,14 @@ Manage Subtrees  (manage-subtrees.yml)
 Merge Repos into Monorepo  (merge-to-monorepo.yml)
   Merges multiple git repositories into a single monorepo, preserving full
   commit history, tags, and Git LFS objects. Manual dispatch only.
+  dispatch
+
+Mirror Chain Dispatch  (mirror-chain-dispatch.yml)
+  Agnostic mirror-chain backend. Auto-detects chain position
+  (source/mirror/downstream-fork) and runs only the operations appropriate for
+  that position. Configurable via dispatch inputs: source_owner,
+  dest_backends, operations, repo_filter.
+  schedule   Every 6h at :47  (47 */6 * * *)
   dispatch
 
 Onboard Repository  (onboard-repo.yml)
@@ -801,12 +817,14 @@ Daily 06:38                    OTA Discover
 Daily 10:43                    Translate READMEs
 Daily 07:43                    Resolve CI Failures
 Every 6h at :45                Setup OSP Mirror Workflows
+Every 6h at :47                Mirror Chain Dispatch
 Every 6h at :47                Upstream Direct Commits from OSP + OOC
 Every 4h at :05                Rate-Limit Re-trigger
 Daily 03:05                    Sync Registry Sources
 Daily 09:05                    Check OSP-Bound CI Status
 Every 8h at :50                Sync to GitLab Variant
 Daily 05:50                    Reconcile Org References
+Every 2h at :55                Auto-merge PRs
 Every 6h at :55                Sync Registered Imports
 Weekly Mon 06:06               Upstream Workflow Proposal
 Every 8h at :07                Sync pieroproietti Forks
