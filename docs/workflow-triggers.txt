@@ -679,6 +679,7 @@ Queue Manager  (queue-manager.yml)
   runs queued longer than STALE_QUEUE_MIN (default 25 min) to prevent quota
   exhaustion cascades.
   schedule   Every 30 min  (*/30 * * * *)
+  workflow_run  Rate-Limit Re-trigger
   dispatch
 
 Quota Monitor  (quota-monitor.yml)
