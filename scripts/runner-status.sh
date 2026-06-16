@@ -7,19 +7,31 @@
 #   - Per-workflow breakdown of queued runs
 #   - Workflows with queue depth above QUEUE_DEPTH_WARN (default 3)
 #   - Oldest queued run age (minutes)
-#   - Exit 1 if BLOCK_ON_DEPTH=true and any workflow exceeds threshold
+#   - Exit 1 if BLOCK_ON_DEPTH=true and any workflow exceeds QUEUE_DEPTH_CRIT
 #
 # Writes a Markdown table to GITHUB_STEP_SUMMARY.
-# Writes structured JSON to GITHUB_OUTPUT for downstream steps.
+# Writes structured outputs to GITHUB_OUTPUT for downstream steps.
+#
+# Fetch strategy (auto-detected, no configuration needed):
+#   Primary   — GET /orgs/{org}/actions/runs?status=...
+#               Requires token with actions:read on the org.
+#               Classic PAT with `repo` scope covers this.
+#               Fine-grained PAT needs `actions: read` at org level.
+#   Fallback  — per-repo queries against the known active repo set
+#               (union of registered-imports.json target_names and
+#               config/gitlab-subgroups.yml repos). Used automatically
+#               when the org endpoint returns 403/404. More expensive
+#               (~2 calls per repo) but works with repo-scoped tokens.
+#               Bounded to the known set — not all org repos.
 #
 # Environment variables:
-#   GH_TOKEN          — GitHub PAT with actions:read on the org (required)
+#   GH_TOKEN          — GitHub PAT (required)
 #   ORG               — GitHub org to scan (default: Interested-Deving-1896)
-#   QUEUE_DEPTH_WARN  — per-workflow queue depth that triggers a warning (default: 3)
-#   QUEUE_DEPTH_CRIT  — per-workflow queue depth that triggers critical alert (default: 8)
-#   MAX_QUEUE_AGE_MIN — oldest queued run age (minutes) that triggers a warning (default: 20)
+#   QUEUE_DEPTH_WARN  — per-workflow queue depth warning threshold (default: 3)
+#   QUEUE_DEPTH_CRIT  — per-workflow queue depth critical threshold (default: 8)
+#   MAX_QUEUE_AGE_MIN — oldest queued run age (minutes) warning threshold (default: 20)
 #   BLOCK_ON_DEPTH    — exit 1 if any workflow exceeds QUEUE_DEPTH_CRIT (default: false)
-#   DRY_RUN           — report only, no exit 1 even if BLOCK_ON_DEPTH=true (default: false)
+#   DRY_RUN           — report only, never exit 1 (default: false)
 
 set -euo pipefail
 
@@ -37,11 +49,11 @@ GH_API="${GH_API:-https://api.github.com}"
 OUTPUT="${GITHUB_OUTPUT:-/dev/null}"
 SUMMARY="${GITHUB_STEP_SUMMARY:-}"
 
-# ── Fetch in_progress and queued runs via GraphQL (1 call each) ───────────────
-info "Fetching run status for org: ${ORG}"
+# ── Fetch helpers ─────────────────────────────────────────────────────────────
 
-fetch_runs() {
-  local status="$1"
+# Paginate a single endpoint, accumulate all workflow_runs into a JSON array.
+_paginate_runs() {
+  local url_base="$1"
   local page=1
   local all_runs="[]"
   while true; do
@@ -49,22 +61,19 @@ fetch_runs() {
     response=$(curl -sf \
       -H "Authorization: token ${GH_TOKEN}" \
       -H "Accept: application/vnd.github+json" \
-      "${GH_API}/orgs/${ORG}/actions/runs?status=${status}&per_page=100&page=${page}" \
-      2>/dev/null || echo '{"workflow_runs":[]}')
+      "${url_base}&per_page=100&page=${page}" \
+      2>/dev/null || echo '{}')
     local batch
     batch=$(echo "$response" | python3 -c "
 import json,sys
 d=json.load(sys.stdin)
-runs=d.get('workflow_runs',[])
-print(json.dumps(runs))
+print(json.dumps(d.get('workflow_runs',[])))
 " 2>/dev/null || echo "[]")
     local count
     count=$(echo "$batch" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
     all_runs=$(python3 -c "
 import json,sys
-a=json.loads(sys.argv[1])
-b=json.loads(sys.argv[2])
-print(json.dumps(a+b))
+print(json.dumps(json.loads(sys.argv[1]) + json.loads(sys.argv[2])))
 " "$all_runs" "$batch" 2>/dev/null || echo "$all_runs")
     [[ "$count" -lt 100 ]] && break
     (( page++ ))
@@ -72,73 +81,104 @@ print(json.dumps(a+b))
   echo "$all_runs"
 }
 
-in_progress_json=$(fetch_runs "in_progress")
-queued_json=$(fetch_runs "queued")
-
-# ── Analyse ───────────────────────────────────────────────────────────────────
-analysis=$(python3 - << 'PYEOF'
-import json, sys, os, datetime
-
-in_progress = json.loads(os.environ.get('IN_PROGRESS_JSON', '[]'))
-queued      = json.loads(os.environ.get('QUEUED_JSON', '[]'))
-warn_depth  = int(os.environ.get('QUEUE_DEPTH_WARN', '3'))
-crit_depth  = int(os.environ.get('QUEUE_DEPTH_CRIT', '8'))
-max_age_min = int(os.environ.get('MAX_QUEUE_AGE_MIN', '20'))
-now         = datetime.datetime.utcnow()
-
-# Group queued by workflow name
-by_workflow = {}
-oldest_age_min = 0
-oldest_workflow = ""
-for run in queued:
-    name = run.get('name') or run.get('workflow_id', 'unknown')
-    by_workflow.setdefault(name, []).append(run)
-    created = run.get('created_at', '')
-    if created:
-        try:
-            dt = datetime.datetime.strptime(created, '%Y-%m-%dT%H:%M:%SZ')
-            age = int((now - dt).total_seconds() / 60)
-            if age > oldest_age_min:
-                oldest_age_min = age
-                oldest_workflow = name
-        except Exception:
-            pass
-
-# Build per-workflow table rows
-rows = []
-warnings = []
-criticals = []
-for wf_name, runs in sorted(by_workflow.items(), key=lambda x: -len(x[1])):
-    depth = len(runs)
-    flag = ""
-    if depth >= crit_depth:
-        flag = "🔴"
-        criticals.append(wf_name)
-    elif depth >= warn_depth:
-        flag = "⚠️"
-        warnings.append(wf_name)
-    else:
-        flag = "✅"
-    rows.append((wf_name, depth, flag))
-
-result = {
-    "in_progress_total": len(in_progress),
-    "queued_total": len(queued),
-    "oldest_queue_age_min": oldest_age_min,
-    "oldest_queued_workflow": oldest_workflow,
-    "queue_depth_warn": warn_depth,
-    "queue_depth_crit": crit_depth,
-    "workflows_warning": warnings,
-    "workflows_critical": criticals,
-    "rows": rows,
-    "healthy": len(criticals) == 0 and oldest_age_min < max_age_min,
+# Probe the org endpoint — returns HTTP status code
+_probe_org_endpoint() {
+  curl -sf -o /dev/null -w "%{http_code}" \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    "${GH_API}/orgs/${ORG}/actions/runs?status=queued&per_page=1" \
+    2>/dev/null || echo "000"
 }
-print(json.dumps(result))
+
+# Fetch via org endpoint (primary path)
+_fetch_org() {
+  local status="$1"
+  _paginate_runs "${GH_API}/orgs/${ORG}/actions/runs?status=${status}"
+}
+
+# Fetch via per-repo fallback — queries only the known active repo set
+_fetch_per_repo() {
+  local status="$1"
+  local script_dir
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local repo_root
+  repo_root="$(cd "${script_dir}/.." && pwd)"
+
+  # Build known repo list from config files
+  local repos
+  repos=$(python3 - << PYEOF
+import json, yaml, os, sys
+
+root = "${repo_root}"
+known = set()
+
+try:
+    with open(os.path.join(root, 'registered-imports.json')) as f:
+        for entry in json.load(f):
+            name = entry.get('target_name','').strip()
+            if name:
+                known.add(name)
+except Exception as e:
+    print(f"[runner-status] warn: registered-imports.json: {e}", file=sys.stderr)
+
+try:
+    with open(os.path.join(root, 'config/gitlab-subgroups.yml')) as f:
+        d = yaml.safe_load(f)
+    for sg in (d.get('subgroups') or {}).values():
+        for repo in (sg.get('repos') or []):
+            name = repo.strip() if isinstance(repo, str) else repo.get('name','').strip()
+            if name:
+                known.add(name)
+except Exception as e:
+    print(f"[runner-status] warn: gitlab-subgroups.yml: {e}", file=sys.stderr)
+
+for name in sorted(known):
+    print(name)
 PYEOF
 )
 
+  local all_runs="[]"
+  local repo_count=0
+  while IFS= read -r repo; do
+    [[ -z "$repo" ]] && continue
+    local batch
+    batch=$(_paginate_runs "${GH_API}/repos/${ORG}/${repo}/actions/runs?status=${status}" 2>/dev/null || echo "[]")
+    all_runs=$(python3 -c "
+import json,sys
+print(json.dumps(json.loads(sys.argv[1]) + json.loads(sys.argv[2])))
+" "$all_runs" "$batch" 2>/dev/null || echo "$all_runs")
+    (( repo_count++ ))
+  done <<< "$repos"
+
+  info "Fallback: queried ${repo_count} repos for status=${status}"
+  echo "$all_runs"
+}
+
+# ── Auto-detect fetch strategy ────────────────────────────────────────────────
+info "Fetching run status for org: ${ORG}"
+
+http_code=$(_probe_org_endpoint)
+if [[ "$http_code" == "200" ]]; then
+  info "Using org endpoint (HTTP ${http_code})"
+  FETCH_MODE="org"
+else
+  warn "Org endpoint returned HTTP ${http_code} — falling back to per-repo queries"
+  warn "Token may lack org-level actions:read. Results scoped to known active repos."
+  FETCH_MODE="per-repo"
+fi
+
+if [[ "$FETCH_MODE" == "org" ]]; then
+  in_progress_json=$(_fetch_org "in_progress")
+  queued_json=$(_fetch_org "queued")
+else
+  in_progress_json=$(_fetch_per_repo "in_progress")
+  queued_json=$(_fetch_per_repo "queued")
+fi
+
+# ── Analyse ───────────────────────────────────────────────────────────────────
 export IN_PROGRESS_JSON="$in_progress_json"
 export QUEUED_JSON="$queued_json"
+
 analysis=$(python3 - << 'PYEOF'
 import json, sys, os, datetime
 
@@ -183,12 +223,12 @@ for wf_name, runs in sorted(by_workflow.items(), key=lambda x: -len(x[1])):
 
 print(json.dumps({
     "in_progress_total": len(in_progress),
-    "queued_total": len(queued),
-    "oldest_queue_age_min": oldest_age_min,
+    "queued_total":      len(queued),
+    "oldest_queue_age_min":   oldest_age_min,
     "oldest_queued_workflow": oldest_workflow,
-    "workflows_warning": warnings,
+    "workflows_warning":  warnings,
     "workflows_critical": criticals,
-    "rows": rows,
+    "rows":    rows,
     "healthy": len(criticals) == 0 and oldest_age_min < max_age_min,
 }))
 PYEOF
@@ -203,7 +243,7 @@ healthy=$(echo "$analysis"           | python3 -c "import json,sys; print(json.l
 criticals=$(echo "$analysis"         | python3 -c "import json,sys; d=json.load(sys.stdin); print(', '.join(d['workflows_critical']) or 'none')")
 warnings_list=$(echo "$analysis"     | python3 -c "import json,sys; d=json.load(sys.stdin); print(', '.join(d['workflows_warning']) or 'none')")
 
-info "in_progress=${in_progress_total}  queued=${queued_total}  oldest=${oldest_age}min  healthy=${healthy}"
+info "fetch_mode=${FETCH_MODE}  in_progress=${in_progress_total}  queued=${queued_total}  oldest=${oldest_age}min  healthy=${healthy}"
 
 # ── Write GITHUB_OUTPUT ───────────────────────────────────────────────────────
 {
@@ -211,6 +251,7 @@ info "in_progress=${in_progress_total}  queued=${queued_total}  oldest=${oldest_
   echo "queued_total=${queued_total}"
   echo "oldest_queue_age_min=${oldest_age}"
   echo "healthy=${healthy}"
+  echo "fetch_mode=${FETCH_MODE}"
   echo "workflows_critical=${criticals}"
   echo "workflows_warning=${warnings_list}"
 } >> "$OUTPUT"
@@ -236,9 +277,17 @@ if [[ -n "$SUMMARY" ]]; then
     [[ -n "$oldest_wf" ]] && echo "| Oldest queued workflow | \`${oldest_wf}\` |"
     echo "| Warn threshold (per workflow) | ${QUEUE_DEPTH_WARN} |"
     echo "| Critical threshold (per workflow) | ${QUEUE_DEPTH_CRIT} |"
+    echo "| Fetch mode | ${FETCH_MODE} |"
     echo ""
 
-    # Per-workflow breakdown (only if there are queued runs)
+    if [[ "$FETCH_MODE" == "per-repo" ]]; then
+      echo "> ⚠️ **Fallback mode** — org endpoint unavailable (token lacks org-level \`actions:read\`)."
+      echo "> Results are scoped to the known active repo set (registered-imports + gitlab-subgroups)."
+      echo "> For complete coverage, use a classic PAT with \`repo\` scope or a fine-grained PAT"
+      echo "> with \`actions: read\` at the org level."
+      echo ""
+    fi
+
     row_count=$(echo "$analysis" | python3 -c "import json,sys; print(len(json.load(sys.stdin)['rows']))")
     if [[ "$row_count" -gt 0 ]]; then
       echo "### Queued by workflow"
