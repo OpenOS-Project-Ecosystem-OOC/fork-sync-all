@@ -29,3 +29,13 @@ services:
     commands:
       start: bash services/sync-in/start.sh
       ready: curl -sf http://localhost:3284/api/v1/health
+
+tasks:
+  install-sync-in:
+    name: Install Sync-in Server
+    description: >
+      Downloads and installs the sync-in-server binary to ~/.local/bin.
+      Skips if already installed. Set FORCE=true to reinstall.
+      Use this after container creation if the devcontainer feature or
+      postCreateCommand did not run (e.g. on a bare VM or CI runner).
+    command: bash services/sync-in/install.sh

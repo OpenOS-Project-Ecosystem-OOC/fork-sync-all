@@ -442,6 +442,8 @@ github_only:
     reason: Cancels in-flight runs after token rotation — GitHub Actions API only
   - workflow_file: check-osp-ci.yml
     reason: Checks CI status of OSP-bound repos — GitHub API only
+  - workflow_file: check-ooc-ci.yml
+    reason: Checks CI status of OOC-bound repos — GitHub API only
   - workflow_file: rebase-prs.yml
     reason: Rebases open PRs onto main — GitHub API only
   - workflow_file: update-workflow-triggers-doc.yml

@@ -191,6 +191,21 @@ workflows:
     '
   synopsis: Checks CI status across all OSP-bound repos and reports failing workflows. Triggers resolve-failures when failures
     are detected.
+- name: Check OOC-Bound CI Status
+  min_quota: 300
+  cost_low: 50
+  cost_mid: 150
+  cost_high: 300
+  basis: code-audit
+  notes: >
+    Per-repo: repo info + branch + check-runs + statuses (4 REST calls).
+    check-runs/statuses not convertible to GraphQL. OOC org is smaller than
+    OSP; high end assumes 75 repos. Falls back to org enumeration when
+    gitlab-subgroups-ooc.yml is sparse.
+  synopsis: >
+    Checks CI status of every OOC-bound repo (OpenOS-Project-Ecosystem-OOC).
+    Falls back to org enumeration when gitlab-subgroups-ooc.yml is sparse.
+    Dispatches resolve-failures.yml on failures.
 - name: Rebase PRs
   min_quota: 100
   cost_low: 5
