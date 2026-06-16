@@ -18,7 +18,7 @@ MIRROR CHAIN
 Mirror Artifacts  (mirror-artifacts.yml)
   Mirrors GitHub Releases, Flatpak packages, and RPM packages from Interested-
   Deving-1896 repos to their OSP and OOC counterparts.
-  schedule   Every 8h at :10  (10 */8 * * *)
+  schedule   Daily 02:10  (10 2 * * *)
   dispatch
 
 Mirror Orgs  (mirror-orgs-full.yml)
@@ -41,7 +41,7 @@ Mirror OSP → GitLab  (mirror-osp-to-gitlab.yml)
   Mirrors every repo in OpenOS-Project-OSP to its GitLab counterpart under
   openos-project, creating the GitLab project in the correct subgroup if it
   does not exist yet.
-  schedule   Every 8h at :23  (23 */8 * * *)
+  schedule   Daily 01:23  (23 1 * * *)
   workflow_run  Add Mirror Repo
   dispatch
 
@@ -49,7 +49,7 @@ Mirror to OpenOS-Project-Ecosystem-OOC  (mirror-osp-to-ooc.yml)
   Bare-clones every repo in OpenOS-Project-OSP and git push --mirror into
   OpenOS-Project-Ecosystem-OOC, completing the second hop of the three-org
   mirror chain.
-  schedule   Every 6h at :15  (15 */6 * * *)
+  schedule   Every 6h at :45  (45 */6 * * *)
   dispatch
 
 Mirror Releases  (mirror-releases.yml)
@@ -116,7 +116,7 @@ Sync from GitLab  (sync-from-gitlab.yml)
 Sync pieroproietti Forks  (sync-pieroproietti-forks.yml)
   Syncs all penguins-eggs forks owned by Interested-Deving-1896 with their
   upstream pieroproietti sources via merge-upstream.
-  schedule   Every 8h at :07  (7 */8 * * *)
+  schedule   Daily 01:07  (7 1 * * *)
   dispatch
 
 Sync Registered Imports  (sync-registered-imports.yml)
@@ -157,7 +157,7 @@ GITLAB SYNC
 Sync to GitLab Variant  (sync-to-gitlab-variant.yml)
   Variant of Sync to GitLab that uses a different token and push strategy —
   used when the primary sync is blocked or for testing.
-  schedule   Every 8h at :50  (50 */8 * * *)
+  schedule   Daily 01:50  (50 1 * * *)
   push       config/ota-registry.yml
   push       config/ota-blocklist.yml
   push       .ota/schema.yml
@@ -187,7 +187,7 @@ Create Missing READMEs  (create-readmes.yml)
 Inject Built-with-Ona Badges  (inject-badges.yml)
   Adds a Built-with-Ona badge to README.md for all repos in Interested-
   Deving-1896 that are missing it. Skips repos that already have the badge.
-  schedule   Daily 08:15  (15 8 * * *)
+  schedule   15 8 */2 * *  (15 8 */2 * *)
   workflow_run  Mirror OSP → GitLab
   dispatch
 
@@ -208,7 +208,7 @@ Translate READMEs  (translate-readmes.yml)
   Translates README.md files for OSP-bound repos into additional languages
   using GitHub Models API. Writes translated files alongside the English
   original.
-  schedule   Daily 10:43  (43 10 * * *)
+  schedule   43 10 */2 * *  (43 10 */2 * *)
   workflow_run  Update READMEs
   workflow_run  Add Mirror Repo
   dispatch
@@ -306,7 +306,7 @@ Reconcile Org References  (reconcile-org-refs.yml)
   Rewrites org/repo references in OSP and OOC mirrors to point at the correct
   org, fixing stale Interested-Deving-1896 references left by the mirror
   process.
-  schedule   Daily 05:50  (50 5 * * *)
+  schedule   50 5 */2 * *  (50 5 */2 * *)
   dispatch
 
 Rotate Secret Token  (rotate-token.yml)
@@ -687,7 +687,7 @@ Quota Reserve  (quota-reserve.yml)
 Rebase PRs  (rebase-prs.yml)
   Rebases open PRs in Interested-Deving-1896 onto their base branch when they
   fall behind, keeping PRs mergeable without manual intervention.
-  schedule   Daily 05:10  (10 5 * * *)
+  schedule   10 5 */2 * *  (10 5 */2 * *)
   workflow_run  Validate Config
   dispatch
 
@@ -700,6 +700,14 @@ Refresh NotebookLM Auth  (refresh-notebooklm-auth.yml)
 Repo Manifest  (repo-manifest.yml)
   Exports a manifest of all repos in an org, or imports repos from a manifest
   into a target GitHub org. Supports multi-platform bulk import.
+  dispatch
+
+Resolve CI Failures (Agnostic)  (resolve-ci.yml)
+  Agnostic CI failure resolver. Runs resolve-ci.sh for each enabled target in
+  config/ci-check-targets.yml. GitHub targets use LLM analysis and auto-fix;
+  GitLab targets retry failed/canceled pipelines.
+  schedule   Daily 07:43  (43 7 * * *)
+  workflow_run  Check CI Status
   dispatch
 
 Setup Dashboard Variables  (setup-dashboard-vars.yml)
@@ -760,7 +768,7 @@ Translate Docs  (translate-docs.yml)
   Translates DOCS/ mdBook pages into a target language using GitHub Models
   API. Writes translated files to DOCS/<lang>/ and upserts a language section
   in SUMMARY.md.
-  schedule   Daily 11:15  (15 11 * * *)
+  schedule   15 11 */2 * *  (15 11 */2 * *)
   workflow_run  Deploy Book
   dispatch
 
@@ -801,23 +809,22 @@ Weekly Sun 03:00               Integrate Shell Tools
 Weekly Mon 04:00               Full Audit
 Weekly Tue 05:00               Sync UAA Vendor
 Weekly Mon 08:00               Update Quota Cost Registry
-Every 8h at :10                Mirror Artifacts
+Daily 02:10                    Mirror Artifacts
 Weekly Sun 03:10               Generate OSP Dependency Graph
-Daily 05:10                    Rebase PRs
+10 5 */2 * *                   Rebase PRs
 Weekly Mon 06:11               Update Infrastructure Dependencies
 Every 6h at :13                Mirror Interested-Deving-1896 → OSP
-Every 6h at :15                Mirror to OpenOS-Project-Ecosystem-OOC
-Daily 11:15                    Translate Docs
+15 11 */2 * *                  Translate Docs
 Daily 03:15                    Update READMEs
 Weekly Mon 05:15               OTA Self-Update
-Daily 08:15                    Inject Built-with-Ona Badges
+15 8 */2 * *                   Inject Built-with-Ona Badges
 Daily 02:17                    Mirror Orgs
 Weekly Mon 04:17               Check Accessibility
 Monthly 1st 05:17              Full Chain Flush
 Weekly Tue 06:17               Refresh NotebookLM Auth
 Monthly 1st 03:19              LTS README Standardisation
 Daily 05:02                    Sync btrfs-devel Branches
-Every 8h at :23                Mirror OSP → GitLab
+Daily 01:23                    Mirror OSP → GitLab
 Daily 09:23                    Git Platform Sync
 Daily 04:27                    Git Platform Sync
 Weekly Mon 09:24               Token Health Monitor
@@ -833,19 +840,21 @@ Every 6h at :37                Sync-in
 Daily 10:15                    Sync-in
 Daily 01:37                    Sync Upstream Sources
 Daily 06:38                    OTA Discover
-Daily 10:43                    Translate READMEs
+43 10 */2 * *                  Translate READMEs
+Daily 07:43                    Resolve CI Failures (Agnostic)
 Daily 07:43                    Resolve CI Failures
+Every 6h at :45                Mirror to OpenOS-Project-Ecosystem-OOC
 Daily 02:45                    Setup OSP Mirror Workflows
 Daily 03:47                    Upstream Direct Commits from OSP + OOC
 Every 4h at :05                Rate-Limit Re-trigger
 Daily 03:05                    Sync Registry Sources
 Daily 09:05                    Check CI Status
-Every 8h at :50                Sync to GitLab Variant
-Daily 05:50                    Reconcile Org References
+Daily 01:50                    Sync to GitLab Variant
+50 5 */2 * *                   Reconcile Org References
 Every 6h at :55                Auto-merge PRs
 Daily 04:55                    Sync Registered Imports
 Weekly Mon 06:06               Upstream Workflow Proposal
-Every 8h at :07                Sync pieroproietti Forks
+Daily 01:07                    Sync pieroproietti Forks
 Daily 06:07                    Sync All Forks
 Weekly Sun 03:08               Docker → Incus Migration
 Daily 07:08                    Create Missing READMEs
