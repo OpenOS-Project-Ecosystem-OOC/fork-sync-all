@@ -77,14 +77,12 @@ Add Mirror Repo  (add-mirror-repo.yml)
 Check OSP-Bound CI Status  (check-osp-ci.yml)
   Checks CI status across all OSP-bound repos and reports failing workflows.
   Triggers resolve-failures when failures are detected.
-  schedule   Daily 09:05  (5 9 * * *)
-  workflow_run  Add Mirror Repo
   dispatch
 
 Setup OSP Mirror Workflows  (setup-osp-mirrors.yml)
   Ensures all repos in OpenOS-Project-OSP have the correct mirror workflow
   files and secrets configured for the OSP→OOC mirror chain.
-  schedule   Every 6h at :45  (45 */6 * * *)
+  schedule   Daily 02:45  (45 2 * * *)
   dispatch
 
 
@@ -144,13 +142,13 @@ Sync Upstream Sources  (sync-upstream-sources.yml)
 Upstream Direct Commits from OSP + OOC  (upstream-commits.yml)
   Detects commits pushed directly to OSP/OOC default branches (without a PR)
   and opens PRs against Interested-Deving-1896 to reconcile them.
-  schedule   Every 6h at :47  (47 */6 * * *)
+  schedule   Daily 03:47  (47 3 * * *)
   dispatch
 
 Upstream PRs from OSP + OOC  (upstream-prs.yml)
   Detects commits on OSP and OOC default branches that are not present in
   Interested-Deving-1896 and opens PRs to bring them upstream.
-  schedule   Every 6h at :33  (33 */6 * * *)
+  schedule   Daily 03:33  (33 3 * * *)
   dispatch
 
 
@@ -437,7 +435,7 @@ Auto-merge PRs  (auto-merge-prs.yml)
   Merges open PRs once required checks pass. Hybrid auto-detection per PR:
   scope (label/bot/all), strategy (rebase/squash/merge), mechanism (native
   auto-merge vs poll).
-  schedule   Every 2h at :55  (55 */2 * * *)
+  schedule   Every 6h at :55  (55 */6 * * *)
   workflow_run  Validate Config
   dispatch
 
@@ -469,8 +467,6 @@ Check CI Status  (check-ci.yml)
 Check OOC-Bound CI Status  (check-ooc-ci.yml)
   Deprecated stub — delegates to Check CI Status. Kept for schedule/trigger
   continuity.
-  schedule   Daily 09:25  (25 9 * * *)
-  workflow_run  Mirror to OpenOS-Project-Ecosystem-OOC
   dispatch
 
 Check Shell Tools CI  (check-shell-tools-ci.yml)
@@ -830,29 +826,27 @@ Daily 09:23                    Git Platform Sync
 Daily 04:27                    Git Platform Sync
 Weekly Mon 09:24               Token Health Monitor
 Weekly Mon 06:25               Verify Fork Integrity
-Daily 09:25                    Check OOC-Bound CI Status
 Monthly 1st 04:29              Cleanup Stale Branches
 Every 6h at :03                Mirror Releases
 Weekly Sun 03:30               Generate Repo Descriptions
 Weekly Mon 04:30               Manage Repo Settings
 Weekly Mon 06:30               Check Shell Tools CI
 Every 4h at :32                Notification Poller
-Every 6h at :33                Upstream PRs from OSP + OOC
+Daily 03:33                    Upstream PRs from OSP + OOC
 Every 6h at :37                Sync-in
 Daily 10:15                    Sync-in
 Daily 01:37                    Sync Upstream Sources
 Daily 06:38                    OTA Discover
 Daily 10:43                    Translate READMEs
 Daily 07:43                    Resolve CI Failures
-Every 6h at :45                Setup OSP Mirror Workflows
-Every 6h at :47                Upstream Direct Commits from OSP + OOC
+Daily 02:45                    Setup OSP Mirror Workflows
+Daily 03:47                    Upstream Direct Commits from OSP + OOC
 Every 4h at :05                Rate-Limit Re-trigger
 Daily 03:05                    Sync Registry Sources
 Daily 09:05                    Check CI Status
-Daily 09:05                    Check OSP-Bound CI Status
 Every 8h at :50                Sync to GitLab Variant
 Daily 05:50                    Reconcile Org References
-Every 2h at :55                Auto-merge PRs
+Every 6h at :55                Auto-merge PRs
 Every 6h at :55                Sync Registered Imports
 Weekly Mon 06:06               Upstream Workflow Proposal
 Every 8h at :07                Sync pieroproietti Forks
