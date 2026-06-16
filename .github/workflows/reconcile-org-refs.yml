@@ -14,7 +14,7 @@ on:
     # the hourly cadence was consuming 1000-3000 API calls/hr, exhausting the
     # 5000/hr budget. Off-peak time avoids overlap with the 02:00-03:xx mirror
     # and README sweeps.
-    - cron: "50 5 * * *"
+    - cron: "50 5 */2 * *"  # Every 2 days at 05:50 UTC — org refs drift slowly
   workflow_dispatch:
     inputs:
       repo_filter:

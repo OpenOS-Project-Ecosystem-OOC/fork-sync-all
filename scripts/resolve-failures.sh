@@ -14,6 +14,9 @@ set -uo pipefail
 
 DRY_RUN="${DRY_RUN:-false}"
 REPO_FILTER="${REPO_FILTER:-}"
+# JSON_OUT: if set, write a structured JSON summary to this file path at exit.
+# Used by resolve-ci.sh to produce a unified summary across all targets.
+JSON_OUT="${JSON_OUT:-}"
 
 # OSP_REPOS_OVERRIDE: space-separated list of short repo names to scan for a
 # given owner instead of paginating the entire org. Set by the workflow for
@@ -863,6 +866,20 @@ echo "  RL re-triggered: ${total_rl_rerun}"
 echo "  Auto-fixed:      ${total_fixed}"
 echo "  Need manual fix: ${total_unfixable}"
 echo "========================================"
+
+# Write structured JSON summary if JSON_OUT is set (used by resolve-ci.sh)
+if [[ -n "${JSON_OUT:-}" ]]; then
+  python3 -c "
+import json
+print(json.dumps({
+  'scanned':        ${total_scanned},
+  'failures_found': ${total_failures},
+  'rl_rerun':       ${total_rl_rerun},
+  'fixed':          ${total_fixed},
+  'unfixable':      ${total_unfixable},
+}))
+" > "${JSON_OUT}" 2>/dev/null || true
+fi
 
 # Exit 0 — failures to fix are informational, not errors
 budget_report

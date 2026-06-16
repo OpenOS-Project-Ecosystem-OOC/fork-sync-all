@@ -84,6 +84,8 @@ print(' '.join(sorted(set(repos))))
   info "Delegating to resolve-failures.sh (owner=${owner}, repos=$(echo "$repos_override" | wc -w | tr -d ' '))"
 
   local watchdog_arg="${WATCHDOG_REPO:-${REPO_ROOT##*/}}"
+  local json_tmp
+  json_tmp=$(mktemp /tmp/resolve-failures-summary-XXXXXX.json)
 
   GH_TOKEN="$TOKEN" \
   SCAN_OWNERS="$owner" \
@@ -92,11 +94,30 @@ print(' '.join(sorted(set(repos))))
   BUDGET_MINUTES="$BUDGET_MINUTES" \
   WATCHDOG_REPO="$watchdog_arg" \
   OSP_REPOS_OVERRIDE="$repos_override" \
+  JSON_OUT="$json_tmp" \
     bash "${SCRIPT_DIR}/resolve-failures.sh"
   local rc=$?
 
-  # resolve-failures.sh always exits 0 (failures are informational).
-  # Parse its stderr summary line for the JSON output.
+  # Emit unified JSON summary to stdout
+  if [[ -s "$json_tmp" ]]; then
+    python3 -c "
+import json
+inner = json.load(open('${json_tmp}'))
+print(json.dumps({
+  'target_id':     '${TARGET_ID}',
+  'platform':      'github',
+  'org':           '${owner}',
+  'scanned':       inner.get('scanned', 0),
+  'failures_found': inner.get('failures_found', 0),
+  'fixed':         inner.get('fixed', 0),
+  'retried':       inner.get('rl_rerun', 0),
+  'unfixable':     inner.get('unfixable', 0),
+}))
+"
+  else
+    python3 -c "import json; print(json.dumps({'target_id':'${TARGET_ID}','platform':'github','org':'${owner}','scanned':0,'failures_found':0,'fixed':0,'retried':0,'unfixable':0,'note':'no_summary_written'}))"
+  fi
+  rm -f "$json_tmp"
   return $rc
 }
 
