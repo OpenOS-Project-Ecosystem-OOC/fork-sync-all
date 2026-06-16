@@ -5,12 +5,6 @@ name: Check OSP-Bound CI Status
 # the transition period. Delegates immediately to check-ci.yml.
 
 on:
-  workflow_run:
-    workflows:
-      - "Add Mirror Repo"
-    types: [completed]
-  schedule:
-    - cron: '5 9 * * *'
   workflow_dispatch:
     inputs:
       repo_filter:

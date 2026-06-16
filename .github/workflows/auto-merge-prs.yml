@@ -34,7 +34,7 @@ on:
   # Scheduled fallback: catches PRs that were already green before this
   # workflow existed, or where workflow_run didn't fire
   schedule:
-    - cron: '55 */2 * * *'   # Every 2h at :55 — low-frequency safety net
+    - cron: '55 */6 * * *'   # Every 6h at :55 — reduced from 2h to ease quota pressure
 
   workflow_dispatch:
     inputs:
