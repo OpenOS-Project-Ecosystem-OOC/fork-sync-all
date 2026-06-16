@@ -71,9 +71,31 @@ permissions:
   contents: read
 
 jobs:
+  # ── Pre-flight: skip gracefully when Sync-in secrets are not configured ───
+  secrets-check:
+    name: Secrets pre-flight
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - name: Check required secrets
+        id: check
+        env:
+          HAS_URL:   ${{ secrets.SYNC_IN_SERVER_URL != '' }}
+          HAS_TOKEN: ${{ secrets.SYNC_IN_ADMIN_TOKEN != '' }}
+        run: |
+          if [[ "$HAS_URL" == "true" && "$HAS_TOKEN" == "true" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "SYNC_IN_SERVER_URL or SYNC_IN_ADMIN_TOKEN not set — skipping all Sync-in jobs." >&2
+          fi
+
   # ── Resolve which roles to run from schedule or dispatch ──────────────────
   resolve:
     name: Resolve roles
+    needs: secrets-check
+    if: needs.secrets-check.outputs.configured == 'true'
     runs-on: ubuntu-latest
     outputs:
       run_health:      ${{ steps.roles.outputs.run_health }}
@@ -127,8 +149,8 @@ jobs:
   # ── SERVER: health check ──────────────────────────────────────────────────
   health:
     name: Server health check
-    needs: resolve
-    if: needs.resolve.outputs.run_health == 'true'
+    needs: [secrets-check, resolve]
+    if: needs.secrets-check.outputs.configured == 'true' && needs.resolve.outputs.run_health == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -145,8 +167,8 @@ jobs:
   # ── SERVER: deploy / update ───────────────────────────────────────────────
   deploy:
     name: Deploy server
-    needs: resolve
-    if: needs.resolve.outputs.run_deploy == 'true'
+    needs: [secrets-check, resolve]
+    if: needs.secrets-check.outputs.configured == 'true' && needs.resolve.outputs.run_deploy == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -184,8 +206,8 @@ jobs:
   # ── CLIENT: register OSP-bound repos as workspaces ───────────────────────
   register-workspaces:
     name: Register workspaces
-    needs: resolve
-    if: needs.resolve.outputs.run_register == 'true'
+    needs: [secrets-check, resolve]
+    if: needs.secrets-check.outputs.configured == 'true' && needs.resolve.outputs.run_register == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -213,8 +235,8 @@ jobs:
   # ── CLIENT: trigger workspace syncs ──────────────────────────────────────
   sync-workspaces:
     name: Sync workspaces
-    needs: resolve
-    if: needs.resolve.outputs.run_sync == 'true'
+    needs: [secrets-check, resolve]
+    if: needs.secrets-check.outputs.configured == 'true' && needs.resolve.outputs.run_sync == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -241,8 +263,8 @@ jobs:
   # ── SERVER: rotate admin token ────────────────────────────────────────────
   rotate-token:
     name: Rotate admin token
-    needs: resolve
-    if: needs.resolve.outputs.run_rotate == 'true'
+    needs: [secrets-check, resolve]
+    if: needs.secrets-check.outputs.configured == 'true' && needs.resolve.outputs.run_rotate == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
