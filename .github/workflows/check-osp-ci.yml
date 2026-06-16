@@ -6,9 +6,11 @@ name: Check OSP-Bound CI Status
 # dispatches resolve-failures.yml scoped to the failing repos.
 
 on:
+  # workflow_run trigger from Mirror I-D-1896→OSP removed: mirror runs 4×/day
+  # and each CI check costs 4 REST calls × 225 repos = 900 calls/run.
+  # The daily schedule at 09:05 UTC is sufficient.
   workflow_run:
     workflows:
-      - "Mirror Interested-Deving-1896 → OSP"
       - "Add Mirror Repo"
     types: [completed]
   schedule:

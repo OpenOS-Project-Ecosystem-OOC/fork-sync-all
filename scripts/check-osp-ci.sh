@@ -84,6 +84,62 @@ PYEOF
 
 info "OSP-bound repos: ${#OSP_REPOS[@]}"
 
+# ── Prefetch default branch + HEAD SHA via GraphQL (1 call for all repos) ─────
+# Replaces 2 REST calls per repo (GET /repos/{r} + GET /repos/{r}/branches/{b}).
+# check-runs and statuses are not in GraphQL so those remain as REST calls.
+declare -A _BRANCH_CACHE=()   # repo -> default_branch
+declare -A _SHA_CACHE=()      # repo -> HEAD SHA
+
+_prefetch_repo_metadata() {
+  local owner="$1"; shift
+  local repos=("$@")
+  local total="${#repos[@]}"
+  local page_size=100
+  local offset=0
+
+  while (( offset < total )); do
+    local aliases=""
+    local i
+    for (( i=offset; i < offset+page_size && i < total; i++ )); do
+      local r="${repos[$i]}"
+      local safe
+      safe=$(echo "$r" | tr '-' '_' | tr '.' '_')
+      aliases+="r_${safe}: repository(owner: \"${owner}\", name: \"${r}\") { defaultBranchRef { name target { oid } } } "
+    done
+
+    local gql_result
+    gql_result=$(curl -sf \
+      -H "Authorization: token ${GH_TOKEN}" \
+      -H "Content-Type: application/json" \
+      "${API}/graphql" \
+      -d "{\"query\":\"{ ${aliases} }\"}" \
+      2>/dev/null || echo "{}")
+
+    python3 - <<PYEOF
+import json, sys
+result = json.loads('''${gql_result}''')
+data = result.get("data") or {}
+for key, val in data.items():
+    if not val:
+        continue
+    repo_name = key[2:].replace("_", "-")
+    ref = (val.get("defaultBranchRef") or {})
+    branch = ref.get("name") or "main"
+    sha = (ref.get("target") or {}).get("oid") or ""
+    print(f"{repo_name}\t{branch}\t{sha}")
+PYEOF
+
+    (( offset += page_size ))
+  done
+}
+
+info "Prefetching branch + SHA for ${#OSP_REPOS[@]} repos via GraphQL…"
+while IFS=$'\t' read -r _repo _branch _sha; do
+  _BRANCH_CACHE["$_repo"]="$_branch"
+  _SHA_CACHE["$_repo"]="$_sha"
+done < <(_prefetch_repo_metadata "$OWNER" "${OSP_REPOS[@]}")
+info "Prefetch complete (${#_BRANCH_CACHE[@]} repos resolved)"
+
 # ── Check CI status for each repo ─────────────────────────────────────────────
 failing_repos="[]"
 checked=0
@@ -99,18 +155,12 @@ for repo in "${OSP_REPOS[@]}"; do
 
   full_repo="${OWNER}/${repo}"
 
-  # Get default branch
-  repo_json=$(gh_get "${API}/repos/${full_repo}") || { (( skipped++ )); continue; }
-  default_branch=$(echo "$repo_json" | python3 -c \
-    "import json,sys; print(json.load(sys.stdin).get('default_branch','main'))" 2>/dev/null || echo "main")
-
-  # Get HEAD SHA of default branch
-  branch_json=$(gh_get "${API}/repos/${full_repo}/branches/${default_branch}") || { (( skipped++ )); continue; }
-  sha=$(echo "$branch_json" | python3 -c \
-    "import json,sys; print(json.load(sys.stdin).get('commit',{}).get('sha',''))" 2>/dev/null || echo "")
+  # Use prefetched values — no REST calls for repo info or branch
+  default_branch="${_BRANCH_CACHE[$repo]:-main}"
+  sha="${_SHA_CACHE[$repo]:-}"
 
   if [[ -z "$sha" ]]; then
-    warn "${full_repo}: could not resolve HEAD SHA — skipping"
+    # Repo not in GraphQL result (doesn't exist or has no commits)
     (( skipped++ ))
     continue
   fi

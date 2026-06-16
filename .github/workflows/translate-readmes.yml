@@ -17,21 +17,15 @@ on:
     # Still after update-readmes (03:00) and create-readmes (07:08).
     # Full org scan (scope=all), normalize non-English READMEs to English.
     - cron: '43 10 * * *'  # staggered off :30 boundary
-  # Run OSP-bound normalize pass after any workflow that creates or pushes
-  # content — catches non-English READMEs in priority repos only.
+  # Run OSP-bound normalize pass after workflows that write README content.
+  # Intentionally narrow: high-frequency triggers (Sync Registered Imports,
+  # Sync pieroproietti Forks, Sync Upstream Sources) were removed because
+  # each fires 3-4×/day and Translate READMEs costs ~450 REST calls/run
+  # (2 calls × 225 OSP repos). The daily schedule covers the rest.
   workflow_run:
     workflows:
       - "Update READMEs"
       - "Add Mirror Repo"
-      - "Import Repository"
-      - "Clone Org"
-      - "Merge Repos into Monorepo"
-      - "Sync All Forks"
-      - "Sync Registered Imports"
-      - "Sync from GitLab"
-      - "Sync pieroproietti Forks"
-      - "Sync Upstream Sources"
-      - "Sync penguins-eggs docs to penguins-eggs-book"
     types: [completed]
   workflow_dispatch:
     inputs:
