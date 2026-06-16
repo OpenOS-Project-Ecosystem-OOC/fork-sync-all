@@ -3,7 +3,7 @@
 All workflows in `.github/workflows/`, grouped by priority tier.
 For trigger details and schedules see [Workflow Triggers](workflow-triggers.md).
 
-> Auto-generated on 2026-06-15 from `config/workflow-quota-costs.yml`
+> Auto-generated on 2026-06-16 from `config/workflow-quota-costs.yml`
 > and `config/workflow-priority-tiers.yml`.
 
 **Quota cost columns:** Low = fast/cached run · Mid = typical (p50) · High = large/uncached (p95)
@@ -63,6 +63,10 @@ For trigger details and schedules see [Workflow Triggers](workflow-triggers.md).
 |---|---|---|---|---|---|---|
 | [Auto-merge PRs](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/auto-merge-prs.yml) | Merges open PRs once required checks pass. Hybrid auto-detection per PR: scope (label/bot/all), strategy (rebase/squash/merge), mechanism (native auto-merge vs poll). | Every 2h at :55 | 300 | 5 | 30 | 80 |
 | [Check Accessibility](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/check-accessibility.yml) | Multi-layer accessibility audit — CODEOWNERS coverage, README screen-reader scan, WCAG 2.1 AA HTML check, audio overview (espeak-ng), and Braille output (liblouis). Commits README.audio.mp3 and README.brl artifacts. | Weekly Mon 04:17 UTC | 500 | 5 | 15 | 40 |
+| [Check CI Status](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/check-ci.yml) | Agnostic CI status checker. Runs check-ci.sh for each enabled target in config/ci-check-targets.yml (GitHub orgs and GitLab groups). Replaces check-osp-ci.yml and check-ooc-ci.yml.
+ | Daily 09:05 UTC | 300 | 50 | 300 | 900 |
+| [Check OOC-Bound CI Status](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/check-ooc-ci.yml) | Deprecated stub — delegates to Check CI Status. Kept for schedule/trigger continuity.
+ | Daily 09:25 UTC | 300 | 50 | 150 | 300 |
 | [Check OSP-Bound CI Status](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/check-osp-ci.yml) | Checks CI status across all OSP-bound repos and reports failing workflows. Triggers resolve-failures when failures are detected. | Daily 09:05 UTC | 300 | 50 | 150 | 300 |
 | [Check Shell Tools CI](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/check-shell-tools-ci.yml) | Batch-fetches CI run status for all 24 shell-tools repos via a single GraphQL query. Minimal quota cost. Weekly Monday 06:30 UTC. | Weekly Mon 06:30 UTC | 50 | 1 | 2 | 3 |
 | [Cleanup Stale Branches](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/cleanup-branches.yml) | Deletes branches that have been merged into the default branch across all repos in Interested-Deving-1896, OSP, and OOC. | 29 4 1 * * | 200 | 10 | 60 | 200 |
