@@ -63,6 +63,7 @@ GROUPS = [
     ("Full Pipeline", [
         "pre-flush-prep",
         "full-chain-flush",
+        "post-flush-prep",
         "critical-deploy",
     ]),
     ("Utility / On-Demand", [

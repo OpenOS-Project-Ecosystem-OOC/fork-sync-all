@@ -8,14 +8,16 @@ Sync and mirror infrastructure for the three-org chain:
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  Mirror chain (outward, every 6h)                                           │
 │                                                                             │
-│  Interested-Deving-1896 ──► OpenOS-Project-OSP ──► OpenOS-Project-Ecosystem-OOC
-│          ▲                                                    │             │
-│          └──────── upstream-commits / upstream-prs ───────────┘             │
-│                                         │                                   │
-│                                         ▼                                   │
-│                              GitLab openos-project                          │
-│                         (14 subgroups, 225 repos mirrored)                  │
-└─────────────────────────────────────────────────────────────────────────────┘
+│  Interested-Deving-1896 ──► OpenOS-Project-OSP                              │
+│          ▲                         │                                        │
+│          │                         ▼                                        │
+│          │              OpenOS-Project-Ecosystem-OOC                        │
+│          │                         │                                        │
+│          │                         ▼                                        │
+│          │                  GitLab openos-project                           │
+│          │             (14 subgroups, 225 repos mirrored)                   │
+│          │                                                                  │
+│          └──── upstream-commits / upstream-prs (OSP + OOC → I-D-1896) ──────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  Full pipeline (manual / monthly)                                           │

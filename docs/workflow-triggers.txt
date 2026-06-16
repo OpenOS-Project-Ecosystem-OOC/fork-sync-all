@@ -422,6 +422,13 @@ Full Chain Flush  (full-chain-flush.yml)
   schedule   Monthly 1st 05:17  (17 5 1 * *)
   dispatch
 
+Post-Flush Verification  (post-flush-prep.yml)
+  End-to-end health check after full-chain-flush — mirror integrity across all
+  three pairs, CI status on I-D-1896 OSP-bound repos, quota health, and
+  workflow queue health.
+  workflow_run  Full Chain Flush
+  dispatch
+
 Pre-Flush Prep  (pre-flush-prep.yml)
   Prepares the system for a clean full-chain-flush — cancels stale runs,
   merges ready PRs, validates config, cleans merged branches, removes template
@@ -658,13 +665,6 @@ Pipeline Telemetry  (pipeline-telemetry.yml)
   workflow_run  Pre-Mirror CI Gate
   workflow_run  Verify Mirror Integrity
   workflow_run  Post-Flush Verification
-  dispatch
-
-Post-Flush Verification  (post-flush-prep.yml)
-  End-to-end health check after full-chain-flush — mirror integrity across all
-  three pairs, CI status on I-D-1896 OSP-bound repos, quota health, and
-  workflow queue health.
-  workflow_run  Full Chain Flush
   dispatch
 
 Pre-Mirror CI Gate  (pre-mirror-ci-gate.yml)
