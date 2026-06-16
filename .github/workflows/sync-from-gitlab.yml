@@ -6,10 +6,6 @@ name: Sync from GitLab
 # Remove this file once all downstream references have been updated.
 
 on:
-  schedule:
-    # Daily at 04:22 UTC — scheduled fallback; the primary trigger is
-    # GitLab CI on push (sync-from-gitlab job in .gitlab-ci.yml)
-    - cron: '22 4 * * *'
   workflow_dispatch:
     inputs:
       repo_filter:

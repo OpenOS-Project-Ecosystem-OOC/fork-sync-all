@@ -6,9 +6,6 @@ name: Sync to GitLab
 # Remove this file once all downstream references have been updated.
 
 on:
-  schedule:
-    # Kept to avoid phantom trigger errors; git-platform-sync.yml runs at 09:23.
-    - cron: '17 9 * * *'
   workflow_dispatch:
     inputs:
       repo_filter:

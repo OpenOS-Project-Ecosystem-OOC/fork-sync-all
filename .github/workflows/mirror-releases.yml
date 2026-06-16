@@ -6,7 +6,7 @@ name: Mirror Releases
 
 on:
   schedule:
-    - cron: "3 */6 * * *"  # Every 6h at :03 — release tags don't change hourly
+    - cron: "3 */12 * * *"  # Every 12h at :03 — reduced from 6h; releases are infrequent
   workflow_dispatch:
     inputs:
       repo_filter:
