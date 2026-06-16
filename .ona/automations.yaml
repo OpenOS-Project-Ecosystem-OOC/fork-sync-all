@@ -9,3 +9,16 @@ services:
     commands:
       start: headroom proxy --port 8787 --no-ccr-inject-tool
       ready: curl -sf http://localhost:8787/livez
+
+  sync-in-server:
+    name: Sync-in Server
+    description: >
+      Local Sync-in server instance. Provides file sync and workspace
+      collaboration for this devcontainer. Starts automatically so the
+      sync-in.yml workflow can reach it at http://localhost:3284 when
+      SYNC_IN_SERVER_URL is set to that address.
+      Admin token is generated on first start and stored in
+      ~/.local/share/sync-in/.admin_token.
+    commands:
+      start: bash services/sync-in/start.sh
+      ready: curl -sf http://localhost:3284/api/v1/health

@@ -28,5 +28,12 @@
     }
   },
   "postCreateCommand": "pip install --quiet 'headroom-ai[proxy,mcp]==0.25.0'",
-  "remoteEnv": {}
+  "remoteEnv": {
+    // Sync-in server — set these to connect the devcontainer's local Sync-in
+    // instance to the sync-in.yml workflow. SYNC_IN_SERVER_URL points to the
+    // in-container server; SYNC_IN_ADMIN_TOKEN is read from the token file
+    // written by services/sync-in/start.sh on first boot.
+    "SYNC_IN_SERVER_URL": "http://localhost:3284",
+    "SYNC_IN_ADMIN_TOKEN": "${localEnv:SYNC_IN_ADMIN_TOKEN}"
+  }
 }

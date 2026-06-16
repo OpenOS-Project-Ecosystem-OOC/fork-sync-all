@@ -35,7 +35,9 @@
     "INCUS_REMOTE": "${localEnv:INCUS_REMOTE}",
     "INCUS_REMOTE_URL": "${localEnv:INCUS_REMOTE_URL}",
     "INCUS_CLIENT_CERT": "${localEnv:INCUS_CLIENT_CERT}",
-    "INCUS_CLIENT_KEY": "${localEnv:INCUS_CLIENT_KEY}"
+    "INCUS_CLIENT_KEY": "${localEnv:INCUS_CLIENT_KEY}",
+    "SYNC_IN_SERVER_URL": "http://localhost:3284",
+    "SYNC_IN_ADMIN_TOKEN": "${localEnv:SYNC_IN_ADMIN_TOKEN}"
   },
   "postCreateCommand": "pip install --quiet 'headroom-ai[proxy,mcp]==0.25.0'"
 }
