@@ -547,6 +547,71 @@ reference it by URI: `ghcr.io/Interested-Deving-1896/fork-sync-all/git-platform-
 completes, only local path references work. Run `devcontainer-sdk.yml` with
 `mode: publish` to push it.
 
+### Devcontainer feature — `sync-in-server`
+
+`.devcontainer/features/sync-in-server/` installs the Sync-in server binary
+at container build time from `github.com/Sync-in/server` releases.
+
+**Binary resolution order in `services/sync-in/start.sh` (hybrid A→B→C→D):**
+
+| Step | Path | When |
+|---|---|---|
+| A | `/usr/local/bin/sync-in-server` | Feature ran at build time |
+| B | `~/.local/bin/sync-in-server` | `postCreateCommand` ran `services/sync-in/install.sh` |
+| C | PATH search | Binary installed by other means |
+| D | Self-install | Downloads latest release from GitHub at service start time |
+
+If all four fail, the service exits with a clear message and suggests running
+the `Install Sync-in Server` automation task.
+
+`services/sync-in/install.sh` is the shared install helper used by both
+`postCreateCommand` (B) and the automations task (C). It skips silently if
+the binary is already present; set `FORCE=true` to reinstall.
+
+Both `services/sync-in/start.sh` and `services/sync-in/install.sh` are
+scaffold-only includes in all four template manifest profiles — consumers
+receive them on first sync, subsequent syncs skip them if already present.
+
+### Sync-in workflow (`sync-in.yml`)
+
+Manages the Sync-in server/client lifecycle. Every devcontainer starts a local
+Sync-in server automatically via the `sync-in-server` automation service
+(port 3284, admin token at `~/.local/share/sync-in/.admin_token`).
+
+**Enable/disable toggle — `vars.SYNC_IN_ENABLED`:**
+
+Set as a repo Actions variable (not a secret — it's plain text):
+
+```bash
+# Enable
+gh api --method POST /repos/{owner}/{repo}/actions/variables \
+  -f name="SYNC_IN_ENABLED" -f value="true"
+
+# Disable (maintenance mode)
+gh api --method PATCH /repos/{owner}/{repo}/actions/variables/SYNC_IN_ENABLED \
+  -f value="false"
+```
+
+Decision matrix in `secrets-check` job:
+
+| Condition | Result |
+|---|---|
+| `force_run=true` (dispatch input) | Run — bypasses everything |
+| `SYNC_IN_ENABLED == 'false'` | Skip — explicit opt-out |
+| `SYNC_IN_ENABLED == 'true'` | Run — explicit opt-in |
+| `SYNC_IN_ENABLED` unset | Run if both secrets present, skip otherwise |
+
+**Required secrets** (only needed when `SYNC_IN_ENABLED=true`):
+- `SYNC_IN_SERVER_URL` — public URL of the Sync-in instance (must be reachable
+  by GitHub Actions runners — `localhost:3284` only works from inside the container)
+- `SYNC_IN_ADMIN_TOKEN` — admin token from `~/.local/share/sync-in/.admin_token`
+
+**Federated mesh** — `config/sync-in-peers.yml` is the peer registry. Each
+entry declares a node's `node_id`, secret names for its URL and token, role
+(`server`/`client`/`both`), and managed orgs. The `register-with-peers` action
+in `sync-in-client.sh` announces this node to each peer's `/api/v1/peers`
+endpoint. Dispatch with `role=register-peers` or `role=all`.
+
 ### Devcontainer SDK workflow (`devcontainer-sdk.yml`)
 
 Three modes, selectable via `workflow_dispatch`:
@@ -793,7 +858,7 @@ for sg in data.get('subgroups', {}).values():
 
 ### GitLab subgroup IDs
 
-Parent group: `openos-project` on GitLab (`gitlab.com/openos-project`)
+#### OSP leg — `openos-project` (`gitlab.com/openos-project`)
 
 | Subgroup slug | GitLab ID |
 |---|---|
@@ -809,8 +874,26 @@ Parent group: `openos-project` on GitLab (`gitlab.com/openos-project`)
 | `cachyos_deving` | 133909503 |
 | `ai-agents_deving` | 133909504 |
 | `rust-systems_deving` | 133954601 |
+| `accessibility_deving` | 134613311 |
+| `agnostic-api_deving` | 134613312 |
 
 All IDs are authoritative — sourced from `config/gitlab-subgroups.yml`. Do not hardcode them elsewhere.
+
+#### OOC leg — `openos-project-ooc-ecosystem` (`gitlab.com/openos-project-ooc-ecosystem`)
+
+Root group ID: 134901804
+
+OOC subgroup names **mirror OSP exactly** — same slugs, different GitLab group.
+Config: `config/gitlab-subgroups-ooc.yml`.
+
+All OOC subgroup IDs are currently `null` (subgroups not yet created in GitLab).
+When a subgroup is created, update the `id:` field in `gitlab-subgroups-ooc.yml`.
+Until then, repos fall back to the `projects` entry (root group ID 134901804).
+
+**Subgroup mirroring convention:** when adding a new subgroup to the OSP config,
+add the same slug to the OOC config with `id: null` and `repos: []`. The two
+`repos:` lists are populated independently — OSP repos and OOC repos are distinct
+even when they share a subgroup name.
 
 ---
 
@@ -1094,10 +1177,14 @@ a successful merge, entering it into the standard OSP mirror chain automatically
   handles creation now, but the target repo must be reachable via the GitHub API.
   New entries in `registered-imports.json` will auto-create the repo on first run.
 
-- **GitLab mirror chain** — `I-D-1896 → OpenOS-Project-OSP (GitHub) → openos-project (GitLab)`.
-  Adding a repo to `gitlab-subgroups.yml` is required for GitLab mirroring.
+- **GitLab mirror chain** — two independent legs:
+  - OSP leg: `I-D-1896 → OpenOS-Project-OSP (GitHub) → openos-project (GitLab)`
+  - OOC leg: `OpenOS-Project-Ecosystem-OOC (GitHub) → openos-project-ooc-ecosystem (GitLab)`
+
+  Adding a repo to `gitlab-subgroups.yml` (OSP) or `gitlab-subgroups-ooc.yml` (OOC)
+  is required for GitLab mirroring on the respective leg.
   Adding to `registered-imports.json` is required for upstream sync.
-  Both are independent — a repo can be in one without the other.
+  All three are independent — a repo can be in any combination.
 
 - **`_inter_repo_sleep` in `update-readmes.sh`** — quota-aware pacing.
   No delay when quota > 2000; scales to 30s when < 500. The cached
