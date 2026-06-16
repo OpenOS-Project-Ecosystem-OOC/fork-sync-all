@@ -11,11 +11,13 @@ Interested-Deving-1896  ──►  OpenOS-Project-OSP  ──►  OpenOS-Project
                                     │
                                     ▼
                          GitLab openos-project
-                    (11 subgroups, ~150 repos mirrored)
+                    (14 subgroups, 225 repos mirrored)
 ```
 
 <!-- AI:start:what-it-does -->
-_What it does pending._
+fork-sync-all is the control plane for the `Interested-Deving-1896` GitHub org. It runs 109 GitHub Actions workflows that keep three GitHub orgs and a GitLab group in sync, manage READMEs and badges across ~49 OSP-bound repos, resolve CI failures, and maintain 152 registered upstream imports.
+
+The mirror chain flows outward from `Interested-Deving-1896` → `OpenOS-Project-OSP` → `OpenOS-Project-Ecosystem-OOC` → `gitlab.com/openos-project`. Commits pushed directly to OSP or OOC are detected and opened as PRs back to `Interested-Deving-1896` so the source of truth stays in one place.
 <!-- AI:end:what-it-does -->
 
 ---
@@ -23,66 +25,69 @@ _What it does pending._
 ## Documentation
 
 - [Full documentation](https://interested-deving-1896.github.io/fork-sync-all/) — architecture, quota management, workflow reference, runbooks
-- [Workflow Triggers](docs/workflow-triggers.md) — every workflow, its schedule, and what else triggers it ([plain text](docs/workflow-triggers.txt))
+- [Workflow Triggers](docs/workflow-triggers.md) — all 109 workflows, their schedules, and what else triggers them ([plain text](docs/workflow-triggers.txt))
+- [Workflow Scheduling Guide](DOCS/workflow-scheduling.md) — optimal dispatch windows, quota floors, EST/UTC timing reference
+- [Quota Costs](DOCS/quota-costs.md) — per-workflow REST call estimates (p50/p95)
 
 ---
 
 ## Workflows
 
-### Sync & Mirror
+109 workflows across 17 GitLab-paired and 93 GitHub-only. Key groups:
 
-| Workflow | Schedule | What it does |
+### Mirror chain
+
+| Workflow | Schedule (UTC) | What it does |
 |---|---|---|
-| `sync-forks.yml` | Daily `06:00` | Syncs all `Interested-Deving-1896` forks with their upstreams |
-| `sync-pieroproietti-forks.yml` | Every 4h `:05` | Fast-path sync for pieroproietti forks only |
-| `mirror-to-osp.yml` | Every 6h `:00` | Mirrors `Interested-Deving-1896` repos into `OpenOS-Project-OSP` |
-| `mirror-osp-to-gitlab.yml` | Every 4h `:30` | Mirrors `OpenOS-Project-OSP` repos into GitLab `openos-project` |
-| `sync-from-gitlab.yml` | Daily `04:22` | Pulls GitLab `openos-project` repos back into `Interested-Deving-1896` (scheduled fallback; primary trigger is GitLab CI on push) |
-| `sync-registered-imports.yml` | Every 6h `:55` | Re-syncs all repos registered via the import workflow |
+| `mirror-to-osp.yml` | Every 6h at :13 | Mirrors `Interested-Deving-1896` → `OpenOS-Project-OSP` |
+| `mirror-osp-to-ooc.yml` | Every 6h at :45 | Mirrors `OpenOS-Project-OSP` → `OpenOS-Project-Ecosystem-OOC` |
+| `mirror-osp-to-gitlab.yml` | Daily 01:23 | Mirrors `OpenOS-Project-OSP` → GitLab `openos-project` |
+| `mirror-orgs-full.yml` | Daily 02:17 | Full org mirror (all branches, tags, refs) |
+| `mirror-releases.yml` | Every 12h at :03 | Mirrors GitHub Releases + assets across all three orgs |
+| `mirror-artifacts.yml` | Daily 02:10 | Mirrors Flatpak, RPM, and container artifacts |
 
-### Import
+### Fork & import sync
 
-| Workflow | Trigger | What it does |
+| Workflow | Schedule (UTC) | What it does |
 |---|---|---|
-| `import-repo.yml` | Manual | Imports any git repo from any platform into `Interested-Deving-1896` |
+| `sync-forks.yml` | Daily 06:07 | Syncs all `Interested-Deving-1896` forks with their upstreams |
+| `sync-registered-imports.yml` | Daily 04:55 | Re-syncs all 152 repos in `registered-imports.json` |
+| `sync-pieroproietti-forks.yml` | Daily 01:07 | Fast-path sync for pieroproietti forks |
+| `upstream-prs.yml` | Daily 03:33 | Opens PRs for OSP/OOC commits not in `Interested-Deving-1896` |
+| `upstream-commits.yml` | Daily 03:47 | Detects direct OSP/OOC commits; opens reconciliation PRs |
+| `import-repo.yml` | Manual | Imports any git repo from any platform |
 
-**Import workflow inputs:**
-- `repo_url` — source URL (GitHub, GitLab, Bitbucket, Codeberg, Sourcehut, Gitea, or any git host)
-- `repo_name` — optional rename in `Interested-Deving-1896` (defaults to source name)
-- `mirror_to_osp_ooc` — push through the OSP → OOC chain immediately
-- `ongoing_sync` — register in `registered-imports.json` for re-sync every 6h
+### README, badges & content
 
-### Quota and queue management
-
-| Workflow | Schedule | What it does |
+| Workflow | Schedule (UTC) | What it does |
 |---|---|---|
-| `full-chain-flush.yml` | On `validate-config` success / manual | Master orchestrator — runs the full mirror chain in sequence |
-| `queue-manager.yml` | Every 15 min | Deduplicates queued runs; evicts runs queued > 25 min |
-| `quota-reserve.yml` | Every 10 min | Cancels low-priority queued runs when quota < 1000 |
-| `validate-config.yml` | On push / PR | Validates all config files; runs AgentShield security scan (opt-in) |
+| `update-readmes.yml` | Daily 03:15 | Regenerates AI-owned README sections across OSP-bound repos |
+| `create-readmes.yml` | Daily 07:08 | Creates READMEs for repos that have none |
+| `inject-badges.yml` | Every 2 days 08:15 | Injects Built-with-Ona badges |
+| `translate-readmes.yml` | Every 2 days 10:43 | Translates READMEs to French |
+| `reconcile-org-refs.yml` | Every 2 days 05:50 | Rewrites org names in file content across all three orgs |
 
-### Security and token management
+### CI, quota & queue management
 
-| Workflow | Schedule | What it does |
+| Workflow | Schedule (UTC) | What it does |
 |---|---|---|
-| `token-health.yml` | Weekly Monday `09:00` | Checks GitHub + GitLab PAT expiry; opens an issue at 45 days out |
-| `rotate-token.yml` | Manual | Rotates any repo secret via workflow dispatch |
+| `check-ci.yml` | Daily 09:05 | Checks CI status across all configured targets (GitHub + GitLab) |
+| `resolve-ci.yml` | Daily 07:43 | AI-assisted CI failure resolver across all targets |
+| `queue-manager.yml` | Every 30 min | Deduplicates queued runs; evicts runs queued > 25 min |
+| `quota-reserve.yml` | Every 30 min | Cancels low-priority runs when quota < 1,000 |
+| `full-chain-flush.yml` | Monthly 05:17 / manual | Master orchestrator — runs the full 18-stage pipeline in sequence |
+| `validate-config.yml` | On push / PR | Validates all config files; runs AgentShield security scan |
+| `full-audit.yml` | Weekly Monday 04:00 | 20-check structural audit of workflows, configs, and wiring |
 
-### Maintenance
+### Infrastructure & maintenance
 
-| Workflow | Schedule | What it does |
+| Workflow | Schedule (UTC) | What it does |
 |---|---|---|
-| `reconcile-org-refs.yml` | Manual / on push | Rewrites org names in file content across all three orgs |
-| `upstream-commits.yml` | Every 6h `:47` | Detects direct commits to OSP/OOC and opens PRs in `Interested-Deving-1896` |
-| `upstream-prs.yml` | Every 6h `:33` | Syncs open PRs from OSP/OOC upstream into `Interested-Deving-1896` |
-| `add-mirror-repo.yml` | Manual | Adds a new repo to the OSP + OOC mirror chain |
-| `setup-osp-mirrors.yml` | Manual | Injects `mirror-osp-to-ooc.yaml` into all OSP repos |
-| `resolve-failures.yml` | Daily `07:30` | AI-assisted CI failure resolver (GitHub Models) |
-| `upstream-workflow-proposal.yml` | Weekly Monday `06:00` | Scans OSP-bound repos for new workflows; opens a PR to propose as a template skeleton |
-| `rebase-lts.yml` | Weekly | Rebases the `lts` branch of `penguins-eggs` |
-| `sync-eggs-docs-to-book.yml` | On push | Syncs `penguins-eggs` docs into `penguins-eggs-book` |
-| `mirror-artifacts.yml` | Scheduled | Mirrors release artifacts (packages, containers, flatpaks) |
-| `ota-discover.yml` | Scheduled | Discovers OTA update payloads across OSP-bound repos |
+| `rate-limit-rerun.yml` | Every 4h at :05 | Re-triggers workflows that failed due to rate limiting |
+| `cleanup-branches.yml` | Monthly 04:29 | Deletes branches merged into main across the org |
+| `update-infra-deps.yml` | Weekly Monday 06:11 | Opens PRs for outdated Actions versions, runners, Node/Python |
+| `token-health.yml` | Weekly Monday 09:24 | Checks PAT expiry; opens an issue at 45 days out |
+| `pre-flush-prep.yml` | Manual | Clears queue, merges PRs, validates config, then dispatches flush |
 
 ---
 
@@ -91,15 +96,18 @@ _What it does pending._
 | Secret | Used by | Notes |
 |---|---|---|
 | `SYNC_TOKEN` | All workflows | GitHub PAT — `repo` + `workflow` + `admin:org` scopes |
+| `GITLAB_TOKEN` | GitLab workflows | GitLab PAT — `api` + `write_repository` on `openos-project` |
+| `GITLAB_SYNC_TOKEN` | `mirror-osp-to-gitlab.yml`, post-flush verification | GitLab PAT for mirror operations |
 | `GH_SYNC_TOKEN` | GitLab CI `sync-from-gitlab` job | Same PAT stored as a GitLab CI variable |
-| `GITLAB_SYNC_TOKEN` | `mirror-osp-to-gitlab.yml`, `sync-from-gitlab.yml` | GitLab PAT — `api` + `write_repository` on `openos-project` group |
+| `ADD_MIRROR_REPO_SYNC` | `add-mirror-repo.yml` | Scoped PAT for repo creation |
+| `OSP_ADMIN_TOKEN` | OSP org admin operations | PAT with `admin:org` on `OpenOS-Project-OSP` |
 | `BITBUCKET_TOKEN` | `import-repo.yml`, `sync-registered-imports.yml` | Bitbucket app password (private repos only) |
 | `GITEA_TOKEN` | `import-repo.yml`, `sync-registered-imports.yml` | Gitea/Codeberg PAT (private repos only) |
-| `ADD_MIRROR_REPO_SYNC` | `add-mirror-repo.yml` | Scoped PAT for repo creation |
+| `SOURCEHUT_TOKEN` | `import-repo.yml` | Sourcehut PAT (private repos only) |
 | `ACTIVITYSMITH_API_KEY` | `full-chain-flush.yml` | Optional — live activity tracking; skipped if unset |
-| `ANTHROPIC_API_KEY` | `validate-config.yml` | Optional — AgentShield security scan; skipped if unset |
+| `SYNC_IN_SERVER_URL` | `sync-in.yml` | URL of the local sync-in server instance |
 
-To add a missing secret, run in your terminal (value prompted securely, never logged):
+To add a missing secret:
 
 ```bash
 gh secret set <SECRET_NAME> --repo Interested-Deving-1896/fork-sync-all
@@ -109,9 +117,8 @@ gh secret set <SECRET_NAME> --repo Interested-Deving-1896/fork-sync-all
 
 ## Registered Imports
 
-`registered-imports.json` tracks repos imported via `import-repo.yml` with `ongoing_sync` enabled. The `sync-registered-imports.yml` workflow reads this file hourly and re-pulls each source.
+`registered-imports.json` tracks 152 repos imported via `import-repo.yml` with `ongoing_sync` enabled. `sync-registered-imports.yml` re-pulls each source daily at 04:55 UTC.
 
-Schema:
 ```json
 [
   {
@@ -129,197 +136,101 @@ To register a repo manually, run `import-repo.yml` with `ongoing_sync: true`, or
 
 ## Rate limits
 
-All workflows share a single `SYNC_TOKEN`. Understanding the limits prevents
-surprise failures and helps diagnose them when they do occur.
+Both `SYNC_TOKEN` and `GH_SYNC_TOKEN` belong to the same user and share the same 5,000 req/hr REST bucket. Treat them as one pool.
 
-### GitHub REST API
-
-| Limit type | Threshold | Reset | Header |
+| API | Limit | Reset | Notes |
 |---|---|---|---|
-| Primary (per token) | 5 000 req/hr | Top of the hour | `X-RateLimit-Reset` (epoch) |
-| Secondary (burst/concurrency) | No fixed number — triggered by rapid sequential requests | ~60 s cooldown | `X-RateLimit-Reset` or `Retry-After` |
-| Unauthenticated | 60 req/hr per IP | Top of the hour | `X-RateLimit-Reset` |
+| GitHub REST | 5,000 req/hr per token | Top of the hour | `X-RateLimit-Reset` header |
+| GitHub GraphQL | 5,000 pts/hr (counts as 1 REST call) | Top of the hour | Preferred for bulk repo queries |
+| GitHub Models | Varies by model | Per-minute window | `Retry-After` header |
+| GitLab REST | 2,000 req/min per token | Per-minute window | `RateLimit-Reset` header |
 
-**What a 403/429 means here:** GitHub returns HTTP `403` for secondary rate
-limits and HTTP `429` for primary exhaustion. Both include `X-RateLimit-Reset`
-in the response headers. All scripts that call the GitHub API read this header
-and sleep until the reset window opens before retrying (up to 3 attempts).
+`raw.githubusercontent.com` fetches do **not** count against the quota.
 
-**Workflows most likely to hit limits:** `sync-forks.yml` (scans all forks),
-`reconcile-org-refs.yml` (reads every file in every repo), and
-`resolve-failures.yml` (scans all repos across three orgs). These run
-sequentially within their own concurrency group so they don't compound each
-other's usage.
-
-**If a workflow fails with "API rate limit exceeded":** the next scheduled run
-will succeed once the window resets. `resolve-failures.yml` will also catch and
-retry it automatically. No manual intervention is needed unless the token itself
-has been revoked.
-
-### GitHub Models API
-
-Used by `resolve-failures.yml` and `create-readmes.yml` / `update-readmes.yml`
-for AI-assisted analysis and generation.
-
-| Limit type | Behaviour | Header |
-|---|---|---|
-| Per-token quota | Varies by model; `gpt-4o-mini` has the highest allowance | `Retry-After` (seconds) |
-| Rate (requests/min) | Model-dependent | `Retry-After` |
-
-HTTP `429` from the Models API includes a `Retry-After` header. Scripts read
-this and sleep for the indicated duration before retrying (up to 3 attempts).
-If the quota is fully exhausted the script logs
-`[models-rate-limit] GitHub Models quota exhausted` and skips AI analysis for
-that run — the workflow still exits 0 so it doesn't generate a false failure
-notification.
-
-### GitLab API
-
-Used by `mirror-osp-to-gitlab.yml`, `sync-from-gitlab.yml`, and
-`sync-to-gitlab.yml`.
-
-| Limit type | Threshold | Reset | Header |
-|---|---|---|---|
-| Authenticated REST | 2 000 req/min per token | Per-minute window | `RateLimit-Reset` (epoch) |
-| Unauthenticated | 500 req/min per IP | Per-minute window | `RateLimit-Reset` |
-
-HTTP `429` (and occasionally `403`) from GitLab includes a `RateLimit-Reset`
-header. Scripts read this and sleep until the window resets before retrying.
-
-### git push limits
-
-Mirror scripts that push via HTTPS (`mirror-to-osp.yml`,
-`mirror-osp-to-ooc.yaml`, `sync-to-gitlab.yml`, `sync-registered-imports.yml`,
-etc.) can hit transient push rejections under load — these are not HTTP API
-limits but git-level errors. All push steps retry up to 3 times with linear
-backoff (15 s, 30 s, 45 s) before failing.
-
-The `mirror-osp-to-ooc.yaml` workflow additionally uses a `concurrency` group
-(`mirror-to-ooc`) so concurrent runs queue rather than race, which eliminates
-the `cannot lock ref` class of push failures.
-
-### Diagnosing a rate-limit failure
-
-1. Open the failed run log and search for `[rate-limit]` or `rate limit exceeded`.
-2. The log line includes the HTTP status, sleep duration, and attempt number.
-3. If all 3 retries were exhausted the next scheduled run will succeed
-   automatically — primary limits reset hourly, secondary limits within ~60 s.
-4. If failures persist across multiple scheduled runs, check that `SYNC_TOKEN`
-   is valid (`gh auth status`) and has the required scopes (`repo`, `workflow`,
-   `admin:org`).
-
-### GitHub Actions runner minutes
-
-**Free tier:** 2,000 min/month (Linux, resets 1st of each month). All jobs use
-`ubuntu-latest` (1× multiplier). At the current schedule density (~7 hourly
-workflows), this repo exceeds the free tier. **A paid plan or self-hosted
-runner is required.**
-
-**Symptoms of exhaustion:** `ubuntu-latest` jobs queue indefinitely, 0
-in-progress runs, no runners active. Check via **Settings → Billing → Actions**.
-
-**Recovery:** Cancel all queued runs (they will never start), then wait for the
-monthly reset or add a self-hosted runner.
+All scripts retry up to 3 times with reset-aware backoff on 403/429. The `quota-reserve.yml` workflow cancels low-priority queued runs when remaining quota drops below 1,000. Check current quota:
 
 ```bash
-# Bulk cancel all queued runs (requires API quota)
-gh api "repos/Interested-Deving-1896/fork-sync-all/actions/runs?per_page=100" \
-  --jq '[.workflow_runs[] | select(.status=="queued") | .id] | .[]' | \
-  xargs -I{} gh api -X POST \
-    "repos/Interested-Deving-1896/fork-sync-all/actions/runs/{}/cancel"
+curl -sf -H "Authorization: token $SYNC_TOKEN" \
+  "https://api.github.com/rate_limit" | \
+  python3 -c "
+import sys,json,datetime
+d=json.load(sys.stdin)['resources']['core']
+print(f\"remaining={d['remaining']}  resets={datetime.datetime.utcfromtimestamp(d['reset']).strftime('%H:%M UTC')}\")
+"
 ```
 
-### Concurrency groups and stuck runs
+**Workflows most likely to hit limits:** `reconcile-org-refs.yml` (reads every file in every repo), `check-ci.yml` (scans all repos across three orgs), and `resolve-ci.yml` (AI-assisted analysis). These run in their own concurrency groups so they don't compound each other.
 
-All workflows use `cancel-in-progress: true`. A newer run always supersedes a
-queued one, preventing permanent queue buildup when runner minutes are exhausted
-mid-job.
-
-**Detecting stuck runs:**
-```bash
-gh api "repos/Interested-Deving-1896/fork-sync-all/actions/runs?per_page=100" \
-  --jq '[.workflow_runs[] | select(.status=="queued")] | length'
-```
-
-### workflow_run trigger cost
-
-`workflow_run` fires on every `completed` event regardless of conclusion. All
-listeners in this repo gate at the job level so they exit immediately (no
-runner cost) when the upstream conclusion doesn't match:
-
-- Content processors (`create-readmes`, `update-readmes`, `inject-badges`,
-  `translate-readmes`, `lts-readmes`, `mirror-osp-to-gitlab`): gate on
-  `conclusion == 'success'`
-- Watchdogs (`mirror-orgs-watchdog`): gate on `conclusion == 'failure'`
-
-See [DOCS/OPERATIONS.md](DOCS/OPERATIONS.md) for the full operational
-reference: quota tables, schedule summary, self-hosted runner setup, and
-quick-reference reset times.
+---
 
 ## GitLab subgroups
 
-11 subgroups under `gitlab.com/openos-project`, ~150 repos mirrored:
+14 subgroups under `gitlab.com/openos-project`, 225 repos mirrored:
 
 | Subgroup | Repos | Focus |
 |---|---|---|
-| `git-management_deving` | 4 | Git tooling and org management |
-| `penguins-eggs_deving` | 3 | penguins-eggs distro tools |
-| `immutable-filesystem_deving` | varies | Immutable filesystem projects |
-| `linux-kernel_filesystem_deving` | 15 | Kernel and filesystem repos |
-| `incus_deving` | varies | Incus container/VM tooling |
-| `taubyte_deving` | 8 | Taubyte protocol repos |
-| `neon-deving` | varies | KDE Neon repos |
-| `ops` | 5 | Infrastructure and tooling |
-| `yaml-tooling_deving` | 29 | YAML tools, linters, schema validators, GH Actions tooling |
-| `cachyos_deving` | 15 | CachyOS distro packages |
-| `ai-agents_deving` | 12 | AI agent frameworks and tools |
+| `incus_deving` | 49 | Incus container/VM tooling |
+| `yaml-tooling_deving` | 34 | YAML tools, linters, schema validators, GH Actions tooling |
+| `ops` | 30 | Infrastructure and org management tooling |
+| `agnostic-api_deving` | 29 | Unified Agnostic API — virtual filesystems, AI/LLM adapters, OS-compat layers |
+| `penguins-eggs_deving` | 17 | penguins-eggs distro tools |
+| `linux-kernel_filesystem_deving` | 14 | Kernel and filesystem repos |
+| `cachyos_deving` | 12 | CachyOS distro packages |
+| `ai-agents_deving` | 10 | AI agent frameworks and tools |
+| `accessibility_deving` | 9 | Screen readers, Braille, WCAG auditing, audio overviews |
+| `git-management_deving` | 9 | Git tooling and org management |
+| `neon-deving` | 8 | KDE Neon repos |
+| `rust-systems_deving` | 2 | Rust systems programming |
+| `taubyte_deving` | 1 | Taubyte protocol |
+| `immutable-filesystem_deving` | 1 | Immutable filesystem projects |
 
 Subgroup IDs and repo assignments are in `config/gitlab-subgroups.yml`.
 
 ---
 
-## Mirror chain timing
-
-```
-:00  mirror-to-osp.yml          Interested-Deving-1896 → OSP
-:05  sync-pieroproietti          pieroproietti forks fast-path
-:10  quota-reserve.yml           Cancel low-priority runs if quota < 1000
-:15  queue-manager.yml           Deduplicate queued runs
-:15  mirror-osp-to-ooc.yaml      OSP → OOC  (per-repo, injected by setup-osp-mirrors)
-:23  upstream-prs.yml            OOC/OSP PRs → Interested-Deving-1896
-:30  mirror-osp-to-gitlab.yml    OSP → GitLab openos-project
-:45  upstream-commits.yml        Direct OSP/OOC commits → PRs in Interested-Deving-1896
-:55  sync-registered-imports     External platform imports re-sync
-
-Full chain (validate-config → full-chain-flush) runs on every push to main.
-```
-
-<!-- AI:start:mirror-chain -->
-This repo is maintained in [`Interested-Deving-1896/fork-sync-all`](https://github.com/Interested-Deving-1896/fork-sync-all) and mirrored through:
-
-```
-Interested-Deving-1896/fork-sync-all  ──►  OpenOS-Project-OSP/fork-sync-all  ──►  OpenOS-Project-Ecosystem-OOC/fork-sync-all
-```
-
-Changes flow downstream automatically via the hourly mirror chain in
-[`fork-sync-all`](https://github.com/Interested-Deving-1896/fork-sync-all).
-Direct commits to OSP or OOC are detected and opened as PRs back to `Interested-Deving-1896`.
-<!-- AI:end:mirror-chain -->
-
----
-
+<!-- AI:start:architecture -->
 ## Architecture
 
-<!-- AI:start:architecture -->
-_Architecture pending._
+fork-sync-all is structured as a hub-and-spoke control plane. All automation lives in this repo; consumer repos receive only the files they need via `sync-template.yml`.
+
+**Mirror chain** (outward flow, runs every 6h):
+```
+Interested-Deving-1896  ──[mirror-to-osp]──►  OpenOS-Project-OSP
+                                                      │
+                              ──[mirror-osp-to-ooc]──►  OpenOS-Project-Ecosystem-OOC
+                                                      │
+                              ──[mirror-osp-to-gitlab]──►  gitlab.com/openos-project
+```
+
+**Feedback loop** (inward flow, runs daily):
+- `upstream-prs.yml` + `upstream-commits.yml` detect changes on OSP/OOC and open PRs back to `Interested-Deving-1896`
+- `git-platform-sync.yml` pulls from GitLab back to GitHub
+
+**Key config files:**
+- `config/gitlab-subgroups.yml` — single source of truth for GitLab subgroup placement
+- `config/workflow-quota-costs.yml` — per-workflow REST call cost estimates (drives quota pre-flight)
+- `config/workflow-priority-tiers.yml` — cancellation priority (Tier 1 = never cancel, Tier 4 = cancel first)
+- `config/workflow-sync.yml` — which workflows have GitLab CI counterparts
+- `registered-imports.json` — 152 upstream repos kept in ongoing sync
+
+**Quota management** runs on two axes: `queue-manager.yml` deduplicates queued runs every 30 min; `quota-reserve.yml` cancels low-priority runs when the REST bucket drops below 1,000. Both read `config/workflow-priority-tiers.yml` at runtime — no script edits needed when adding new workflows.
 <!-- AI:end:architecture -->
 
 ---
 
+<!-- AI:start:ci -->
 ## CI
 
-<!-- AI:start:ci -->
-_CI pending._
+Every push and PR runs `validate-config.yml`, which gates on:
+
+1. **YAML parse** — all 109 workflow files parse cleanly
+2. **Workflow guards** — `rate_limit_rerun` inputs have job-level guards; `workflow_run` trigger names match real workflows; quota-cost and priority-tier entries are consistent
+3. **Shell syntax** — `bash -n` on all scripts
+4. **Schema validation** — `gavi` validates all workflows against the GitHub Actions JSON schema
+5. **Config validators** — `gitlab-subgroups.yml`, `registered-imports.json`, `template-manifest.yml`, `workflow-priority-tiers.yml`, `workflow-cost-profiles.yml`
+6. **AgentShield** — AI agent config security scan (opt-in via `ANTHROPIC_API_KEY` secret)
+
+The required status check is `CI Required` (a gate job that always runs and reflects all filtered outcomes). `full-audit.yml` runs 20 deeper checks weekly on Monday at 04:00 UTC.
 <!-- AI:end:ci -->
 
 ---
@@ -359,19 +270,14 @@ origin(s), as declared in each repo's `## Origins` README section.
 <!-- AI:start:resources -->
 | File | Description |
 |---|---|
-| [registered-imports.json](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/registered-imports.json) | Registered ongoing-sync imports |
+| [registered-imports.json](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/registered-imports.json) | 152 registered ongoing-sync imports |
+| [config/gitlab-subgroups.yml](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/config/gitlab-subgroups.yml) | GitLab subgroup map (14 subgroups, 225 repos) |
+| [config/workflow-quota-costs.yml](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/config/workflow-quota-costs.yml) | Per-workflow REST call cost estimates |
+| [config/workflow-priority-tiers.yml](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/config/workflow-priority-tiers.yml) | Workflow cancellation priority tiers |
+| [docs/workflow-triggers.md](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/workflow-triggers.md) | All 109 workflows with schedules and triggers |
+| [DOCS/workflow-scheduling.md](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/workflow-scheduling.md) | Scheduling guide with EST/UTC columns |
 | [dep-graph/origins.md](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/dep-graph/origins.md) | Dependency graph (Markdown table) |
-| [.gitlab/merge_request_templates/Default.md](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.gitlab/merge_request_templates/Default.md) | GitLab MR template |
-| [config/gitlab-subgroups.yml](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/config/gitlab-subgroups.yml) | GitLab subgroup map |
 <!-- AI:end:resources -->
-
----
-
-## Contributors
-
-<!-- AI:start:contributors -->
-_Contributors pending._
-<!-- AI:end:contributors -->
 
 ---
 
@@ -383,13 +289,36 @@ This repo uses automated accessibility auditing via `check-accessibility.yml`.
 Checks include: CODEOWNERS ownership coverage, README screen-reader compatibility,
 WCAG 2.1 AA HTML compliance, audio overview (espeak-ng), and Braille output (liblouis).
 
-
-
-
 Run the [Check Accessibility](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/check-accessibility.yml)
 workflow to generate the first report and accessibility artifacts.
 See [DOCS/accessibility.md](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/accessibility.md) for the full reference.
 <!-- AI:end:accessibility -->
+
+---
+
+<!-- AI:start:mirror-chain -->
+## Mirror chain
+
+This repo is maintained in [`Interested-Deving-1896/fork-sync-all`](https://github.com/Interested-Deving-1896/fork-sync-all) and mirrored through:
+
+```
+Interested-Deving-1896/fork-sync-all  ──►  OpenOS-Project-OSP/fork-sync-all  ──►  OpenOS-Project-Ecosystem-OOC/fork-sync-all
+                                                                                              │
+                                                                                              ▼
+                                                                               gitlab.com/openos-project/ops/fork-sync-all
+```
+
+Changes flow downstream automatically via the hourly mirror chain.
+Direct commits to OSP or OOC are detected and opened as PRs back to `Interested-Deving-1896`.
+<!-- AI:end:mirror-chain -->
+
+---
+
+## Contributors
+
+<!-- AI:start:contributors -->
+_Contributors pending._
+<!-- AI:end:contributors -->
 
 ---
 
