@@ -5,17 +5,39 @@
 Sync and mirror infrastructure for the three-org chain:
 
 ```
-Interested-Deving-1896  ──►  OpenOS-Project-OSP  ──►  OpenOS-Project-Ecosystem-OOC
-        ▲                                                         │
-        └─────────── upstream-commits / upstream-prs ────────────┘
-                                    │
-                                    ▼
-                         GitLab openos-project
-                    (14 subgroups, 225 repos mirrored)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Mirror chain (outward, every 6h)                                           │
+│                                                                             │
+│  Interested-Deving-1896 ──► OpenOS-Project-OSP ──► OpenOS-Project-Ecosystem-OOC
+│          ▲                                                    │             │
+│          └──────── upstream-commits / upstream-prs ───────────┘             │
+│                                         │                                   │
+│                                         ▼                                   │
+│                              GitLab openos-project                          │
+│                         (14 subgroups, 225 repos mirrored)                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Full pipeline (manual / monthly)                                           │
+│                                                                             │
+│  pre-flush-prep ──► full-chain-flush (18 stages) ──► post-flush-prep       │
+│       │                      │                             │                │
+│  QUOTA_SNAPSHOT          QUOTA_SNAPSHOT               QUOTA_SNAPSHOT        │
+│  (chain entry)           (chain start)                (chain exit)          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Quota & queue management (automatic, every 30 min)                         │
+│                                                                             │
+│  quota-reserve ──► queue-manager ──► runner-status                         │
+│                         │                                                   │
+│                  rate-limit-rerun ──► cancel-stale-runs                     │
+│                    (every 4h)         quota-monitor                         │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 <!-- AI:start:what-it-does -->
-fork-sync-all is the control plane for the `Interested-Deving-1896` GitHub org. It runs 109 GitHub Actions workflows that keep three GitHub orgs and a GitLab group in sync, manage READMEs and badges across ~49 OSP-bound repos, resolve CI failures, and maintain 152 registered upstream imports.
+fork-sync-all is the control plane for the `Interested-Deving-1896` GitHub org. It runs 110 GitHub Actions workflows that keep three GitHub orgs and a GitLab group in sync, manage READMEs and badges across ~49 OSP-bound repos, resolve CI failures, and maintain 152 registered upstream imports.
 
 The mirror chain flows outward from `Interested-Deving-1896` → `OpenOS-Project-OSP` → `OpenOS-Project-Ecosystem-OOC` → `gitlab.com/openos-project`. Commits pushed directly to OSP or OOC are detected and opened as PRs back to `Interested-Deving-1896` so the source of truth stays in one place.
 <!-- AI:end:what-it-does -->
@@ -25,7 +47,7 @@ The mirror chain flows outward from `Interested-Deving-1896` → `OpenOS-Project
 ## Documentation
 
 - [Full documentation](https://interested-deving-1896.github.io/fork-sync-all/) — architecture, quota management, workflow reference, runbooks
-- [Workflow Triggers](docs/workflow-triggers.md) — all 109 workflows, their schedules, and what else triggers them ([plain text](docs/workflow-triggers.txt))
+- [Workflow Triggers](docs/workflow-triggers.md) — all 110 workflows, their schedules, and what else triggers them ([plain text](docs/workflow-triggers.txt))
 - [Workflow Scheduling Guide](DOCS/workflow-scheduling.md) — optimal dispatch windows, quota floors, EST/UTC timing reference
 - [Quota Costs](DOCS/quota-costs.md) — per-workflow REST call estimates (p50/p95)
 
@@ -33,7 +55,7 @@ The mirror chain flows outward from `Interested-Deving-1896` → `OpenOS-Project
 
 ## Workflows
 
-109 workflows across 17 GitLab-paired and 93 GitHub-only. Key groups:
+110 workflows across 17 GitLab-paired and 93 GitHub-only. Key groups:
 
 ### Mirror chain
 
@@ -67,6 +89,14 @@ The mirror chain flows outward from `Interested-Deving-1896` → `OpenOS-Project
 | `translate-readmes.yml` | Every 2 days 10:43 | Translates READMEs to French |
 | `reconcile-org-refs.yml` | Every 2 days 05:50 | Rewrites org names in file content across all three orgs |
 
+### Full pipeline
+
+| Workflow | Schedule (UTC) | What it does |
+|---|---|---|
+| `pre-flush-prep.yml` | Manual | Clears queue, merges PRs, validates config, writes entry `QUOTA_SNAPSHOT`, then dispatches flush |
+| `full-chain-flush.yml` | Monthly 05:17 / manual | Master orchestrator — runs the full 18-stage pipeline in sequence; writes `QUOTA_SNAPSHOT` at start |
+| `post-flush-prep.yml` | After flush / manual | End-to-end verification (mirror integrity, CI, badge check); writes exit `QUOTA_SNAPSHOT` |
+
 ### CI, quota & queue management
 
 | Workflow | Schedule (UTC) | What it does |
@@ -75,7 +105,10 @@ The mirror chain flows outward from `Interested-Deving-1896` → `OpenOS-Project
 | `resolve-ci.yml` | Daily 07:43 | AI-assisted CI failure resolver across all targets |
 | `queue-manager.yml` | Every 30 min | Deduplicates queued runs; evicts runs queued > 25 min |
 | `quota-reserve.yml` | Every 30 min | Cancels low-priority runs when quota < 1,000 |
-| `full-chain-flush.yml` | Monthly 05:17 / manual | Master orchestrator — runs the full 18-stage pipeline in sequence |
+| `runner-status.yml` | Every hour at :10 | Runner utilisation and queue depth report; flags critical backlog |
+| `rate-limit-rerun.yml` | Every 4h at :05 | Re-triggers workflows that failed due to rate limiting |
+| `cancel-stale-runs.yml` | After rate-limit-rerun | Clears post-outage run pile-up immediately after reruns are dispatched |
+| `rate-limit-status.yml` | Manual / after rerun | Snapshots quota across all platforms (GitHub REST/GraphQL, GitLab, Models) |
 | `validate-config.yml` | On push / PR | Validates all config files; runs AgentShield security scan |
 | `full-audit.yml` | Weekly Monday 04:00 | 20-check structural audit of workflows, configs, and wiring |
 
@@ -83,11 +116,9 @@ The mirror chain flows outward from `Interested-Deving-1896` → `OpenOS-Project
 
 | Workflow | Schedule (UTC) | What it does |
 |---|---|---|
-| `rate-limit-rerun.yml` | Every 4h at :05 | Re-triggers workflows that failed due to rate limiting |
 | `cleanup-branches.yml` | Monthly 04:29 | Deletes branches merged into main across the org |
 | `update-infra-deps.yml` | Weekly Monday 06:11 | Opens PRs for outdated Actions versions, runners, Node/Python |
 | `token-health.yml` | Weekly Monday 09:24 | Checks PAT expiry; opens an issue at 45 days out |
-| `pre-flush-prep.yml` | Manual | Clears queue, merges PRs, validates config, then dispatches flush |
 
 ---
 
@@ -191,7 +222,7 @@ Subgroup IDs and repo assignments are in `config/gitlab-subgroups.yml`.
 <!-- AI:start:architecture -->
 ## Architecture
 
-fork-sync-all is structured as a hub-and-spoke control plane. All automation lives in this repo; consumer repos receive only the files they need via `sync-template.yml`.
+fork-sync-all is structured as a hub-and-spoke control plane. All automation lives in this repo; consumer repos receive only the files they need via `sync-template.yml`. 110 workflows across three functional layers: mirror chain, full pipeline, and quota/queue management.
 
 **Mirror chain** (outward flow, runs every 6h):
 ```
@@ -223,7 +254,7 @@ Interested-Deving-1896  ──[mirror-to-osp]──►  OpenOS-Project-OSP
 
 Every push and PR runs `validate-config.yml`, which gates on:
 
-1. **YAML parse** — all 109 workflow files parse cleanly
+1. **YAML parse** — all 110 workflow files parse cleanly
 2. **Workflow guards** — `rate_limit_rerun` inputs have job-level guards; `workflow_run` trigger names match real workflows; quota-cost and priority-tier entries are consistent
 3. **Shell syntax** — `bash -n` on all scripts
 4. **Schema validation** — `gavi` validates all workflows against the GitHub Actions JSON schema
@@ -274,7 +305,7 @@ origin(s), as declared in each repo's `## Origins` README section.
 | [config/gitlab-subgroups.yml](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/config/gitlab-subgroups.yml) | GitLab subgroup map (14 subgroups, 225 repos) |
 | [config/workflow-quota-costs.yml](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/config/workflow-quota-costs.yml) | Per-workflow REST call cost estimates |
 | [config/workflow-priority-tiers.yml](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/config/workflow-priority-tiers.yml) | Workflow cancellation priority tiers |
-| [docs/workflow-triggers.md](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/workflow-triggers.md) | All 109 workflows with schedules and triggers |
+| [docs/workflow-triggers.md](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/workflow-triggers.md) | All 110 workflows with schedules and triggers |
 | [DOCS/workflow-scheduling.md](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/workflow-scheduling.md) | Scheduling guide with EST/UTC columns |
 | [dep-graph/origins.md](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/dep-graph/origins.md) | Dependency graph (Markdown table) |
 <!-- AI:end:resources -->
