@@ -238,6 +238,7 @@ Check GitLab CI Sync  (check-gitlab-sync.yml)
   Compares paired jobs in .gitlab-ci.yml against config/workflow-sync.yml and
   reports drift — scripts with changed entry points, mismatched cadence rules,
   or jobs missing from either side.
+  workflow_run  Validate Config
   dispatch
 
 Notification Poller  (notify-poller.yml)
@@ -261,6 +262,7 @@ Rate-Limit Re-trigger  (rate-limit-rerun.yml)
 Rate Limit Status  (rate-limit-status.yml)
   Queries current rate limit status for all external APIs used by fork-sync-
   all. On-demand health check.
+  workflow_run  Rate-Limit Re-trigger
   dispatch
 
 Rebuild LTS Branch (penguins-eggs)  (rebase-lts.yml)
@@ -294,6 +296,7 @@ Cleanup Stale Branches  (cleanup-branches.yml)
 Cleanup Template Pollution  (cleanup-pollution.yml)
   Removes files incorrectly propagated from fork-sync-all to consumer repos
   via the template sync pipeline, across all three GitHub orgs and GitLab.
+  workflow_run  Sync Template
   dispatch
 
 Generate OSP Dependency Graph  (generate-dep-graph.yml)
@@ -441,6 +444,7 @@ Cancel Stale Runs  (cancel-stale-runs.yml)
   Cancels queued and in-progress workflow runs older than MAX_AGE_MINUTES
   (default 90) or created before a fix commit, preventing stale runs from
   burning quota.
+  workflow_run  Rate-Limit Re-trigger
   dispatch
 
 Check Accessibility  (check-accessibility.yml)
@@ -565,6 +569,7 @@ Git Platform Sync  (git-platform-sync.yml)
 GitLab Storage Scan  (gl-storage-scan.yml)
   Scans all projects under openos-project on GitLab and reports storage usage.
   Useful for diagnosing when the namespace approaches its 10 GiB limit.
+  workflow_run  Mirror OSP → GitLab
   dispatch
 
 Integrate Shell Tools  (integrate-shell-tools.yml)
@@ -659,12 +664,14 @@ Post-Flush Verification  (post-flush-prep.yml)
   End-to-end health check after full-chain-flush — mirror integrity across all
   three pairs, CI status on I-D-1896 OSP-bound repos, quota health, and
   workflow queue health.
+  workflow_run  Full Chain Flush
   dispatch
 
 Pre-Mirror CI Gate  (pre-mirror-ci-gate.yml)
   Checks CI status on all OSP-bound repos in Interested-Deving-1896 before
   mirroring. Dispatches resolve-failures for red repos, waits, then re-checks.
   Blocks the mirror if repos are still failing.
+  workflow_run  Reconcile Org References
   dispatch
 
 Queue Manager  (queue-manager.yml)
@@ -677,6 +684,7 @@ Queue Manager  (queue-manager.yml)
 Quota Monitor  (quota-monitor.yml)
   Polls GitHub quota and optionally dispatches a target workflow once quota
   recovers above a configurable threshold. Dispatch-only — never scheduled.
+  workflow_run  Rate-Limit Re-trigger
   dispatch
 
 Quota Reserve  (quota-reserve.yml)
@@ -797,6 +805,9 @@ Verify Mirror Integrity  (verify-mirror-integrity.yml)
   Compares default-branch HEAD SHAs between source and destination for all
   OSP-bound repos after a mirror stage. Reports mismatches as warnings;
   configurable hard-fail mode.
+  workflow_run  Mirror Interested-Deving-1896 → OSP
+  workflow_run  Mirror to OpenOS-Project-Ecosystem-OOC
+  workflow_run  Mirror OSP → GitLab
   dispatch
 
 
