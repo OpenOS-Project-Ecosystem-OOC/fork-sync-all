@@ -458,10 +458,17 @@ Check Accessibility  (check-accessibility.yml)
   push       DOCS/generated/**
   dispatch
 
+Check CI Status  (check-ci.yml)
+  Agnostic CI status checker. Runs check-ci.sh for each enabled target in
+  config/ci-check-targets.yml (GitHub orgs and GitLab groups). Replaces check-
+  osp-ci.yml and check-ooc-ci.yml.
+  schedule   Daily 09:05  (5 9 * * *)
+  workflow_run  Add Mirror Repo
+  dispatch
+
 Check OOC-Bound CI Status  (check-ooc-ci.yml)
-  Checks CI status of every OOC-bound repo (OpenOS-Project-Ecosystem-OOC).
-  Falls back to org enumeration when gitlab-subgroups-ooc.yml is sparse.
-  Dispatches resolve-failures.yml on failures.
+  Deprecated stub — delegates to Check CI Status. Kept for schedule/trigger
+  continuity.
   schedule   Daily 09:25  (25 9 * * *)
   workflow_run  Mirror to OpenOS-Project-Ecosystem-OOC
   dispatch
@@ -841,6 +848,7 @@ Every 6h at :45                Setup OSP Mirror Workflows
 Every 6h at :47                Upstream Direct Commits from OSP + OOC
 Every 4h at :05                Rate-Limit Re-trigger
 Daily 03:05                    Sync Registry Sources
+Daily 09:05                    Check CI Status
 Daily 09:05                    Check OSP-Bound CI Status
 Every 8h at :50                Sync to GitLab Variant
 Daily 05:50                    Reconcile Org References
