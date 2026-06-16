@@ -383,6 +383,31 @@ Validate Config  (validate-config.yml)
 FULL PIPELINE
 -------------
 
+Pre-Flush Prep  (pre-flush-prep.yml)
+  Prepares the system for a clean full-chain-flush — cancels stale runs,
+  merges ready PRs, validates config, cleans merged branches, removes template
+  pollution, then dispatches full-chain-flush when quota is sufficient.
+  dispatch
+
+Full Chain Flush  (full-chain-flush.yml)
+  Orchestrates the complete mirror chain in sequence — mirror-to-osp → mirror-
+  osp-to-ooc → mirror-osp-to-gitlab — with quota checks between each stage.
+  schedule   Monthly 1st 05:17  (17 5 1 * *)
+  dispatch
+
+Post-Flush Verification  (post-flush-prep.yml)
+  End-to-end health check after full-chain-flush — mirror integrity across all
+  three pairs, CI status on I-D-1896 OSP-bound repos, quota health, and
+  workflow queue health.
+  workflow_run  Full Chain Flush
+  dispatch
+
+Critical Deploy  (critical-deploy.yml)
+  Fast-lane workflow for deploying critical fixes when the system is degraded
+  — commits and pushes changes, clears the queue aggressively, then dispatches
+  priority workflows.
+  dispatch
+
 Critical Deploy — All  (critical-deploy-all.yml)
   Fast-lane critical deploy across all four platforms (Interested-Deving-1896,
   OSP, OOC, GitLab) in sequence. Cost is approximately 4× the single-org
@@ -399,40 +424,15 @@ Critical Deploy — OSP  (critical-deploy-github-osp.yml)
   pattern as Critical Deploy but targets the OSP mirror org only.
   dispatch
 
-GitLab Critical Deploy  (critical-deploy-gitlab.yml)
-  Fast-lane GitLab mirror recovery. Pushes current HEAD directly to GitLab via
-  HTTPS, cancels pending pipelines, pauses/resumes schedules, and optionally
-  triggers a fresh pipeline. Works even when GitHub quota is near 0.
-  dispatch
-
 Critical Deploy — Stub (TODO)  (critical-deploy-stub.yml)
   Stub template for new platform critical deploy targets. Non-functional until
   TODOs are filled in. Update costs when the platform is activated.
   dispatch
 
-Critical Deploy  (critical-deploy.yml)
-  Fast-lane workflow for deploying critical fixes when the system is degraded
-  — commits and pushes changes, clears the queue aggressively, then dispatches
-  priority workflows.
-  dispatch
-
-Full Chain Flush  (full-chain-flush.yml)
-  Orchestrates the complete mirror chain in sequence — mirror-to-osp → mirror-
-  osp-to-ooc → mirror-osp-to-gitlab — with quota checks between each stage.
-  schedule   Monthly 1st 05:17  (17 5 1 * *)
-  dispatch
-
-Post-Flush Verification  (post-flush-prep.yml)
-  End-to-end health check after full-chain-flush — mirror integrity across all
-  three pairs, CI status on I-D-1896 OSP-bound repos, quota health, and
-  workflow queue health.
-  workflow_run  Full Chain Flush
-  dispatch
-
-Pre-Flush Prep  (pre-flush-prep.yml)
-  Prepares the system for a clean full-chain-flush — cancels stale runs,
-  merges ready PRs, validates config, cleans merged branches, removes template
-  pollution, then dispatches full-chain-flush when quota is sufficient.
+GitLab Critical Deploy  (critical-deploy-gitlab.yml)
+  Fast-lane GitLab mirror recovery. Pushes current HEAD directly to GitLab via
+  HTTPS, cancels pending pipelines, pauses/resumes schedules, and optionally
+  triggers a fresh pipeline. Works even when GitHub quota is near 0.
   dispatch
 
 
@@ -760,6 +760,14 @@ Sync-in  (sync-in.yml)
   schedule   Daily 10:15  (15 10 * * *)
   dispatch
 
+Sync Ona Projects  (sync-ona-projects.yml)
+  Reconciles config/ona-projects.yml with the Ona API. Creates or updates Ona
+  projects for all repos in the org chain. Runs in dry-run mode when ONA_TOKEN
+  is absent.
+  schedule   Daily 06:00  (0 6 * * *)
+  push       config/ona-projects.yml
+  dispatch
+
 Sync Registry Backend  (sync-registry-backend.yml)
   Agnostic registry sync backend propagated to upstream-sync consumers.
   Dispatch-only, no schedule, no hardcoded defaults. Reads
@@ -830,6 +838,7 @@ Weekly Sun 02:00               Sync Shell Tools Vendor
 Weekly Sun 03:00               Integrate Shell Tools
 Weekly Mon 04:00               Full Audit
 Weekly Tue 05:00               Sync UAA Vendor
+Daily 06:00                    Sync Ona Projects
 Weekly Mon 08:00               Update Quota Cost Registry
 Every 1h at :10                Runner Status
 Daily 02:10                    Mirror Artifacts

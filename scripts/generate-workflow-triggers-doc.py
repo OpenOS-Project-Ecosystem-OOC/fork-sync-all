@@ -76,6 +76,18 @@ GROUPS = [
     # Note: critical-deploy, pre-flush-prep, full-chain-flush → "Full Pipeline"
 ]
 
+# ── Explicit sort order for groups where alphabetical is wrong ────────────────
+# Maps group name → list of filename substrings in the desired display order.
+# Workflows not listed here sort alphabetically after the pinned ones.
+GROUP_SORT_KEYS: dict[str, list[str]] = {
+    "Full Pipeline": [
+        "pre-flush-prep",
+        "full-chain-flush",
+        "post-flush-prep",
+        "critical-deploy",
+    ],
+}
+
 # ── Cron → human-readable ─────────────────────────────────────────────────────
 def cron_to_parts(cron: str) -> tuple[str, str]:
     """Return (frequency, time) for a cron expression.
@@ -247,6 +259,17 @@ def generate_md(grouped: dict, all_wfs: list, now: str, synopses: dict = None) -
         wfs = grouped.get(group_name, [])
         if not wfs:
             continue
+
+        # Apply explicit ordering for groups where alphabetical is wrong
+        if group_name in GROUP_SORT_KEYS:
+            order = GROUP_SORT_KEYS[group_name]
+            def _sort_key(wf, _order=order):
+                for i, pat in enumerate(_order):
+                    if pat in wf["file"]:
+                        return (i, wf["name"])
+                return (len(_order), wf["name"])
+            wfs = sorted(wfs, key=_sort_key)
+
         lines.append(f"---")
         lines.append("")
         lines.append(f"## {group_name}")
@@ -338,6 +361,17 @@ def generate_txt(grouped: dict, all_wfs: list, now: str, synopses: dict = None) 
         wfs = grouped.get(group_name, [])
         if not wfs:
             continue
+
+        # Apply explicit ordering for groups where alphabetical is wrong
+        if group_name in GROUP_SORT_KEYS:
+            order = GROUP_SORT_KEYS[group_name]
+            def _sort_key(wf, _order=order):
+                for i, pat in enumerate(_order):
+                    if pat in wf["file"]:
+                        return (i, wf["name"])
+                return (len(_order), wf["name"])
+            wfs = sorted(wfs, key=_sort_key)
+
         lines.append("")
         lines.append(group_name.upper())
         lines.append("-" * len(group_name))
