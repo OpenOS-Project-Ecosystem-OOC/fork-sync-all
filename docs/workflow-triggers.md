@@ -3,7 +3,7 @@
 All workflows in `.github/workflows/`. Grouped by function, with every trigger listed.
 
 > Plain-text version: [`docs/workflow-triggers.txt`](workflow-triggers.txt)  
-> Auto-generated on 2026-06-16 from `.github/workflows/` and `config/workflow-quota-costs.yml`
+> Auto-generated on 2026-06-17 from `.github/workflows/` and `config/workflow-quota-costs.yml`
 
 ---
 
