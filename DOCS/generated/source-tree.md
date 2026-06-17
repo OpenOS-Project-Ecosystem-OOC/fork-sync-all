@@ -123,8 +123,6 @@ Click any path to view it on GitHub.
 | [`blincus.yaml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.dotdrop/dotfiles/templates/vite-app/blincus.yaml) |  |
 | [`incus-image.yaml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.dotdrop/dotfiles/templates/vite-app/incus-image.yaml) |  |
 
-##### [{rust-service,go-service,nextjs-app,vite-app,generic}/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/.dotdrop/dotfiles/templates/{rust-service,go-service,nextjs-app,vite-app,generic}) {#dotdrop-dotfiles-templates-{rust-service,go-service,nextjs-app,vite-app,generic}}
-
 ## [.github/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/.github) {#github}
 *GitHub Actions workflows, issue templates, dependabot config*
 
@@ -282,12 +280,6 @@ Click any path to view it on GitHub.
 |---|---|
 | [`automations.yaml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.ona/automations.yaml) |  |
 
-### [review/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/.ona/review) {#ona-review}
-
-| File | Description |
-|---|---|
-| [`comments.json`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.ona/review/comments.json) |  |
-
 ### [skills/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/.ona/skills) {#ona-skills}
 
 | File | Description |
@@ -306,7 +298,9 @@ Click any path to view it on GitHub.
 
 | File | Description |
 |---|---|
+| [`AGENTS.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/AGENTS.md) | AI agent conventions, patterns, and known pitfalls |
 | [`OPERATIONS.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/OPERATIONS.md) |  |
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/README.md) | Project overview, mirror chain diagram, workflow count |
 | [`SUMMARY.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/SUMMARY.md) |  |
 | [`accessibility.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/accessibility.md) |  |
 | [`architecture.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/architecture.md) |  |
@@ -318,9 +312,6 @@ Click any path to view it on GitHub.
 | [`runbooks.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/runbooks.md) |  |
 | [`workflow-scheduling.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/workflow-scheduling.md) |  |
 | [`workflow-triggers.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/workflow-triggers.md) |  |
-
-### [fr/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/DOCS/fr) {#docs-fr}
-*French translations (populated by translate-docs.yml)*
 
 ### [generated/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/DOCS/generated) {#docs-generated}
 *Auto-generated pages (rebuilt by generate-book-pages.py)*
@@ -690,10 +681,6 @@ Click any path to view it on GitHub.
 | [`book.js`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/vendor/book-engine/themes/fsa/book.js) |  |
 | [`custom.css`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/vendor/book-engine/themes/fsa/custom.css) |  |
 | [`mkdocs-extra.css`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/vendor/book-engine/themes/fsa/mkdocs-extra.css) |  |
-
-#### [{adapters,themes/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/vendor/book-engine/{adapters,themes) {#vendor-book-engine-{adapters,themes}
-
-##### [fsa,scripts,config}/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/vendor/book-engine/{adapters,themes/fsa,scripts,config}) {#vendor-book-engine-{adapters,themes-fsa,scripts,config}}
 
 ### [infra-dashboard/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/vendor/infra-dashboard) {#vendor-infra-dashboard}
 *Unified infrastructure platform (statuspage, dashboards)*
