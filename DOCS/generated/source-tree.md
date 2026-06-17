@@ -172,6 +172,7 @@ Click any path to view it on GitHub.
 | [`docker-to-incus.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/docker-to-incus.yml) |  |
 | [`eco-audit.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/eco-audit.yml) |  |
 | [`enforce-agnostic-vendor.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/enforce-agnostic-vendor.yml) |  |
+| [`flush-lifecycle.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/flush-lifecycle.yml) |  |
 | [`fork-neon-repos.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/fork-neon-repos.yml) |  |
 | [`full-audit.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/full-audit.yml) |  |
 | [`full-chain-flush.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/full-chain-flush.yml) |  |
@@ -431,11 +432,161 @@ Click any path to view it on GitHub.
 |---|---|
 | [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/audio-overview/README.md) | Project overview, mirror chain diagram, workflow count |
 
+##### [long/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/audio-overview/long) {#docs-notebooklm-audio-overview-long}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/audio-overview/long/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/audio-overview/long/2026-06-17) {#docs-notebooklm-audio-overview-long-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/audio-overview/long/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [medium/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/audio-overview/medium) {#docs-notebooklm-audio-overview-medium}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/audio-overview/medium/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/audio-overview/medium/2026-06-17) {#docs-notebooklm-audio-overview-medium-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/audio-overview/medium/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [short/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/audio-overview/short) {#docs-notebooklm-audio-overview-short}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/audio-overview/short/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/audio-overview/short/2026-06-17) {#docs-notebooklm-audio-overview-short-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/audio-overview/short/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
 #### [flashcards/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards) {#docs-notebooklm-flashcards}
 
 | File | Description |
 |---|---|
 | [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [fewer/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/fewer) {#docs-notebooklm-flashcards-fewer}
+
+##### [easy/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/fewer/easy) {#docs-notebooklm-flashcards-fewer-easy}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/fewer/easy/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/fewer/easy/2026-06-17) {#docs-notebooklm-flashcards-fewer-easy-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/fewer/easy/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [hard/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/fewer/hard) {#docs-notebooklm-flashcards-fewer-hard}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/fewer/hard/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/fewer/hard/2026-06-17) {#docs-notebooklm-flashcards-fewer-hard-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/fewer/hard/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [medium/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/fewer/medium) {#docs-notebooklm-flashcards-fewer-medium}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/fewer/medium/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/fewer/medium/2026-06-17) {#docs-notebooklm-flashcards-fewer-medium-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/fewer/medium/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [more/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/more) {#docs-notebooklm-flashcards-more}
+
+##### [easy/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/more/easy) {#docs-notebooklm-flashcards-more-easy}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/more/easy/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/more/easy/2026-06-17) {#docs-notebooklm-flashcards-more-easy-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/more/easy/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [hard/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/more/hard) {#docs-notebooklm-flashcards-more-hard}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/more/hard/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/more/hard/2026-06-17) {#docs-notebooklm-flashcards-more-hard-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/more/hard/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [medium/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/more/medium) {#docs-notebooklm-flashcards-more-medium}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/more/medium/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/more/medium/2026-06-17) {#docs-notebooklm-flashcards-more-medium-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/more/medium/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [standard/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/standard) {#docs-notebooklm-flashcards-standard}
+
+##### [easy/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/standard/easy) {#docs-notebooklm-flashcards-standard-easy}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/standard/easy/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/standard/easy/2026-06-17) {#docs-notebooklm-flashcards-standard-easy-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/standard/easy/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [hard/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/standard/hard) {#docs-notebooklm-flashcards-standard-hard}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/standard/hard/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/standard/hard/2026-06-17) {#docs-notebooklm-flashcards-standard-hard-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/standard/hard/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [medium/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/standard/medium) {#docs-notebooklm-flashcards-standard-medium}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/standard/medium/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/flashcards/standard/medium/2026-06-17) {#docs-notebooklm-flashcards-standard-medium-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/flashcards/standard/medium/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
 
 #### [infographic/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/infographic) {#docs-notebooklm-infographic}
 
@@ -443,11 +594,161 @@ Click any path to view it on GitHub.
 |---|---|
 | [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/infographic/README.md) | Project overview, mirror chain diagram, workflow count |
 
+##### [landscape/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/infographic/landscape) {#docs-notebooklm-infographic-landscape}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/infographic/landscape/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/infographic/landscape/2026-06-17) {#docs-notebooklm-infographic-landscape-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/infographic/landscape/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [portrait/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/infographic/portrait) {#docs-notebooklm-infographic-portrait}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/infographic/portrait/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/infographic/portrait/2026-06-17) {#docs-notebooklm-infographic-portrait-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/infographic/portrait/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [square/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/infographic/square) {#docs-notebooklm-infographic-square}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/infographic/square/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/infographic/square/2026-06-17) {#docs-notebooklm-infographic-square-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/infographic/square/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
 #### [quiz/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz) {#docs-notebooklm-quiz}
 
 | File | Description |
 |---|---|
 | [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [fewer/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/fewer) {#docs-notebooklm-quiz-fewer}
+
+##### [easy/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/fewer/easy) {#docs-notebooklm-quiz-fewer-easy}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/fewer/easy/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/fewer/easy/2026-06-17) {#docs-notebooklm-quiz-fewer-easy-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/fewer/easy/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [hard/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/fewer/hard) {#docs-notebooklm-quiz-fewer-hard}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/fewer/hard/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/fewer/hard/2026-06-17) {#docs-notebooklm-quiz-fewer-hard-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/fewer/hard/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [medium/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/fewer/medium) {#docs-notebooklm-quiz-fewer-medium}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/fewer/medium/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/fewer/medium/2026-06-17) {#docs-notebooklm-quiz-fewer-medium-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/fewer/medium/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [more/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/more) {#docs-notebooklm-quiz-more}
+
+##### [easy/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/more/easy) {#docs-notebooklm-quiz-more-easy}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/more/easy/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/more/easy/2026-06-17) {#docs-notebooklm-quiz-more-easy-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/more/easy/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [hard/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/more/hard) {#docs-notebooklm-quiz-more-hard}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/more/hard/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/more/hard/2026-06-17) {#docs-notebooklm-quiz-more-hard-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/more/hard/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [medium/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/more/medium) {#docs-notebooklm-quiz-more-medium}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/more/medium/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/more/medium/2026-06-17) {#docs-notebooklm-quiz-more-medium-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/more/medium/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [standard/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/standard) {#docs-notebooklm-quiz-standard}
+
+##### [easy/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/standard/easy) {#docs-notebooklm-quiz-standard-easy}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/standard/easy/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/standard/easy/2026-06-17) {#docs-notebooklm-quiz-standard-easy-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/standard/easy/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [hard/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/standard/hard) {#docs-notebooklm-quiz-standard-hard}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/standard/hard/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/standard/hard/2026-06-17) {#docs-notebooklm-quiz-standard-hard-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/standard/hard/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [medium/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/standard/medium) {#docs-notebooklm-quiz-standard-medium}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/standard/medium/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/quiz/standard/medium/2026-06-17) {#docs-notebooklm-quiz-standard-medium-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/quiz/standard/medium/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
 
 #### [reports/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/reports) {#docs-notebooklm-reports}
 
@@ -455,17 +756,101 @@ Click any path to view it on GitHub.
 |---|---|
 | [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/reports/README.md) | Project overview, mirror chain diagram, workflow count |
 
+##### [blog-post/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/reports/blog-post) {#docs-notebooklm-reports-blog-post}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/reports/blog-post/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/reports/blog-post/2026-06-17) {#docs-notebooklm-reports-blog-post-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/reports/blog-post/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [briefing-doc/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/reports/briefing-doc) {#docs-notebooklm-reports-briefing-doc}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/reports/briefing-doc/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/reports/briefing-doc/2026-06-17) {#docs-notebooklm-reports-briefing-doc-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/reports/briefing-doc/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [study-guide/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/reports/study-guide) {#docs-notebooklm-reports-study-guide}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/reports/study-guide/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/reports/study-guide/2026-06-17) {#docs-notebooklm-reports-study-guide-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/reports/study-guide/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
 #### [slide-deck/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/slide-deck) {#docs-notebooklm-slide-deck}
 
 | File | Description |
 |---|---|
 | [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/slide-deck/README.md) | Project overview, mirror chain diagram, workflow count |
 
+##### [detailed/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/slide-deck/detailed) {#docs-notebooklm-slide-deck-detailed}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/slide-deck/detailed/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/slide-deck/detailed/2026-06-17) {#docs-notebooklm-slide-deck-detailed-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/slide-deck/detailed/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [presenter/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/slide-deck/presenter) {#docs-notebooklm-slide-deck-presenter}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/slide-deck/presenter/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/slide-deck/presenter/2026-06-17) {#docs-notebooklm-slide-deck-presenter-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/slide-deck/presenter/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
 #### [video-overview/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/video-overview) {#docs-notebooklm-video-overview}
 
 | File | Description |
 |---|---|
 | [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/video-overview/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [brief/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/video-overview/brief) {#docs-notebooklm-video-overview-brief}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/video-overview/brief/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/video-overview/brief/2026-06-17) {#docs-notebooklm-video-overview-brief-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/video-overview/brief/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [explainer/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/video-overview/explainer) {#docs-notebooklm-video-overview-explainer}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/video-overview/explainer/README.md) | Project overview, mirror chain diagram, workflow count |
+
+##### [2026-06-17/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/docs/notebooklm/video-overview/explainer/2026-06-17) {#docs-notebooklm-video-overview-explainer-2026-06-17}
+
+| File | Description |
+|---|---|
+| [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docs/notebooklm/video-overview/explainer/2026-06-17/README.md) | Project overview, mirror chain diagram, workflow count |
 
 ## [scripts/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/scripts) {#scripts}
 *All first-party automation scripts*
@@ -501,6 +886,7 @@ Click any path to view it on GitHub.
 | [`devcontainer-validate.py`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/scripts/devcontainer-validate.py) |  |
 | [`dispatch-and-wait.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/scripts/dispatch-and-wait.sh) |  |
 | [`docker-to-incus.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/scripts/docker-to-incus.sh) |  |
+| [`flush-sentinel.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/scripts/flush-sentinel.sh) |  |
 | [`generate-book-pages.py`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/scripts/generate-book-pages.py) | Generates DOCS/generated/ pages from config sources |
 | [`generate-dep-graph.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/scripts/generate-dep-graph.sh) |  |
 | [`generate-gitlab-stubs.py`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/scripts/generate-gitlab-stubs.py) |  |
