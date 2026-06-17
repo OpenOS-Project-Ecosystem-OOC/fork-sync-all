@@ -294,6 +294,12 @@ Click any path to view it on GitHub.
 |---|---|
 | [`schema.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.ota/schema.yml) |  |
 
+## [.reuse/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/.reuse) {#reuse}
+
+| File | Description |
+|---|---|
+| [`dep5`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.reuse/dep5) |  |
+
 ## [DOCS/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/DOCS) {#docs}
 *mdBook source — all documentation pages*
 
@@ -326,6 +332,12 @@ Click any path to view it on GitHub.
 | [`source-tree.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/generated/source-tree.md) |  |
 | [`subgroup-map.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/generated/subgroup-map.md) |  |
 | [`workflow-reference.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/DOCS/generated/workflow-reference.md) |  |
+
+## [LICENSES/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/LICENSES) {#licenses}
+
+| File | Description |
+|---|---|
+| [`GPL-3.0-only.txt`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/LICENSES/GPL-3.0-only.txt) |  |
 
 ## [assets/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/assets) {#assets}
 *Static assets: brand logos, docs scaffolds, OTA stubs*
@@ -601,6 +613,7 @@ Click any path to view it on GitHub.
 | File | Description |
 |---|---|
 | [`eco-audit.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/scripts/eco/eco-audit.sh) |  |
+| [`eco-ci-shell.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/scripts/eco/eco-ci-shell.sh) |  |
 | [`gitlab-ci-eco.yml.tpl`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/scripts/eco/gitlab-ci-eco.yml.tpl) |  |
 
 ### [includes/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/scripts/includes) {#scripts-includes}
@@ -646,6 +659,15 @@ Click any path to view it on GitHub.
 | [`test_validate_template_config.py`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/tests/test_validate_template_config.py) |  |
 | [`test_validate_workflow_guards.py`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/tests/test_validate_workflow_guards.py) |  |
 
+### [eco/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/tests/eco) {#tests-eco}
+
+#### [ocs/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/tests/eco/ocs) {#tests-eco-ocs}
+
+| File | Description |
+|---|---|
+| [`test-eco-certified.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/tests/eco/ocs/test-eco-certified.sh) |  |
+| [`test-providers.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/tests/eco/ocs/test-providers.sh) |  |
+
 ## [vendor/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/vendor) {#vendor}
 *Third-party components hosted/deployed by fork-sync-all*
 
@@ -663,6 +685,7 @@ Click any path to view it on GitHub.
 |---|---|
 | [`gitbook-oss.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/vendor/book-engine/adapters/gitbook-oss.sh) |  |
 | [`gitbook.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/vendor/book-engine/adapters/gitbook.sh) |  |
+| [`kapidox.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/vendor/book-engine/adapters/kapidox.sh) |  |
 | [`mdbook.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/vendor/book-engine/adapters/mdbook.sh) |  |
 | [`mkdocs.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/vendor/book-engine/adapters/mkdocs.sh) |  |
 | [`pandoc.sh`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/vendor/book-engine/adapters/pandoc.sh) |  |

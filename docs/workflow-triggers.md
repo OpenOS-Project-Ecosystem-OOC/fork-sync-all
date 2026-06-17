@@ -7,26 +7,6 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 
 ---
 
-<!-- FSA-INDEX-START -->
-## Index
-
-Jump to any section:
-
-| Section | Workflows |
-|---|---|
-| [Mirror Chain](#mirror-chain) | 7 |
-| [OSP-Bound Repo Management](#osp-bound-repo-management) | 3 |
-| [Fork & Import Sync](#fork--import-sync) | 10 |
-| [GitLab Sync](#gitlab-sync) | 2 |
-| [README Management](#readme-management) | 7 |
-| [CI & Failure Resolution](#ci--failure-resolution) | 7 |
-| [Maintenance & Housekeeping](#maintenance--housekeeping) | 12 |
-| [Full Pipeline](#full-pipeline) | 9 |
-| [Utility / On-Demand](#utility--on-demand) | 59 |
-
-**Quick links:** [Glossary](#glossary) · [Schedule Summary](#schedule-summary-utc) · [Source](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/.github/workflows)
-
-<!-- FSA-INDEX-END -->
 
 ## Mirror Chain
 
@@ -209,6 +189,7 @@ Jump to any section:
 | Verify Mirror Integrity [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/verify-mirror-integrity.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/verify-mirror-integrity.yml) | Compares default-branch HEAD SHAs between source and destination for all OSP-bound repos after a mirror stage. Reports mismatches as warnings; configurable hard-fail mode. | `verify-mirror-integrity.yml` | `Mirror Interested-Deving-1896 → OSP` completes · `Mirror to OpenOS-Project-Ecosystem-OOC` completes · `Mirror OSP → GitLab` completes · dispatch |
 
 ---
+
 
 <!-- FSA-GLOSSARY-START -->
 ## Glossary
