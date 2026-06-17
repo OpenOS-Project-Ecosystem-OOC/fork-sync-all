@@ -7,30 +7,6 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 
 ---
 
-<!-- FSA-INDEX-START -->
-## Index
-
-Jump to any section:
-
-| Section | Workflows |
-|---|---|
-| [Mirror Chain](#mirror-chain) | 7 |
-| [OSP-Bound Repo Management](#osp-bound-repo-management) | 3 |
-| [Fork & Import Sync](#fork--import-sync) | 10 |
-| [GitLab Sync](#gitlab-sync) | 2 |
-| [README Management](#readme-management) | 7 |
-| [CI & Failure Resolution](#ci--failure-resolution) | 7 |
-| [Maintenance & Housekeeping](#maintenance--housekeeping) | 11 |
-| [Full Pipeline](#full-pipeline) | 9 |
-| [Quota & Queue Management](#quota--queue-management) | 4 |
-| [OTA System](#ota-system) | 5 |
-| [Documentation & Publishing](#documentation--publishing) | 9 |
-| [AI & Cost Tracking](#ai--cost-tracking) | 2 |
-| [Utility / On-Demand](#utility--on-demand) | 51 |
-
-**Quick links:** [Glossary](#glossary) · [Schedule Summary](#schedule-summary-utc) · [Source](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/.github/workflows)
-
-<!-- FSA-INDEX-END -->
 
 ## Mirror Chain
 
@@ -257,6 +233,7 @@ Jump to any section:
 | Vouch Sync Codeowners [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/vouch-sync-codeowners.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/vouch-sync-codeowners.yml) | Weekly sync of CODEOWNERS entries and org members into VOUCHED.td via vouch-seed.sh. Opens a PR if VOUCHED.td changed. | `vouch-sync-codeowners.yml` | dispatch |
 
 ---
+
 
 <!-- FSA-GLOSSARY-START -->
 ## Glossary
