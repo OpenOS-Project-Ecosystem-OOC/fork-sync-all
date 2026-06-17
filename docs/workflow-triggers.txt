@@ -424,9 +424,9 @@ Critical Deploy — OSP  (critical-deploy-github-osp.yml)
   pattern as Critical Deploy but targets the OSP mirror org only.
   dispatch
 
-Critical Deploy — Stub (TODO)  (critical-deploy-stub.yml)
-  Stub template for new platform critical deploy targets. Non-functional until
-  TODOs are filled in. Update costs when the platform is activated.
+Critical Deploy — Stub (template — not functional)  (critical-deploy-stub.yml)
+  Template for new platform critical deploy targets. Non-functional until
+  copied, renamed, and filled in. Update costs when the platform is activated.
   dispatch
 
 GitLab Critical Deploy  (critical-deploy-gitlab.yml)

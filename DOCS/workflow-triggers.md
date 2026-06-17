@@ -7,27 +7,6 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 
 ---
 
-<!-- FSA-INDEX-START -->
-## Index
-
-Jump to any section:
-
-| Section | Workflows |
-|---|---|
-| [Mirror Chain](#mirror-chain) | 7 |
-| [OSP-Bound Repo Management](#osp-bound-repo-management) | 3 |
-| [Fork & Import Sync](#fork--import-sync) | 10 |
-| [GitLab Sync](#gitlab-sync) | 2 |
-| [README Management](#readme-management) | 7 |
-| [CI & Failure Resolution](#ci--failure-resolution) | 7 |
-| [Maintenance & Housekeeping](#maintenance--housekeeping) | 12 |
-| [Full Pipeline](#full-pipeline) | 9 |
-| [Utility / On-Demand](#utility--on-demand) | 61 |
-
-**Quick links:** [Glossary](#glossary) · [Schedule Summary](#schedule-summary-utc) · [Source](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/.github/workflows)
-
-<!-- FSA-INDEX-END -->
-
 ## Mirror Chain
 
 | Workflow | Synopsis | File | Schedule | Also triggers on |
@@ -136,7 +115,8 @@ Jump to any section:
 | Critical Deploy — All [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/critical-deploy-all.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/critical-deploy-all.yml) | Fast-lane critical deploy across all four platforms (Interested-Deving-1896, OSP, OOC, GitLab) in sequence. Cost is approximately 4× the single-org variant. | `critical-deploy-all.yml` | — | dispatch |
 | Critical Deploy — OOC [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/critical-deploy-github-ooc.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/critical-deploy-github-ooc.yml) | Fast-lane critical deploy scoped to OpenOS-Project-Ecosystem-OOC — same three-phase pattern as Critical Deploy but targets the OOC mirror org only. | `critical-deploy-github-ooc.yml` | — | dispatch |
 | Critical Deploy — OSP [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/critical-deploy-github-osp.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/critical-deploy-github-osp.yml) | Fast-lane critical deploy scoped to OpenOS-Project-OSP — same three-phase pattern as Critical Deploy but targets the OSP mirror org only. | `critical-deploy-github-osp.yml` | — | dispatch |
-| Critical Deploy — Stub (TODO) [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/critical-deploy-stub.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/critical-deploy-stub.yml) | Stub template for new platform critical deploy targets. Non-functional until TODOs are filled in. Update costs when the platform is activated. | `critical-deploy-stub.yml` | — | dispatch |
+| Critical Deploy — Stub (template — not functional) [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/critical-deploy-stub.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/critical-deploy-stub.yml) | Template for new platform critical deploy targets. Non-functional until copied, renamed, and filled in. Update costs when the platform is activated.
+ | `critical-deploy-stub.yml` | — | dispatch |
 | GitLab Critical Deploy [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/critical-deploy-gitlab.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/critical-deploy-gitlab.yml) | Fast-lane GitLab mirror recovery. Pushes current HEAD directly to GitLab via HTTPS, cancels pending pipelines, pauses/resumes schedules, and optionally triggers a fresh pipeline. Works even when GitHub quota is near 0. | `critical-deploy-gitlab.yml` | — | dispatch |
 
 ---
@@ -213,58 +193,6 @@ Jump to any section:
 | Verify Mirror Integrity [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/verify-mirror-integrity.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/verify-mirror-integrity.yml) | Compares default-branch HEAD SHAs between source and destination for all OSP-bound repos after a mirror stage. Reports mismatches as warnings; configurable hard-fail mode. | `verify-mirror-integrity.yml` | `Mirror Interested-Deving-1896 → OSP` completes · `Mirror to OpenOS-Project-Ecosystem-OOC` completes · `Mirror OSP → GitLab` completes · dispatch |
 
 ---
-
-<!-- FSA-GLOSSARY-START -->
-## Glossary
-
-> Key terms used in this document. Full glossary: [DOCS/generated/glossary.md](generated/glossary.md)
-
-**dispatch**
-: Manual `workflow_dispatch` trigger — run from the Actions UI or via `gh workflow run`.
-
-**workflow_run**
-: Trigger that fires when another named workflow completes. Used to chain workflows.
-
-**quota pre-flight**
-: Step that checks remaining REST quota before doing API work. Sets `skip=true` when below `MIN_QUOTA`.
-
-**MIN_QUOTA**
-: Minimum remaining REST quota required before a workflow proceeds. Per-workflow value from `workflow-quota-costs.yml`.
-
-**OSP**
-: OpenOS-Project-OSP — second org in the mirror chain (GitHub).
-
-**OOC**
-: OpenOS-Project-Ecosystem-OOC — third org in the mirror chain (GitHub).
-
-**mirror chain**
-: Three-org pipeline: Interested-Deving-1896 → OSP → GitLab.
-
-**DRY_RUN**
-: When `true`, scripts print what they would do without making changes.
-
-**SYNC_TOKEN**
-: Cross-org GitHub token. Shares the 5000 req/hr bucket with `GH_TOKEN`.
-
-**OTA**
-: Over-the-air update system delivering workflow/config updates to consumer repos.
-
-**pre-flush-prep**
-: Pre-flight workflow run before full-chain-flush.
-
-**full-chain-flush**
-: End-to-end pipeline: pre-flush-prep → mirror chain → post-flush-prep.
-
-**priority tiers**
-: Tier 1 CRITICAL → Tier 4 LOW. Controls queue-manager and quota-reserve cancellation order.
-
-**consumer repo**
-: Repo receiving template files from fork-sync-all via sync-template.sh.
-
-**OSP-bound repo**
-: Repo mirrored into OSP and managed by fork-sync-all.
-
-<!-- FSA-GLOSSARY-END -->
 
 ## Schedule Summary (UTC)
 
