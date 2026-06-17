@@ -200,14 +200,6 @@ blockquote {
     padding: 3rem 2rem;
 }
 
-.fsa-cover img.fsa-logo {
-    max-width: 280px;
-    height: auto;
-    margin: 0 auto 2rem;
-    display: block;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 51, 204, 0.2);
-}
 
 .fsa-cover h1 {
     font-size: 2.5rem;
@@ -239,16 +231,23 @@ blockquote {
 }
 
 .fsa-index-card {
+    display: block;
     border: 1px solid var(--fsa-border);
     border-radius: 8px;
     padding: 1rem 1.2rem;
     background: white;
     transition: box-shadow 0.2s, border-color 0.2s;
+    /* reset link styles when used as <a> */
+    text-decoration: none !important;
+    color: inherit !important;
+    cursor: pointer;
 }
 
-.fsa-index-card:hover {
+.fsa-index-card:hover,
+.fsa-index-card:focus {
     box-shadow: 0 4px 12px rgba(0, 51, 204, 0.12);
     border-color: var(--fsa-blue);
+    text-decoration: none !important;
 }
 
 .fsa-index-card h3 {

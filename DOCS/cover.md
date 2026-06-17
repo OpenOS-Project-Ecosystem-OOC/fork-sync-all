@@ -25,61 +25,61 @@ syncs upstream forks, and runs org-wide maintenance workflows.
 
 <div class="fsa-index-grid">
 
-<div class="fsa-index-card">
+<a class="fsa-index-card" href="architecture.html">
 
-### [Architecture](architecture.md)
+### Architecture
 Three-org mirror chain, data flow, GitLab subgroup map, token model, quota layers.
 
-</div>
+</a>
 
-<div class="fsa-index-card">
+<a class="fsa-index-card" href="workflow-triggers.html">
 
-### [Workflow Triggers](workflow-triggers.md)
+### Workflow Triggers
 <!-- FSA-COVER-COUNT-START -->All 127 workflows<!-- FSA-COVER-COUNT-END --> — schedules, triggers, cross-workflow dependencies, index + glossary.
 
-</div>
+</a>
 
-<div class="fsa-index-card">
+<a class="fsa-index-card" href="OPERATIONS.html">
 
-### [Operations](OPERATIONS.md)
+### Operations
 GitHub Actions limits, quota management, concurrency groups, schedule summary.
 
-</div>
+</a>
 
-<div class="fsa-index-card">
+<a class="fsa-index-card" href="quota-costs.html">
 
-### [Quota Costs](quota-costs.md)
+### Quota Costs
 Per-workflow REST call cost table, daily budget, REST→GraphQL savings.
 
-</div>
+</a>
 
-<div class="fsa-index-card">
+<a class="fsa-index-card" href="runbooks.html">
 
-### [Runbooks](runbooks.md)
+### Runbooks
 Quota exhaustion, queue pile-up, token expiry, mirror chain broken, incident response.
 
-</div>
+</a>
 
-<div class="fsa-index-card">
+<a class="fsa-index-card" href="contributing.html">
 
-### [Contributing](contributing.md)
+### Contributing
 Adding workflows, scripts, config files; testing; white-labeling guide.
 
-</div>
+</a>
 
-<div class="fsa-index-card">
+<a class="fsa-index-card" href="generated/source-tree.html">
 
-### [Source Tree](generated/source-tree.md)
+### Source Tree
 Full directory/file index of the entire fork-sync-all source hierarchy.
 
-</div>
+</a>
 
-<div class="fsa-index-card">
+<a class="fsa-index-card" href="generated/glossary.html">
 
-### [Glossary](generated/glossary.md)
+### Glossary
 Definitions for every term, acronym, and concept used across the project.
 
-</div>
+</a>
 
 </div>
 
