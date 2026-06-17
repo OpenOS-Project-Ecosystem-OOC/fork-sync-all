@@ -542,6 +542,25 @@ Enforce Agnostic Vendor  (enforce-agnostic-vendor.yml)
   pull_request
   dispatch
 
+Flush Active Watchdog  (flush-active-watchdog.yml)
+  Clears FLUSH_ACTIVE=false whenever Flush Lifecycle Manager or any critical-
+  deploy workflow completes. Prevents stuck-mutex after force-cancel.
+  workflow_run  Flush Lifecycle Manager
+  workflow_run  Critical Deploy
+  workflow_run  Critical Deploy — All
+  workflow_run  Critical Deploy — OSP
+  workflow_run  Critical Deploy — OOC
+  workflow_run  GitLab Critical Deploy
+
+Flush Lifecycle Manager  (flush-lifecycle.yml)
+  Coordinates the three-stage flush pipeline with quota reservation, runner
+  slot holding via a parallel sentinel job, and pause/resume at quota reset
+  windows. Sets FLUSH_ACTIVE=true so queue-manager and quota-reserve protect
+  flush stages.
+  schedule   Weekly Sun 06:00  (0 6 * * 0)
+  workflow_run  Pre-Flush Prep
+  dispatch
+
 Fork KDE Neon Repos  (fork-neon-repos.yml)
   One-shot workflow that clones the 6 KDE Invent neon repos into Interested-
   Deving-1896 and pushes them through the OSP mirror chain. Ongoing re-sync
@@ -885,6 +904,7 @@ Weekly Mon 04:00               Full Audit
 Weekly Sun 05:00               Eco Audit
 Weekly Tue 05:00               Sync UAA Vendor
 Daily 06:00                    Sync Ona Projects
+Weekly Sun 06:00               Flush Lifecycle Manager
 Weekly Mon 08:00               Update Quota Cost Registry
 Every 1h at :10                Runner Status
 Daily 02:10                    Mirror Artifacts

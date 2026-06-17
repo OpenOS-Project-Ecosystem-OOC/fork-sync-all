@@ -7,7 +7,6 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 
 ---
 
-
 ## Mirror Chain
 
 | Workflow | Synopsis | File | Schedule | Also triggers on |
@@ -141,6 +140,10 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 | Docker → Incus Migration [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/docker-to-incus.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/docker-to-incus.yml) | Scans repos for Docker artifacts (Dockerfile, docker-compose.yml) and replaces them with Incus equivalents. Runs after Add Mirror Repo and weekly. | `docker-to-incus.yml` | `Add Mirror Repo` completes · dispatch |
 | Eco Audit [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/eco-audit.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/eco-audit.yml) | Audits fork-sync-all against KDE Eco / Blue Angel DE-UZ 215 criteria. Checks green hosting, CI efficiency, telemetry, dependency footprint. Stubs KEcoLab energy measurement for GitLab activation. Weekly on Sundays. | `eco-audit.yml` | push to `scripts/eco/**`, `.github/workflows/eco-audit.yml`, `config/workflow-quota-costs.yml` · dispatch |
 | Enforce Agnostic Vendor [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/enforce-agnostic-vendor.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/enforce-agnostic-vendor.yml) | Scans vendor/ for distro-specific hardcoded fallback values in shell, YAML, and TypeScript. All vendored components must be deployment-agnostic. | `enforce-agnostic-vendor.yml` | push to `vendor/**`, `scripts/check-vendor-agnostic.sh`, `.github/workflows/enforce-agnostic-vendor.yml` · pull_request · dispatch |
+| Flush Active Watchdog [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/flush-active-watchdog.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/flush-active-watchdog.yml) | Clears FLUSH_ACTIVE=false whenever Flush Lifecycle Manager or any critical-deploy workflow completes. Prevents stuck-mutex after force-cancel.
+ | `flush-active-watchdog.yml` | `Flush Lifecycle Manager` completes · `Critical Deploy` completes · `Critical Deploy — All` completes · `Critical Deploy — OSP` completes · `Critical Deploy — OOC` completes · `GitLab Critical Deploy` completes |
+| Flush Lifecycle Manager [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/flush-lifecycle.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/flush-lifecycle.yml) | Coordinates the three-stage flush pipeline with quota reservation, runner slot holding via a parallel sentinel job, and pause/resume at quota reset windows. Sets FLUSH_ACTIVE=true so queue-manager and quota-reserve protect flush stages.
+ | `flush-lifecycle.yml` | `Pre-Flush Prep` completes · dispatch |
 | Fork KDE Neon Repos [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/fork-neon-repos.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/fork-neon-repos.yml) | One-shot workflow that clones the 6 KDE Invent neon repos into Interested-Deving-1896 and pushes them through the OSP mirror chain. Ongoing re-sync handled by sync-registered-imports. | `fork-neon-repos.yml` | dispatch |
 | Full Audit [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/full-audit.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/full-audit.yml) | Weekly structural audit of workflows, scripts, config registries, assets, and vendor dirs. No REST calls. | `full-audit.yml` | dispatch |
 | Generate Book Pages [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/generate-book-pages.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/generate-book-pages.yml) | Regenerates DOCS/generated/ pages from config sources (workflow-quota-costs.yml, priority-tiers.yml, gitlab-subgroups.yml, registered-imports.json) and commits the result. | `generate-book-pages.yml` | push to `config/workflow-quota-costs.yml`, `config/workflow-priority-tiers.yml`, `config/gitlab-subgroups.yml` (+3 more) · dispatch |
@@ -190,60 +193,6 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 
 ---
 
-
-
-<!-- FSA-GLOSSARY-START -->
-## Glossary
-
-> Key terms used in this document. Full glossary: [DOCS/generated/glossary.md](generated/glossary.md)
-
-**dispatch**
-: Manual `workflow_dispatch` trigger — run from the Actions UI or via `gh workflow run`.
-
-**workflow_run**
-: Trigger that fires when another named workflow completes. Used to chain workflows.
-
-**quota pre-flight**
-: Step that checks remaining REST quota before doing API work. Sets `skip=true` when below `MIN_QUOTA`.
-
-**MIN_QUOTA**
-: Minimum remaining REST quota required before a workflow proceeds. Per-workflow value from `workflow-quota-costs.yml`.
-
-**OSP**
-: OpenOS-Project-OSP — second org in the mirror chain (GitHub).
-
-**OOC**
-: OpenOS-Project-Ecosystem-OOC — third org in the mirror chain (GitHub).
-
-**mirror chain**
-: Three-org pipeline: Interested-Deving-1896 → OSP → GitLab.
-
-**DRY_RUN**
-: When `true`, scripts print what they would do without making changes.
-
-**SYNC_TOKEN**
-: Cross-org GitHub token. Shares the 5000 req/hr bucket with `GH_TOKEN`.
-
-**OTA**
-: Over-the-air update system delivering workflow/config updates to consumer repos.
-
-**pre-flush-prep**
-: Pre-flight workflow run before full-chain-flush.
-
-**full-chain-flush**
-: End-to-end pipeline: pre-flush-prep → mirror chain → post-flush-prep.
-
-**priority tiers**
-: Tier 1 CRITICAL → Tier 4 LOW. Controls queue-manager and quota-reserve cancellation order.
-
-**consumer repo**
-: Repo receiving template files from fork-sync-all via sync-template.sh.
-
-**OSP-bound repo**
-: Repo mirrored into OSP and managed by fork-sync-all.
-
-<!-- FSA-GLOSSARY-END -->
-
 ## Schedule Summary (UTC)
 
 | Time | Frequency | Workflow |
@@ -283,6 +232,7 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 | Mon 05:15 | Weekly | OTA Self-Update [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/ota-self-update.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/ota-self-update.yml) |
 | 1st 05:17 | Monthly | Full Chain Flush [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/full-chain-flush.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/full-chain-flush.yml) |
 | 50 5 */2 * * |  | Reconcile Org References [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/reconcile-org-refs.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/reconcile-org-refs.yml) |
+| Sun 06:00 | Weekly | Flush Lifecycle Manager [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/flush-lifecycle.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/flush-lifecycle.yml) |
 | 06:00 | Daily | Sync Ona Projects [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/sync-ona-projects.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/sync-ona-projects.yml) |
 | Mon 06:06 | Weekly | Upstream Workflow Proposal [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/upstream-workflow-proposal.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/upstream-workflow-proposal.yml) |
 | 06:07 | Daily | Sync All Forks [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/sync-forks.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/sync-forks.yml) |
