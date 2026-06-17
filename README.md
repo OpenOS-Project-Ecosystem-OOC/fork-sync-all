@@ -311,7 +311,8 @@ This repo is maintained in [`Interested-Deving-1896/fork-sync-all`](https://gith
 Interested-Deving-1896/fork-sync-all  ──►  OpenOS-Project-OSP/fork-sync-all  ──►  OpenOS-Project-Ecosystem-OOC/fork-sync-all
 ```
 
-Changes flow downstream automatically via the hourly mirror chain.
+Changes flow downstream automatically via the hourly mirror chain in
+[`fork-sync-all`](https://github.com/Interested-Deving-1896/fork-sync-all).
 Direct commits to OSP or OOC are detected and opened as PRs back to `Interested-Deving-1896`.
 <!-- AI:end:mirror-chain -->
 
