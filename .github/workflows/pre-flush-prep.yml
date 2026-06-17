@@ -126,6 +126,16 @@ jobs:
           source scripts/includes/quota-snapshot.sh
           quota_snapshot
 
+      # Exit 1 when quota is too low so rate-limit-rerun.yml detects this run
+      # as a quota failure and re-dispatches it after the reset. The log line
+      # matches RATE_LIMIT_PATTERNS in scripts/scan-rate-limit-failures.sh.
+      - name: Fail on low quota
+        if: steps.quota_preflight.outputs.skip == 'true'
+        run: |
+          reset_time="${{ steps.quota_preflight.outputs.reset_time }}"
+          echo "Quota too low for pre-flush-prep — Re-trigger this workflow after the reset (${reset_time})" >&2
+          exit 1
+
       - name: "Step 1: Cancel stale queued runs"
         if: ${{ steps.quota_preflight.outputs.skip == 'false' }}
         run: bash scripts/pre-flush-prep.sh cancel_stale
