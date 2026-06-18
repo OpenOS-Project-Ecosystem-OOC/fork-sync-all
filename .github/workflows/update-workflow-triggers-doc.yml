@@ -29,19 +29,24 @@ jobs:
         with:
           token: ${{ secrets.SYNC_TOKEN }}
 
+      - name: Install dependencies
+        run: pip install pyyaml --quiet
+
       - name: Regenerate docs
-        run: python3 scripts/generate-workflow-triggers-doc.py .
+        run: |
+          # generate-workflow-triggers-doc.py calls inject_triggers_index() from
+          # generate-book-pages.py and copies docs/ → DOCS/ atomically.
+          python3 scripts/generate-workflow-triggers-doc.py .
 
       - name: Commit if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          cp docs/workflow-triggers.md DOCS/workflow-triggers.md
-          git add docs/workflow-triggers.md docs/workflow-triggers.txt DOCS/workflow-triggers.md
+          git add docs/workflow-triggers.md docs/workflow-triggers.txt DOCS/workflow-triggers.md README.md DOCS/cover.md
           if git diff --cached --quiet; then
             echo "No changes to docs — skipping commit."
           else
-            git commit -m "docs(auto): regenerate workflow triggers doc"
+            git commit -m "docs(auto): regenerate workflow triggers doc [skip ci]"
             git pull --rebase && git push
           fi
       - name: Write summary

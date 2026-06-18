@@ -58,7 +58,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TRIVY_VERSION: "0.51.4"
+  TRIVY_VERSION: "0.71.1"
   SBOMASM_VERSION: "0.1.9"
   PARLAY_VERSION: "0.6.0"
   SBOMQS_VERSION: "0.2.3"
@@ -74,7 +74,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 1

@@ -3,10 +3,34 @@
 All workflows in `.github/workflows/`. Grouped by function, with every trigger listed.
 
 > Plain-text version: [`docs/workflow-triggers.txt`](workflow-triggers.txt)  
-> Auto-generated on 2026-06-17 from `.github/workflows/` and `config/workflow-quota-costs.yml`
+> Auto-generated on 2026-06-18 from `.github/workflows/` and `config/workflow-quota-costs.yml`
 
 ---
 
+<!-- FSA-INDEX-START -->
+## Index
+
+Jump to any section:
+
+| Section | Workflows |
+|---|---|
+| [Mirror Chain](#mirror-chain) | 7 |
+| [OSP-Bound Repo Management](#osp-bound-repo-management) | 3 |
+| [Fork & Import Sync](#fork--import-sync) | 10 |
+| [GitLab Sync](#gitlab-sync) | 2 |
+| [README Management](#readme-management) | 7 |
+| [CI & Failure Resolution](#ci--failure-resolution) | 7 |
+| [Maintenance & Housekeeping](#maintenance--housekeeping) | 11 |
+| [Full Pipeline](#full-pipeline) | 9 |
+| [Quota & Queue Management](#quota--queue-management) | 4 |
+| [OTA System](#ota-system) | 5 |
+| [Documentation & Publishing](#documentation--publishing) | 9 |
+| [AI & Cost Tracking](#ai--cost-tracking) | 2 |
+| [Utility / On-Demand](#utility--on-demand) | 51 |
+
+**Quick links:** [Glossary](#glossary) · [Schedule Summary](#schedule-summary-utc) · [Source](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/.github/workflows)
+
+<!-- FSA-INDEX-END -->
 
 ## Mirror Chain
 
@@ -358,7 +382,3 @@ All workflows in `.github/workflows/`. Grouped by function, with every trigger l
 | at :03 | Every 12h | Mirror Releases [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/mirror-releases.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/mirror-releases.yml) |
 |  | Every 30 min | Queue Manager [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/queue-manager.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/queue-manager.yml) |
 |  | Every 30 min | Quota Reserve [↗](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/quota-reserve.yml) [▶ Run](https://github.com/Interested-Deving-1896/fork-sync-all/actions/workflows/quota-reserve.yml) |
-
----
-
-

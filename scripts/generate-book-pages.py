@@ -696,8 +696,14 @@ def inject_triggers_index(triggers_path: str, now: str) -> None:
     index_block = "\n".join(index_lines)
     glossary_block = "\n".join(glossary_lines)
 
-    # Insert index after first "---\n"
-    content = content.replace("\n---\n\n## Mirror Chain", "\n---\n" + index_block + "\n## Mirror Chain", 1)
+    # Insert index after first "---" separator before Mirror Chain section.
+    # Use regex to handle variable whitespace between --- and ## Mirror Chain.
+    import re as _re
+    content = _re.sub(
+        r'\n---\n\n+## Mirror Chain',
+        "\n---\n" + index_block + "\n## Mirror Chain",
+        content, count=1
+    )
 
     # Insert glossary before Schedule Summary
     content = content.replace("\n## Schedule Summary", "\n" + glossary_block + "\n## Schedule Summary", 1)
