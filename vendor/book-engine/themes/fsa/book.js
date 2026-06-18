@@ -4,33 +4,6 @@
 (function () {
   "use strict";
 
-  // ── Logo injection into sidebar ──────────────────────────────────────────
-  function injectSidebarLogo() {
-    var sidebar = document.querySelector(".sidebar-scrollbox");
-    if (!sidebar) return;
-    if (document.querySelector(".fsa-sidebar-logo")) return;
-
-    var logoDiv = document.createElement("div");
-    logoDiv.className = "fsa-sidebar-logo";
-    logoDiv.style.cssText =
-      "text-align:center;padding:1.2rem 1rem 0.5rem;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:0.5rem;";
-
-    var img = document.createElement("img");
-    // Path relative to book root — works for GitHub Pages deployment
-    img.src = window.__book_root
-      ? window.__book_root + "assets/brand/logo-option-1.png"
-      : "../assets/brand/logo-option-1.png";
-    img.alt = "fork-sync-all";
-    img.style.cssText =
-      "max-width:100px;height:auto;border-radius:8px;opacity:0.92;";
-    img.onerror = function () {
-      this.style.display = "none";
-    };
-
-    logoDiv.appendChild(img);
-    sidebar.insertBefore(logoDiv, sidebar.firstChild);
-  }
-
   // ── Anchor links for all headings ────────────────────────────────────────
   function addHeadingAnchors() {
     var headings = document.querySelectorAll(
@@ -111,7 +84,6 @@
 
   // ── Init ──────────────────────────────────────────────────────────────────
   function init() {
-    injectSidebarLogo();
     addHeadingAnchors();
     addCopyButtons();
     highlightActiveSidebarItem();

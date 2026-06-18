@@ -55,18 +55,6 @@
     font-size: 0.85em;
 }
 
-/* ── Logo in sidebar ─────────────────────────────────────────────────────── */
-.sidebar .sidebar-logo {
-    display: block;
-    padding: 1.5rem 1rem 0.5rem;
-    text-align: center;
-}
-
-.sidebar .sidebar-logo img {
-    max-width: 120px;
-    height: auto;
-    border-radius: 8px;
-}
 
 /* ── Top nav bar ─────────────────────────────────────────────────────────── */
 #menu-bar {
@@ -283,19 +271,49 @@ blockquote {
 /* ── Dark mode overrides ─────────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
     :root {
-        --fsa-bg:       var(--fsa-bg-dark);
-        --fsa-text:     #e8eaf6;
-        --fsa-code-bg:  #1e2030;
-        --fsa-border:   #30363d;
+        --fsa-bg:         #0d1117;
+        --fsa-text:       #e6edf3;
+        --fsa-text-muted: #8b949e;
+        --fsa-code-bg:    #161b22;
+        --fsa-border:     #30363d;
+        --fsa-link:       #79b8ff;
+        --fsa-link-hover: #a5d6ff;
     }
 
     .content {
-        background-color: var(--fsa-bg-dark) !important;
-        color: #e8eaf6 !important;
+        background-color: #0d1117 !important;
+        color: #e6edf3 !important;
     }
 
+    .content h1 { color: #79b8ff; border-bottom-color: #30363d; }
+    .content h2 { color: #79b8ff; border-bottom-color: #30363d; }
+    .content h3 { color: #a5d6ff; }
+
+    .content a         { color: #79b8ff !important; }
+    .content a:hover   { color: #a5d6ff !important; }
+
+    code {
+        background-color: #161b22 !important;
+        color: #ff7b72 !important;
+    }
+
+    table th { background-color: #1c2333 !important; color: #e6edf3 !important; }
+    table td { border-bottom-color: #30363d; color: #e6edf3; }
     table tr:nth-child(even) td { background-color: #161b22; }
     table tr:hover td           { background-color: #1c2333; }
-    .fsa-index-card             { background: #161b22; }
-    blockquote                  { background-color: #0d2137 !important; }
+
+    blockquote { background-color: #0d2137 !important; color: #c9d1d9 !important; }
+
+    .fsa-index-card {
+        background: #161b22;
+        border-color: #30363d;
+        color: #e6edf3 !important;
+    }
+    .fsa-index-card h3 { color: #79b8ff; }
+    .fsa-index-card p  { color: #8b949e; }
+    .fsa-index-card:hover,
+    .fsa-index-card:focus {
+        border-color: #79b8ff;
+        box-shadow: 0 4px 12px rgba(121, 184, 255, 0.15);
+    }
 }

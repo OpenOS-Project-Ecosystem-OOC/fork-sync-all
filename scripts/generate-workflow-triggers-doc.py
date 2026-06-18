@@ -678,7 +678,7 @@ def main():
         n = len(all_wfs)
         cover_new = re.sub(
             r'<!-- FSA-COVER-BADGE-START -->.*?<!-- FSA-COVER-BADGE-END -->',
-            f'<!-- FSA-COVER-BADGE-START -->[![{n} Workflows](https://img.shields.io/badge/workflows-{n}-0033cc?style=flat-square)](https://github.com/Interested-Deving-1896/fork-sync-all/actions)<!-- FSA-COVER-BADGE-END -->',
+            f'<!-- FSA-COVER-BADGE-START -->\n<a href="https://github.com/Interested-Deving-1896/fork-sync-all/actions"><img src="https://img.shields.io/badge/workflows-{n}-0033cc?style=flat-square" alt="{n} Workflows"></a>\n<!-- FSA-COVER-BADGE-END -->',
             cover, flags=re.DOTALL
         )
         cover_new = re.sub(

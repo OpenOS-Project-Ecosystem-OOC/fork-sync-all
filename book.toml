@@ -16,6 +16,8 @@ git-repository-url = "https://github.com/Interested-Deving-1896/fork-sync-all"
 git-repository-icon = "fa-github"
 edit-url-template = "https://github.com/Interested-Deving-1896/fork-sync-all/edit/main/{path}"
 no-section-label = false
+default-theme = "navy"
+preferred-dark-theme = "navy"
 additional-css = ["vendor/book-engine/themes/fsa/custom.css"]
 additional-js  = ["vendor/book-engine/themes/fsa/book.js"]
 
