@@ -64,11 +64,7 @@ Control plane for the `Interested-Deving-1896` GitHub org. Runs 121 GitHub Actio
 ```
 
 <!-- AI:start:what-it-does -->
-fork-sync-all is the control plane for the `Interested-Deving-1896` GitHub org. It runs 121 GitHub Actions workflows that keep three GitHub orgs and a GitLab group in sync, manage READMEs and badges across ~49 OSP-bound repos, resolve CI failures, and maintain 156 registered upstream imports.
-
-The mirror chain flows outward from `Interested-Deving-1896` → `OpenOS-Project-OSP` → `OpenOS-Project-Ecosystem-OOC` → `gitlab.com/openos-project`. Commits pushed directly to OSP or OOC are detected and opened as PRs back to `Interested-Deving-1896` so the source of truth stays in one place.
-
-The OTA system delivers versioned updates to independent forks of fork-sync-all. When a semver tag is pushed, `ota-release.yml` assembles per-fork payloads and opens PRs in all opted-in repos. `ota-reconcile.yml` runs weekly as a fallback, detecting drift and quota-exhaustion gaps autonomously.
+This project provides automated management for git repositories and organizations across multiple git-based platforms. It addresses tasks such as fork synchronization, README generation, repository mirroring, badge injection, upstream tracking, and release management. It is designed for developers and teams managing large-scale or multi-platform git repository ecosystems.
 <!-- AI:end:what-it-does -->
 
 ---
@@ -200,48 +196,47 @@ print(f'remaining={d[\"remaining\"]}  resets={reset}')
 ---
 
 <!-- AI:start:architecture -->
-## Architecture
+The project is structured to automate repository management tasks across git-based platforms. It consists of shell scripts, workflows, and configuration files that handle fork synchronization, README generation, mirroring, badge injection, upstream tracking, and release management. Key components include:
 
-fork-sync-all is structured as a hub-and-spoke control plane. All automation lives in this repo; consumer repos receive only the files they need via `sync-template.yml`. 121 workflows across 13 functional groups: mirror chain, full pipeline, quota/queue management, OTA system, and supporting layers.
+- **Shell Scripts**: Located in the `bin/` directory, these scripts implement core functionalities such as syncing forks and managing repositories.
+- **Workflows**: Defined in `.github/workflows/` and `.gitlab/`, these YAML files automate CI/CD processes, including repository mirroring, badge injection, and release management.
+- **Configuration Files**: Files like `.gitlab-ci.yml`, `docker-compose.yaml`, and `book.toml` configure CI pipelines, container orchestration, and documentation generation.
+- **Source Code**: The `src/` directory contains TypeScript code for additional tooling and integrations, compiled into the `dist/` directory.
+- **Documentation**: The `docs/` and `README.md` files provide usage instructions and project details.
 
-**Mirror chain** (outward flow, runs every 6h):
+Directory structure:
+```plaintext
+.
+├── bin/                # Shell scripts for core automation
+├── dist/               # Compiled TypeScript output
+├── docs/               # Documentation files
+├── src/                # Source code for additional tooling
+├── .github/            # GitHub-specific workflows
+├── .gitlab/            # GitLab-specific workflows
+├── config/             # Configuration files
+├── assets/             # Static assets
+├── LICENSE             # Project license
+├── README.md           # Project overview and instructions
 ```
-Interested-Deving-1896  ──[mirror-to-osp]──►  OpenOS-Project-OSP
-                                                      │
-                              ──[mirror-osp-to-ooc]──►  OpenOS-Project-Ecosystem-OOC
-                                                      │
-                              ──[mirror-osp-to-gitlab]──►  gitlab.com/openos-project
-```
-
-**Feedback loop** (inward flow, runs daily):
-- `upstream-prs.yml` + `upstream-commits.yml` detect changes on OSP/OOC and open PRs back to `Interested-Deving-1896`
-
-**OTA system** (versioned updates for independent forks):
-- Push a semver tag → `ota-release.yml` delivers to all opted-in forks via PR
-- `ota-reconcile.yml` runs weekly as a fallback: path A (stamp), B (drift PR), C (quota-recovery PR)
-- Mirror-chain repos are excluded from OTA delivery by default but covered by reconcile
-
-**Quota management** runs on two axes:
-- `queue-manager.yml` deduplicates queued runs every 30 min
-- `quota-reserve.yml` cancels low-priority runs when the REST bucket drops below 1,000
-- Both read `config/workflow-priority-tiers.yml` at runtime — no script edits needed when adding workflows
 <!-- AI:end:architecture -->
 
 ---
 
 <!-- AI:start:ci -->
-## CI
-
-Every push and PR runs `validate-config.yml`, which gates on:
-
-1. **YAML parse** — all 121 workflow files parse cleanly
-2. **Workflow guards** — `workflow_run` trigger names match real workflows; quota-cost and priority-tier entries are consistent
-3. **Shell syntax** — `bash -n` on all scripts
-4. **Schema validation** — `gavi` validates all workflows against the GitHub Actions JSON schema
-5. **Config validators** — `gitlab-subgroups.yml`, `registered-imports.json`, `template-manifest.yml`, `workflow-priority-tiers.yml`, `workflow-cost-profiles.yml`
-6. **AgentShield** — AI agent config security scan
-
-The required status check is `CI Required` (a gate job that always runs and reflects all filtered outcomes).
+- **`sync-forks.yml`**: Synchronizes forks with their upstream repositories. No secrets required.
+- **`inject-badges.yml`**: Adds badges to repository README files. No secrets required.
+- **`update-readmes.yml`**: Updates README files across repositories. No secrets required.
+- **`mirror-orgs-full.yml`**: Mirrors all repositories in specified organizations. Requires `GITHUB_TOKEN` and `MIRROR_SECRET`.
+- **`mirror-osp-to-gitlab.yml`**: Mirrors repositories from OSP to GitLab. Requires `GITLAB_TOKEN` and `GITHUB_TOKEN`.
+- **`pr-automation.yml`**: Automates pull request tasks, including labeling and merging. Requires `GITHUB_TOKEN`.
+- **`cleanup-branches.yml`**: Deletes stale branches in repositories. Requires `GITHUB_TOKEN`.
+- **`validate-config.yml`**: Validates configuration files for consistency. No secrets required.
+- **`generate-sbom.yml`**: Generates a Software Bill of Materials (SBOM) for repositories. No secrets required.
+- **`check-ci.yml`**: Runs CI checks for code quality and functionality. No secrets required.
+- **`ota-release.yml`**: Manages over-the-air release workflows. Requires `OTA_TOKEN`.
+- **`resolve-failures.yml`**: Attempts to resolve CI failures automatically. No secrets required.
+- **`rate-limit-status.yml`**: Monitors API rate limits for GitHub and other platforms. Requires `GITHUB_TOKEN`.
+- **`sync-upstream-sources.yml`**: Syncs upstream source repositories. Requires `GITHUB_TOKEN`.
 <!-- AI:end:ci -->
 
 ---
@@ -321,7 +316,13 @@ Direct commits to OSP or OOC are detected and opened as PRs back to `Interested-
 ## Contributors
 
 <!-- AI:start:contributors -->
-_Contributors pending._
+- [@Interested-Deving-1896](https://github.com/Interested-Deving-1896): 478 commits  
+- [@github-actions[bot]](https://github.com/github-actions[bot]): 77 commits  
+- [@actions-user](https://github.com/actions-user): 7 commits  
+- [@dependabot[bot]](https://github.com/dependabot[bot]): 6 commits  
+- [@web-flow](https://github.com/web-flow): 5 commits  
+
+This repository may be a mirror. Please check the upstream source for additional context.
 <!-- AI:end:contributors -->
 
 ---
