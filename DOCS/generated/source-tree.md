@@ -1,6 +1,6 @@
 # Source Tree
 
-> Auto-generated 2026-06-18 by `scripts/generate-book-pages.py`
+> Auto-generated 2026-06-23 by `scripts/generate-book-pages.py`
 
 Complete directory and file index of the fork-sync-all source hierarchy.
 Click any path to view it on GitHub.
@@ -17,9 +17,12 @@ Click any path to view it on GitHub.
 | [`AGENTS-IMPROVEMENT-SPEC.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/AGENTS-IMPROVEMENT-SPEC.md) |  |
 | [`AGENTS.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/AGENTS.md) | AI agent conventions, patterns, and known pitfalls |
 | [`CHANGELOG.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/CHANGELOG.md) |  |
+| [`CONTRIBUTING.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/CONTRIBUTING.md) |  |
+| [`Dockerfile`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/Dockerfile) |  |
 | [`LICENSE`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/LICENSE) |  |
 | [`README.md`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/README.md) | Project overview, mirror chain diagram, workflow count |
 | [`book.toml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/book.toml) | mdBook configuration — theme, search, output settings |
+| [`docker-compose.yaml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/docker-compose.yaml) |  |
 | [`registered-imports.json`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/registered-imports.json) | Upstream repos to keep in sync (registry) |
 
 ## [.devcontainer/](https://github.com/Interested-Deving-1896/fork-sync-all/tree/main/.devcontainer) {#devcontainer}
@@ -200,9 +203,11 @@ Click any path to view it on GitHub.
 | [`mirror-orgs-full.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/mirror-orgs-full.yml) |  |
 | [`mirror-orgs-watchdog.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/mirror-orgs-watchdog.yml) |  |
 | [`mirror-osp-to-gitlab.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/mirror-osp-to-gitlab.yml) |  |
+| [`mirror-osp-to-ooc.yaml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/mirror-osp-to-ooc.yaml) |  |
 | [`mirror-osp-to-ooc.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/mirror-osp-to-ooc.yml) |  |
 | [`mirror-releases.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/mirror-releases.yml) |  |
 | [`mirror-to-osp.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/mirror-to-osp.yml) |  |
+| [`mirror.yaml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/mirror.yaml) |  |
 | [`notify-poller.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/notify-poller.yml) |  |
 | [`onboard-repo.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/onboard-repo.yml) |  |
 | [`ota-discover.yml`](https://github.com/Interested-Deving-1896/fork-sync-all/blob/main/.github/workflows/ota-discover.yml) |  |
