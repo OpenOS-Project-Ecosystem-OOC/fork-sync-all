@@ -2,7 +2,7 @@
 
 [![Built with Ona](https://ona.com/build-with-ona.svg)](https://app.ona.com/#https://github.com/OpenOS-Project-OSP/fork-sync-all)
 
-Control plane for the `Interested-Deving-1896` GitHub org. Runs 121 GitHub Actions workflows that keep three GitHub orgs and a GitLab group in sync, manage READMEs and badges across OSP-bound repos, resolve CI failures, and maintain registered upstream imports.
+Control plane for the `Interested-Deving-1896` GitHub org. Runs 147 GitHub Actions workflows that keep three GitHub orgs and two GitLab groups in sync, manage READMEs and badges across OSP-bound repos, resolve CI failures, and maintain registered upstream imports.
 
 <!-- FSA-COUNTS-START — updated 2026-06-23 by generate-workflow-triggers-doc.py -->
 | | |
@@ -74,7 +74,7 @@ This project provides automated management for git repositories and organization
 | Resource | Description |
 |---|---|
 | [Full documentation](https://interested-deving-1896.github.io/fork-sync-all/) | Architecture, quota management, workflow reference, runbooks |
-| [Workflow Triggers](docs/workflow-triggers.md) | All 121 workflows — schedules, triggers, synopses ([plain text](docs/workflow-triggers.txt)) |
+| [Workflow Triggers](DOCS/workflow-triggers.md) | All 147 workflows — schedules, triggers, synopses ([plain text](DOCS/workflow-triggers.txt)) |
 | [OTA Reconcile](DOCS/ota-reconcile.md) | Hybrid A/B/C fallback layer for mirror-chain consumers |
 | [OTA System](DOCS/ota-system.md) | OTA delivery architecture and opt-in guide |
 | [AI Agent Costs](DOCS/ai-agent-costs.md) | OCU pricing, tokenizer reference, per-task estimates |
@@ -86,18 +86,18 @@ This project provides automated management for git repositories and organization
 
 ## Workflow groups
 
-121 workflows across 13 functional groups. Full detail in [docs/workflow-triggers.md](docs/workflow-triggers.md).
+147 workflows across 13 functional groups. Full detail in [DOCS/workflow-triggers.md](DOCS/workflow-triggers.md).
 
 | Group | Workflows | Description |
 |---|---|---|
-| [Mirror Chain](docs/workflow-triggers.md#mirror-chain) | 7 | Outward mirror: I-D-1896 → OSP → OOC → GitLab |
-| [Fork & Import Sync](docs/workflow-triggers.md#fork--import-sync) | 10 | Upstream fork sync, registered imports, platform import |
-| [README Management](docs/workflow-triggers.md#readme-management) | 7 | Create, update, badge, translate, validate READMEs |
-| [CI & Failure Resolution](docs/workflow-triggers.md#ci--failure-resolution) | 7 | Rate-limit rerun, failure resolver, PR automation |
-| [Full Pipeline](docs/workflow-triggers.md#full-pipeline) | 9 | pre-flush → full-chain-flush → post-flush + critical-deploy |
-| [Quota & Queue Management](docs/workflow-triggers.md#quota--queue-management) | 4 | Reserve, dedup, monitor, cost registry |
-| [OTA System](docs/workflow-triggers.md#ota-system) | 5 | Release delivery, reconcile, self-update, discover, opt-in |
-| [Documentation & Publishing](docs/workflow-triggers.md#documentation--publishing) | 8 | mdBook, GitBook, NotebookLM, translate docs, triggers doc |
+| [Mirror Chain](DOCS/workflow-triggers.md#mirror-chain) | 7 | Outward mirror: I-D-1896 → OSP → OOC → GitLab |
+| [Fork & Import Sync](DOCS/workflow-triggers.md#fork--import-sync) | 10 | Upstream fork sync, registered imports, platform import |
+| [README Management](DOCS/workflow-triggers.md#readme-management) | 7 | Create, update, badge, translate, validate READMEs |
+| [CI & Failure Resolution](DOCS/workflow-triggers.md#ci--failure-resolution) | 7 | Rate-limit rerun, failure resolver, PR automation |
+| [Full Pipeline](DOCS/workflow-triggers.md#full-pipeline) | 9 | pre-flush → full-chain-flush → post-flush + critical-deploy |
+| [Quota & Queue Management](DOCS/workflow-triggers.md#quota--queue-management) | 4 | Reserve, dedup, monitor, cost registry |
+| [OTA System](DOCS/workflow-triggers.md#ota-system) | 5 | Release delivery, reconcile, self-update, discover, opt-in |
+| [Documentation & Publishing](DOCS/workflow-triggers.md#documentation--publishing) | 8 | mdBook, GitBook, NotebookLM, translate docs, triggers doc |
 | [AI & Cost Tracking](docs/workflow-triggers.md#ai--cost-tracking) | 2 | Session cost log, weekly price sync |
 | [Maintenance & Housekeeping](docs/workflow-triggers.md#maintenance--housekeeping) | 10 | Config validation, cleanup, token rotation, dep updates |
 | [OSP-Bound Repo Management](docs/workflow-triggers.md#osp-bound-repo-management) | 3 | Add mirror repo, CI status, setup OSP mirrors |
@@ -196,47 +196,48 @@ print(f'remaining={d[\"remaining\"]}  resets={reset}')
 ---
 
 <!-- AI:start:architecture -->
-The project consists of several key components that automate repository management tasks across git-based platforms. These components include scripts for fork synchronization, README generation, badge injection, upstream tracking, and release management. The workflows, defined in `.github/workflows` and `.gitlab-ci.yml`, orchestrate these tasks. The `bin/` directory contains executable scripts, while `dist/` holds the compiled output. Configuration files for CI/CD and containerization are located at the root level, alongside documentation and metadata files.
-
-The directory structure is as follows:
+All automation is implemented as Bash scripts in `scripts/` and GitHub Actions workflows in `.github/workflows/`. There are no compiled artifacts, no Node.js runtime dependencies, and no build step — every workflow runs directly against the shell scripts.
 
 ```plaintext
 .
-├── bin/                  # Executable scripts
-├── dist/                 # Compiled output
-├── config/               # Configuration files
-├── docs/                 # Documentation
-├── workflows/            # CI/CD workflows
-├── assets/               # Static assets
-├── .github/              # GitHub-specific configurations
-├── .gitlab/              # GitLab-specific configurations
-├── LICENSE               # License file
-├── README.md             # Project overview
-├── package.json          # Node.js package metadata
-└── Dockerfile            # Containerization setup
+├── .github/workflows/    # 147 GitHub Actions workflows
+├── scripts/              # Bash automation scripts
+│   └── includes/         # Shared helpers (gh-api.sh, budget.sh, quota-instrument.sh, …)
+├── config/               # YAML config: subgroup maps, quota costs, priority tiers, …
+├── DOCS/                 # mdBook source (architecture, runbooks, quota reference, …)
+│   └── generated/        # Auto-generated pages (workflow reference, source tree, …)
+├── services/             # Long-running service helpers (sync-in server)
+├── vendor/               # Third-party components hosted by fork-sync-all
+├── .devcontainer/        # Dev container definition and local features
+├── .ona/                 # Ona automations (services + tasks)
+├── registered-imports.json  # Upstream repos kept in sync
+├── book.toml             # mdBook configuration
+└── Dockerfile            # Container image for CI runners
 ```
 
-Components interact via shell scripts and Node.js modules, leveraging APIs and CLI tools for automation.
+Scripts communicate via environment variables and exit codes. Shared helpers in `scripts/includes/` provide GitHub API access (`gh-api.sh`), quota budgeting (`budget.sh`), and run instrumentation (`quota-instrument.sh`). See [Architecture](DOCS/architecture.md) for the full data-flow diagram.
 <!-- AI:end:architecture -->
 
 ---
 
 <!-- AI:start:ci -->
-- **add-mirror-repo.yml**: Adds a new repository to the mirroring system. Requires `GITHUB_TOKEN` and `MIRROR_API_KEY` secrets.
-- **auto-merge-prs.yml**: Automatically merges pull requests that meet predefined conditions. Requires `GITHUB_TOKEN`.
-- **cleanup-branches.yml**: Deletes stale branches that are no longer needed. Requires `GITHUB_TOKEN`.
-- **sync-forks.yml**: Synchronizes forks with their upstream repositories. Requires `GITHUB_TOKEN`.
-- **inject-badges.yml**: Adds or updates badges in repository READMEs. Requires `GITHUB_TOKEN`.
-- **update-readmes.yml**: Regenerates and updates README files across repositories. Requires `GITHUB_TOKEN`.
-- **mirror-orgs-full.yml**: Mirrors all repositories in an organization to another platform. Requires `MIRROR_API_KEY`.
-- **validate-config.yml**: Validates configuration files for consistency and correctness. No secrets required.
-- **generate-sbom.yml**: Generates a Software Bill of Materials (SBOM) for the project. No secrets required.
-- **check-ci.yml**: Runs CI checks to ensure workflow integrity. No secrets required.
-- **pr-automation.yml**: Automates pull request workflows, including labeling and assignments. Requires `GITHUB_TOKEN`.
-- **rotate-token.yml**: Rotates API tokens used in workflows. Requires `ADMIN_API_KEY`.
-- **quota-monitor.yml**: Monitors and reports usage quotas for external APIs. Requires `QUOTA_API_KEY`.
-- **sync-upstream-sources.yml**: Syncs upstream source changes to downstream repositories. Requires `GITHUB_TOKEN`.
-- **verify-mirror-integrity.yml**: Verifies that mirrored repositories are consistent with their sources. Requires `MIRROR_API_KEY`.
+Key workflows and their required secrets:
+
+| Workflow | Purpose | Secrets |
+|---|---|---|
+| `mirror-to-osp.yml` | Push every branch/tag from I-D-1896 to OSP | `SYNC_TOKEN` |
+| `mirror-osp-to-gitlab.yml` | Mirror OSP org to GitLab (`openos-project` + OOC) | `GITLAB_SYNC_TOKEN`, `SYNC_TOKEN` |
+| `sync-forks.yml` | Sync upstream forks to their I-D-1896 mirrors | `GH_TOKEN` |
+| `sync-registered-imports.yml` | Keep registered-imports.json repos in sync | `GH_TOKEN` |
+| `update-readmes.yml` | Regenerate README sections across OSP repos | `SYNC_TOKEN` |
+| `inject-badges.yml` | Add/update Built-with-Ona badges | `SYNC_TOKEN` |
+| `add-mirror-repo.yml` | Onboard a new repo into the mirror chain | `SYNC_TOKEN`, `GITLAB_SYNC_TOKEN` |
+| `validate-config.yml` | Validate YAML config files and workflow guards | none |
+| `quota-monitor.yml` | Watch quota, re-dispatch after rate-limit reset | `GH_TOKEN` |
+| `queue-manager.yml` | Deduplicate queued runs, evict stale queue entries | `GH_TOKEN` |
+| `full-chain-flush.yml` | Ordered end-to-end pipeline flush | `GH_TOKEN`, `SYNC_TOKEN` |
+| `verify-mirror-integrity.yml` | Confirm OSP/OOC/GitLab mirrors match source | `SYNC_TOKEN`, `GITLAB_SYNC_TOKEN` |
+| `auto-merge-prs.yml` | Auto-merge vouch/upstream-workflow PRs | `GH_TOKEN` |
 <!-- AI:end:ci -->
 
 ---
