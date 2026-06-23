@@ -23,9 +23,7 @@
       "version": "latest"
     },
     "./features/dotdrop": {
-      "version": "latest",
-      "dotfiles_repo": "",
-      "profile": ""
+      "version": "latest"
     },
     "./features/incus": {
       "version": "latest",

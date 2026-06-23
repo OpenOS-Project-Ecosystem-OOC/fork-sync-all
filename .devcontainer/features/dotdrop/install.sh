@@ -7,7 +7,7 @@
 set -uo pipefail
 
 VERSION="${VERSION:-latest}"
-DOTFILES_REPO="${DOTFILES_REPO:-}"
+DOTFILES_REPO="${REPO:-}"
 PROFILE="${PROFILE:-}"
 
 # ── Ensure pip is available ───────────────────────────────────────────────────

@@ -10,15 +10,15 @@
       "default": "latest",
       "description": "dotdrop version to install via pip ('latest' installs the current PyPI release)."
     },
-    "dotfiles_repo": {
+    "repo": {
       "type": "string",
       "default": "",
-      "description": "Optional dotfiles repository URL to clone and install on container start."
+      "description": "Optional dotdrop repository URL to clone and deploy on container start."
     },
     "profile": {
       "type": "string",
       "default": "",
-      "description": "dotdrop profile to deploy after cloning the dotfiles repo. Defaults to hostname if blank."
+      "description": "dotdrop profile to deploy after cloning the repo. Defaults to hostname if blank."
     }
   }
 }
